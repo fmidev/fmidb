@@ -1,0 +1,757 @@
+#include <NeonsDB.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
+  
+using namespace std;
+
+NeonsDB & NeonsDB::Instance() {
+  static NeonsDB instance_;
+  return instance_; 
+}
+
+NeonsDB::NeonsDB() : Oracle() {
+  connected_ = false;
+  user_ = "neons_client";
+  password_ = "kikka8si";
+  database_ = "neons";  
+}
+
+NeonsDB::~NeonsDB() {
+  Disconnect();              
+}
+
+/*
+ * GetGridLevelName(long, long, long, ,long)
+ *
+ * Replaces old proC function GetGridLvlNameFromNeons.
+ *
+ * GetGridLevellName will convert the given InLvlId on the given
+ * InCodeTableVer to the correct lvl_type on the given OutCodeTableVer
+ * for the given parameter InParmId.
+ *
+ */
+
+string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
+
+	string lvl_name;
+	string parm_name;
+	string univ_id;
+	string lvl_id = boost::lexical_cast<string>(InLvlId);
+	string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+
+	parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
+
+	string query = "SELECT lvl_type "
+                   "FROM grid_lvl_grib "
+                   "WHERE lvl_id = " + lvl_id + " "
+                   "AND no_vers2 = " +no_vers;
+
+	Query(query);
+	vector<string> row = FetchRow();
+
+	if (!row.empty()) {
+	  lvl_name = row[0];
+	}
+	query = "SELECT univ_id "
+            "FROM grid_lvl_xref "
+            "WHERE lvl_type like '" +lvl_name + "'";
+            "AND no_vers2 = " +no_vers;
+
+    Query(query);
+    vector<string> id = FetchRow();
+
+    if (!id.empty()) {
+      univ_id = id[0];
+    }
+    query = "SELECT lvl_type "
+            "FROM grid_lvl_xref "
+            "WHERE parm_name = '" +parm_name +"' "
+            "AND no_vers2 = " +no_vers +" "
+            "AND univ_id = " +univ_id;
+
+    Query(query);
+    vector<string> prod_class = FetchRow();
+    string pclass;
+
+    if (!prod_class.empty()) {
+      lvl_name = prod_class[0];
+    }
+    else {
+      parm_name = "ALL_OTHERS";
+      query = "SELECT lvl_type "
+    	      "FROM grid_lvl_xref "
+    	      "WHERE parm_name = '" +parm_name +"' "
+    	      "AND no_vers2 = " +no_vers +" "
+    	      "AND univ_id = " +univ_id;
+      Query(query);
+      vector<string> lvltype = FetchRow();
+      if (!lvltype.empty()) {
+    	lvl_name = lvltype[0];
+      }
+   }
+
+return lvl_name;
+}
+
+/*
+ * GetGridParameterName(long, long, long)
+ *
+ * Replaces old proC function GetGridParNameFromNeons.
+ *
+ * GetGridParameterName will convert the InParmId on the given
+ * InCodeTableVer to the correct ParName on the given OutCodeTableVer.
+ *
+ */
+
+string NeonsDB::GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer) {
+
+	string parm_name;
+	string univ_id;
+	string parm_id = boost::lexical_cast<string>(InParmId);
+	string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+
+	string query = "SELECT parm_name "
+                   "FROM grid_param_grib "
+                   "WHERE parm_id = " + parm_id + " "
+                   "AND no_vers = " +no_vers;
+
+	Query(query);
+	vector<string> row = FetchRow();
+
+	if (!row.empty())
+	  parm_name = row[0];
+
+	if (InCodeTableVer == OutCodeTableVer) {
+	  return parm_name;
+	}
+	else {
+	  /* We do some further digging */
+	  query = "SELECT univ_id "
+              "FROM grid_param_xref "
+              "WHERE parm_name like '" +parm_name + "'";
+              "AND no_vers = " +no_vers;
+
+      Query(query);
+      vector<string> id = FetchRow();
+
+      if (!id.empty()) {
+    	univ_id = id[0];
+      }
+      /* Finally dig out the parm_name on OutCodeTableVer */
+      query = "SELECT parm_name "
+              "FROM grid_param_xref "
+              "WHERE univ_id = " +univ_id + " "
+              "AND no_vers = "+boost::lexical_cast<string>(OutCodeTableVer);
+
+      Query(query);
+      vector<string> param = FetchRow();
+
+      if (!param.empty()) {
+        parm_name = param[0];
+      }
+
+      query = "SELECT max(producer_class) "
+              "FROM fmi_producers "
+              "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
+
+      Query(query);
+      vector<string> prod_class = FetchRow();
+      string pclass;
+
+      if (!prod_class.empty()) {
+    	pclass = prod_class[0];
+    	/* Switch the -'s to _'s for point producers */
+        if( (pclass == "2") | (pclass == "3") ) {
+          parm_name.replace(parm_name.find("-"), 1, "_");
+        }
+      }
+   }
+
+  return parm_name;
+}
+
+
+/*
+ * NewbaseToGrib2Parameter(long, long, long)
+ *
+ * Get GRIB 2 parameter id from newbase id and producer id.
+ * 
+ * TODO: caching
+ *
+ */
+
+pair<int, int> NeonsDB::NewbaseToGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
+
+	string query = "SELECT category, param "
+                   "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
+                   "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers "
+                   "AND x.univ_id = " + boost::lexical_cast<string> (parameterId);
+                   "AND f.producer_id = " + boost::lexical_cast<string> (producerId);
+
+	Query(query);
+	
+	vector<string> row = FetchRow();
+
+  pair<int, int> p = make_pair (-1, -1);  
+  
+  if (row.empty())
+    return p;
+
+  p = make_pair(boost::lexical_cast<int> (row[0]),
+                boost::lexical_cast<int> (row[1]));
+                     
+  return p;
+}
+
+/*
+ * GetParameterDefinition()
+ * 
+ * Retrieves parameter definition from neons meta-tables (NOT database system tables!).
+ * 
+ * Replaces pro*c function 
+ *
+ * int CheckColumnFromParameter( DBParamDef *ParamDef, DBProducerDef *ProdDef)
+ * 
+ * defined at objdb/pcsource/CheckColumnFromParameter.pc
+ *
+ */
+
+map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
+
+  if (parameterinfo.find(producer_id) != parameterinfo.end())
+    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
+      return parameterinfo[producer_id][universal_id];
+  
+  map <string, string> ret;
+  
+  string prod_id = boost::lexical_cast<string> (producer_id);
+  string univ_id = boost::lexical_cast<string> (universal_id);
+  
+  map <string, string> producer_info = GetProducerDefinition(producer_id);
+
+  string forecast_type = producer_info["seq_type_prfx"];
+  int producer_class = boost::lexical_cast<int> (producer_info["producer_class"]);
+  string no_vers = producer_info["no_vers"];
+  int dbclass_id = boost::lexical_cast<int> (producer_info["dbclass_id"]);
+  
+  string query = "SELECT "
+          "x.parm_name, "
+          "x.base, "
+          "x.scale, "
+          "u.unit_name, "
+          "nvl(g.parm_desc,'No Description') AS parm_desc, "
+          "nvl(u.unit_desc,'No Description') AS unit_desc, "
+          "replace(x.parm_name,'-','_') AS col_name "
+          "FROM grid_param g, grid_unit u, grid_param_xref x "
+          "WHERE u.unit_id = g.unit_id AND x.parm_name = g.parm_name"
+          " AND x.univ_id = " + univ_id +
+          " AND x.no_vers = " + no_vers;
+
+  Query(query);
+   
+  vector<string> row = FetchRow();
+  
+  if (row.empty())
+    return ret;
+    
+  ret["parm_name"] = row[0];
+  ret["base"] = row[1];
+  ret["scale"] = row[2];
+  ret["unit_name"] = row[3];
+  ret["parm_desc"] = row[4];
+  ret["unit_desc"] = row[5];
+  ret["col_name"] = row[6];
+    
+  switch (producer_class) {
+    case 1:
+      /* grid */
+      break;
+      
+    case 2:
+      /* lltbufr */
+  
+      if (dbclass_id == 11)
+      
+        /* For Climatic database we dont have the table descriptions.
+         * For Climatic database-producer DBCLASS_ID is 11 in the
+         * in the FMI_PRODUCER-table 
+         */ 
+  
+        break;
+        
+      if (producer_id == 1005 || producer_id == 1034)
+       
+        /* For temp-data there is no openened columns in the database. */
+        /* So we can't make the parameter name and database column name conversion */
+      
+        break;
+  
+      query = "SELECT 1 FROM lltbufr_seq_col WHERE col_name = replace('" + ret["parm_name"] + "','-','_') AND seq_type = '" + forecast_type + "'";
+  
+      Query(query);
+      
+      row = FetchRow();
+      
+      if (row.empty()) {
+        ret.clear();
+      }
+        
+      break;
+  
+    case 3:
+      /* previ */
+
+      query = "SELECT 1 FROM previ_col WHERE col_name = replace( '" + ret["parm_name"] + "','-','_') AND previ_type = '" + forecast_type + "'";
+    
+      Query(query);
+      
+      row = FetchRow();
+      
+      if (row.empty()) {
+        ret.clear();
+      }    
+
+      break;
+
+    }
+  
+  parameterinfo[producer_id][universal_id] = ret;
+  
+  return ret;
+  
+}
+
+/*
+ * GetProducerDefinition(int)
+ * 
+ * Retrieves producer definition from neons meta-tables.
+ * 
+ * Replaces pro*c function 
+ *
+ * int GetDBProducerDef( DBProducerDef *ProdDef)
+ * 
+ * defined at fmidbu/pcsource/getdbproducerdef.pc
+ *
+ */
+
+map<string, string> NeonsDB::GetProducerDefinition(unsigned long producer_id) {
+
+  if (producerinfo.find(producer_id) != producerinfo.end())
+    return producerinfo[producer_id];
+
+  string query = "SELECT" 
+                 " producer_id,"
+                 " ref_prod,"
+                 " seq_type_prfx,"
+                 " producer_class,"
+                 " no_vers,"
+                 " dbclass_id,"
+                 " nvl(hours_for_latest,24) "
+                 "FROM fmi_producers "
+                 "WHERE producer_id = " + boost::lexical_cast<string> (producer_id); 
+
+  map <string, string> ret;
+  
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    ret["producer_id"] = row[0];
+    ret["ref_prod"] = row[1];
+    ret["seq_type_prfx"] = row[2];
+    ret["producer_class"] = row[3];
+    ret["no_vers"] = row[4];
+    ret["dbclass_id"] = row[5];
+    ret["hours_for_latest"] = row[6];
+  
+    producerinfo[producer_id] = ret;
+  }
+  
+  return ret;
+  
+}
+
+/*
+ * GetProducerDefinition(string)
+ * 
+ * Retrieves producer definition from neons meta-tables.
+ * 
+ * Replaces pro*c function 
+ *
+ * int GetDBProducerDef( DBProducerDef *ProdDef)
+ * 
+ * defined at fmidbu/pcsource/getdbproducerdef.pc
+ *
+ */
+
+map<string, string> NeonsDB::GetProducerDefinition(const string &producer_name) {
+
+  string query = "SELECT"
+                 " producer_id "
+                 "FROM fmi_producers "
+                 "WHERE ref_prod = " + producer_name;
+
+  Query(query);
+  
+  vector<string> row = FetchRow();
+  
+  unsigned long int producer_id = boost::lexical_cast<unsigned long> (row[0]);
+  
+  if (producerinfo.find(producer_id) != producerinfo.end())
+    return producerinfo[producer_id];
+  
+  return GetProducerDefinition(producer_id);
+    
+}
+
+/*
+ * GetGridModelDefinition(int)
+ *
+ * GetGridModelDefinition will pick up the model information for
+ * the given model in the Database.
+ *
+ */
+
+map<string, string> NeonsDB::GetGridModelDefinition(unsigned long producer_id) {
+
+  map <string, string> ret;
+
+  string query = "SELECT fmi_producers.ref_prod, "
+                   "fmi_producers.no_vers, "
+                   "grid_model.model_name, "
+		           "grid_model.flag_mod, "
+                   "grid_model_name.model_desc, "
+                   "grid_num_model_grib.model_id, "
+                   "grid_model_ident.ident_name, "
+                   "grid_model_ident.ident_id "
+                 "FROM fmi_producers, grid_model, grid_model_name, grid_num_model_grib, grid_model_ident "
+                 "WHERE fmi_producers.producer_id = " +boost::lexical_cast<string>(producer_id) + " "
+                 "AND fmi_producers.producer_class = 1 "
+                 "AND fmi_producers.ref_prod = grid_model.model_type "
+                 "AND grid_model_name.model_name = grid_model.model_name "
+                 "AND grid_num_model_grib.model_name = grid_model.model_name "
+                 "AND grid_model_ident.ident_id = grid_num_model_grib.ident_id";
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+
+    ret["ref_prod"] = row[0];
+    ret["no_vers"] = row[1];
+    ret["model_name"] = row[2];
+    ret["flag_mod"] = row[3];
+    ret["model_desc"] = row[4];
+    ret["model_id"] = row[5];
+    ret["ident_name"] = row[6];
+    ret["ident_id"] = row[7];
+  }
+
+return ret;
+}
+
+
+/*
+ * GetNeonsTables(string, string, string)
+ * 
+ * In Neons one table contains data for one day only. If a query spans multiple
+ * days, we must make a UNION over all the tables in our sql query. Function
+ * GetNeonsTables() return all intermediate tables when given start and end
+ * date and producer name.
+ */
+
+vector<string> NeonsDB::GetNeonsTables(const string &start_time, const string &end_time, const string &producer_name) {
+
+  vector<string> ret;
+  
+  string query = "SELECT tbl_name FROM as_lltbufr WHERE min_dat <= '" + end_time + "' AND max_dat >= '" + start_time +"' AND seq_type = '" + producer_name + "'";
+  
+  Query(query);
+  
+  while (true) {
+  	
+  	vector<string> row = FetchRow();
+  	
+  	if (row.empty())
+  	  break;
+  	  
+    ret.push_back(row[0]);	
+  }
+  
+  return ret;  
+}
+
+/*
+ * GetGeometryDefinition(string)
+ *
+ * Retrieves geometry definition from neons meta-tables.
+ *
+ * Replaces pro*c function
+ *
+ * int GetDBGeomDef(DBGribGeomDef *GeomDef)
+ *
+ * defined at fmidbu/pcsource/getdbgeomdef.pc
+ *
+ */
+
+map<string, string> NeonsDB::GetGeometryDefinition(const string &geometry_name) {
+
+  if (geometryinfo.find(geometry_name) != geometryinfo.end())
+    return geometryinfo[geometry_name];
+
+  string query = "SELECT"
+                 " prjn_name,"
+                 " row_cnt,"
+                 " col_cnt,"
+                 " lat_orig,"
+                 " long_orig,"
+                 " orig_row_num,"
+                 " orig_col_num,"
+                 " pas_longitude,"
+                 " pas_latitude,"
+                 " geom_parm_1,"
+                 " geom_parm_2,"
+                 " geom_parm_3 "
+                 "FROM grid_reg_geom "
+                 "WHERE geom_name like '" +geometry_name + "'";
+
+  map <string, string> ret;
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    ret["prjn_name"] = row[0];
+    ret["row_cnt"] = row[1];
+    ret["col_cnt"] = row[2];
+    ret["lat_orig"] = row[3];
+    ret["long_orig"] = row[4];
+    ret["orig_row_num"] = row[5];
+    ret["orig_col_num"] = row[6];
+    ret["pas_longitude"] = row[7];
+    ret["pas_latitude"] = row[8];
+    ret["geom_parm_1"] = row[9];
+    ret["geom_parm_2"] = row[10];
+    ret["geom_parm_3"] = row[11];
+
+    geometryinfo[geometry_name] = ret;
+  }
+
+  return ret;
+
+}
+
+/*
+ * GetStationInfo(int)
+ * 
+ * Retrieves station information from Neons table station. 
+ * 
+ * By default this function uses aggressive caching: when first station 
+ * is requested, all stations are read to memory. As more often that not a
+ * large number of stations are requested, this will reduce the amount
+ * of SQL queries from N to 1. On the other hand when only a few stations
+ * are requested, it will be an overkill. This behaviour can be disabled 
+ * by setting input argument aggressive_caching to false.
+ * 
+ * Results are placed in an STL map, with currently three mandatory fields:
+ * - station name field must be present and named "station_name"
+ * - latitude must be present and named "latitude"
+ * - longitude must be present and named "longitude"
+ * 
+ * Replaces function
+ * 
+ * int GetDbStationDef(DBStation*)
+ * 
+ * defined at 
+ * 
+ * fmidbu/pcsource/getdbstationdef.pc
+ * 
+ */
+
+map<string, string> NeonsDB::GetStationInfo(unsigned long wmo_id, bool aggressive_cache) {
+
+  if (stationinfo.find(wmo_id) != stationinfo.end())
+    return stationinfo[wmo_id];
+
+  string query = "SELECT "
+                 "indicatif_omm, "
+                 "nom_station, " 
+                 "round(lat/100000, 4) as lat, "
+                 "round(lon/100000, 4) as lon, "
+                 "lpnn, "
+                 "aws_id, "
+                 "country_id, "
+                 "CASE WHEN elevation_hp IS NOT NULL THEN elevation_hp "
+                 "WHEN elevation_ha IS NOT NULL THEN elevation_ha "
+                 "ELSE NULL END AS elevation " 
+                 "FROM "
+                 "station "
+                 "WHERE "
+                 "indicatif_omm IS NOT NULL";
+  
+  /*
+   * If aggressive_cache is not set, query only for the individual station.
+   * Also, if aggressive_cache is set and map stationinfo is already populated
+   * do not fetch again all stations. This condition will happen when a station
+   * requested does not exist.
+   */
+  
+  if (!aggressive_cache || (aggressive_cache && stationinfo.size() > 0))
+    query += " AND indicatif_omm = " + boost::lexical_cast<string> (wmo_id);
+  
+  Query(query);
+  
+  while (true) {
+    vector <string> values = FetchRow();
+      
+    map <string, string> station;
+        
+    if (values.empty())
+      break;
+      
+    int wid = boost::lexical_cast<int> (values[0]);
+      
+    station["indicatif_omm"] = values[0];
+    station["name"] = values[1];
+    station["latitude"] = values[2];
+    station["longitude"] = values[3];
+    station["lpnn"] = values[4];
+    station["aws_id"] = values[5];
+    station["country_id"] = values[6];
+    station["elevation"] = values[7];
+      
+    stationinfo[wid] = station;
+  
+  }
+
+  map <string, string> ret;
+
+  if (stationinfo.find(wmo_id) != stationinfo.end())
+    ret = stationinfo[wmo_id];
+  else
+    // If station does not exist, place empty map as a placeholder
+    stationinfo[wmo_id] = ret;
+  
+  return ret;
+}
+
+/*
+ * GetStationListForArea(float,float,float,float,bool)
+ * 
+ * Retrieves a list of stations from Neons table station based on 
+ * given max/min lat/lon coordinates. If last argument (bool temp) 
+ * is false (default), retrieve all stations. If it is true, retrieve
+ * only sounding stations.
+ * 
+ * Results are placed in an STL map, with currently three mandatory fields:
+ * - station name field must be present and named "station_name"
+ * - latitude must be present and named "latitude"
+ * - longitude must be present and named "longitude"
+ * 
+ * Replaces functions
+ * 
+ * int GetDbStationList(DBStationList*)
+ * 
+ * defined at 
+ * 
+ * fmidbu/pcsource/getdbstationlist.pc
+ * 
+ * and
+ * 
+ * int GetDBStationListForTemp(DBStationList*)
+ * 
+ * defined at
+ * 
+ * fmidbu/pcsource/getdbstationlistfortemp.pc
+ * 
+ */
+
+map<int, map<string, string> > NeonsDB::GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp ) {
+  
+  map<int, map<string, string> > stationlist;
+  
+  string query = "SELECT "
+                 "indicatif_omm, "
+                 "indicatif_oaci, "
+                 "indicatif_ship, "
+                 "indicatif_insee, "
+                 "nom_station, " 
+                 "lat/100000, "
+                 "lon/100000, "
+                 "lpnn, "
+                 "aws_id, "
+                 "country_id, "
+                 "CASE WHEN elevation_hp IS NOT NULL THEN elevation_hp "
+                 "WHEN elevation_ha IS NOT NULL THEN elevation_ha "
+                 "ELSE NULL END AS elevation "
+                 "FROM "
+                 "station "
+                 "WHERE "
+                 "indicatif_omm IS NOT NULL "
+                 "AND "
+                 "lat/100000 BETWEEN " +
+                 boost::lexical_cast<string> (min_latitude) +
+                 " AND " +
+                 boost::lexical_cast<string> (max_latitude) +
+                 " AND "
+                 "lon/100000 BETWEEN " +
+                 boost::lexical_cast<string> (min_longitude) +
+                 " AND " +
+                 boost::lexical_cast<string> (max_longitude);
+                 
+                 
+  if (temp)    
+    query += " AND ( "
+             "(OBSALTI00 LIKE '%W%' OR OBSALTI00  LIKE '%P%')"
+             "OR (OBSALTI06  LIKE '%W%' OR OBSALTI06  LIKE '%P%')"
+             "OR (OBSALTI12  LIKE '%W%' OR OBSALTI12  LIKE '%P%')"
+             "OR (OBSALTI18  LIKE '%W%' OR OBSALTI18  LIKE '%P%'))";
+
+  query += " ORDER BY lat DESC, lon";
+  
+  Query(query);
+  
+  while (true) {
+    vector <string> values = FetchRow();
+      
+    map <string, string> station;
+        
+    if (values.empty())
+      break;
+      
+    int wid = boost::lexical_cast<int> (values[0]);
+
+    station["indicatif_omm"] = values[0];
+    station["name"] = values[4];
+    station["latitude"] = values[5];
+    station["longitude"] = values[6];
+    station["lpnn"] = values[7];
+    station["aws_id"] = values[8];
+    station["country_id"] = values[9];
+    station["elevation"] = values[10];
+      
+    stationlist[wid] = station;
+      
+    /*
+     * Fill stationinfo also. This implies that when later on 
+     * GetStationInfo() is called, it will not fetch the station list 
+     * but uses this information. 
+     * 
+     * This should not be a problem since when querying data for an area 
+     * only include stations that are inside that area. This could be a 
+     * problem if in one par we would have an area query and that query 
+     * would contain stations outside the area, but AFAIK that is impossible 
+     * since parfile can only contain EITHER station id OR coordinates, not both. 
+     * 
+     */
+      
+    stationinfo[wid] = station;
+
+  }  
+
+  return stationlist;
+}
