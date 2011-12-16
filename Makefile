@@ -36,7 +36,8 @@ INCLUDES = -I$(includedir) \
 
 LIBS =  -L$(libdir) \
         -L$(libdir)/odbc \
-        $(ORACLE_HOME)/lib/libclntst11.a \
+        -L$(ORACLE_HOME)/lib \
+        -lclntsh \
         -lnsl -ldl -laio -lm \
         -lodbc \
 	-lboost_date_time \
