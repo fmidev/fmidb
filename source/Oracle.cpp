@@ -30,7 +30,7 @@ Oracle & Oracle::Instance() {
   return instance_; 
 }
 
-Oracle::Oracle() {} ;
+Oracle::Oracle() : test_mode_(false) {} ;
 
 
 void Oracle::Connect(const string & user,
@@ -45,7 +45,7 @@ void Oracle::Connect(const string & user,
   connection_string_ = user+"/"+password+"@"+database;
 
   try {
-    db_.rlogon(connection_string_.c_str());
+    db_.rlogon(connection_string_.c_str(), 0);
     connected_ = true;
 
 #ifdef DEBUG
@@ -72,7 +72,7 @@ void Oracle::Connect() {
   connection_string_ = user_+"/"+password_+"@"+database_;
 
   try {
-    db_.rlogon(connection_string_.c_str()); // connect to Oracle
+    db_.rlogon(connection_string_.c_str(), 0); // connect to Oracle
     connected_ = true;
 
 #ifdef DEBUG
@@ -94,6 +94,9 @@ void Oracle::Query(const string & sql, const unsigned int buffer_size) {
     cerr << "ERROR: must be connected before executing query" << endl;
     exit(1);
   }
+
+  if (TestMode())
+    return;
 
 #ifdef DEBUG
 cout << "DEBUG: " << sql.c_str() << endl;
@@ -213,7 +216,7 @@ vector<string> Oracle::FetchRow() {
         // Force format of timestamp to NEONS time
         
         rs_iterator_.get(n+1, tval);
- 
+
         ret.push_back(MakeNEONSDate(tval));
         break;
 
@@ -401,7 +404,7 @@ void Oracle::Execute(const string & sql) throw (int) {
 cout << "DEBUG: " << sql.c_str() << endl;
 #endif
 
-  try { 
+  try {
     oracle::otl_cursor::direct_exec(
         db_,
         sql.c_str(),
@@ -412,7 +415,6 @@ cout << "DEBUG: " << sql.c_str() << endl;
     cerr << "Query: " << p.stm_text << endl;
     throw p.code;  
   }
-
 }
 
 /*
@@ -491,11 +493,49 @@ string Oracle::MakeStandardDate(const otl_datetime &time) {
 */
 
 string Oracle::MakeNEONSDate(const otl_datetime &time) {
-  
   char date[15];
   sprintf(date, "%4d%02d%02d%02d%02d", time.year, time.month, time.day, time.hour, time.minute);
   date[14] = '\0';
-  
+
   return static_cast<string>(date);
 }
 
+/*
+ * Commit()
+ *
+ * Commit transaction.
+ */
+
+void Oracle::Commit() throw (int) {
+
+#ifdef DEBUG
+cout << "DEBUG: COMMIT" << endl;
+#endif
+
+  try {
+    db_.commit();
+  } catch (oracle::otl_exception& p) {
+    cerr << p.msg << endl;
+    throw p.code;
+  }
+}
+
+/*
+ * Rollback()
+ *
+ * Rollback transaction.
+ */
+
+void Oracle::Rollback() throw (int) {
+
+#ifdef DEBUG
+cout << "DEBUG: ROLLBACK" << endl;
+#endif
+
+  try {
+    db_.rollback();
+  } catch (oracle::otl_exception& p) {
+    cerr << p.msg;
+    throw p.code;
+  }
+}

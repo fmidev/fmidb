@@ -50,48 +50,53 @@ string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVe
 	Query(query);
 	vector<string> row = FetchRow();
 
-	if (!row.empty()) {
+	if (!row.empty())
 	  lvl_name = row[0];
-	}
+
+	else
+	  return "";
+
 	query = "SELECT univ_id "
             "FROM grid_lvl_xref "
             "WHERE lvl_type like '" +lvl_name + "'";
             "AND no_vers2 = " +no_vers;
 
-    Query(query);
-    vector<string> id = FetchRow();
+  Query(query);
+  vector<string> id = FetchRow();
 
-    if (!id.empty()) {
-      univ_id = id[0];
-    }
-    query = "SELECT lvl_type "
+  if (!id.empty()) {
+    univ_id = id[0];
+  }
+
+  query = "SELECT lvl_type "
             "FROM grid_lvl_xref "
             "WHERE parm_name = '" +parm_name +"' "
             "AND no_vers2 = " +no_vers +" "
             "AND univ_id = " +univ_id;
 
-    Query(query);
-    vector<string> prod_class = FetchRow();
-    string pclass;
+  Query(query);
+  vector<string> prod_class = FetchRow();
+  string pclass;
 
-    if (!prod_class.empty()) {
-      lvl_name = prod_class[0];
-    }
-    else {
-      parm_name = "ALL_OTHERS";
-      query = "SELECT lvl_type "
+  if (!prod_class.empty()) {
+    lvl_name = prod_class[0];
+  }
+  else {
+    parm_name = "ALL_OTHERS";
+    query = "SELECT lvl_type "
     	      "FROM grid_lvl_xref "
     	      "WHERE parm_name = '" +parm_name +"' "
     	      "AND no_vers2 = " +no_vers +" "
     	      "AND univ_id = " +univ_id;
-      Query(query);
-      vector<string> lvltype = FetchRow();
-      if (!lvltype.empty()) {
-    	lvl_name = lvltype[0];
-      }
-   }
+    Query(query);
+    vector<string> lvltype = FetchRow();
 
-return lvl_name;
+    if (!lvltype.empty()) {
+      lvl_name = lvltype[0];
+    }
+  }
+
+  return lvl_name;
 }
 
 /*
@@ -104,7 +109,7 @@ return lvl_name;
  *
  */
 
-string NeonsDB::GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer) {
+string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer) {
 
 	string parm_name;
 	string univ_id;
@@ -132,48 +137,49 @@ string NeonsDB::GetGridParameterName(long InParmId,long InCodeTableVer,long OutC
               "WHERE parm_name like '" +parm_name + "'";
               "AND no_vers = " +no_vers;
 
-      Query(query);
-      vector<string> id = FetchRow();
+    Query(query);
+    vector<string> id = FetchRow();
 
-      if (!id.empty()) {
+    if (!id.empty()) {
     	univ_id = id[0];
-      }
-      /* Finally dig out the parm_name on OutCodeTableVer */
-      query = "SELECT parm_name "
-              "FROM grid_param_xref "
-              "WHERE univ_id = " +univ_id + " "
-              "AND no_vers = "+boost::lexical_cast<string>(OutCodeTableVer);
+    }
 
-      Query(query);
-      vector<string> param = FetchRow();
+    /* Finally dig out the parm_name on OutCodeTableVer */
+    query = "SELECT parm_name "
+            "FROM grid_param_xref "
+            "WHERE univ_id = " +univ_id + " "
+            "AND no_vers = "+boost::lexical_cast<string>(OutCodeTableVer);
 
-      if (!param.empty()) {
-        parm_name = param[0];
-      }
+    Query(query);
+    vector<string> param = FetchRow();
 
-      query = "SELECT max(producer_class) "
-              "FROM fmi_producers "
-              "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
+    if (!param.empty()) {
+      parm_name = param[0];
+    }
 
-      Query(query);
-      vector<string> prod_class = FetchRow();
-      string pclass;
+    query = "SELECT max(producer_class) "
+            "FROM fmi_producers "
+            "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
 
-      if (!prod_class.empty()) {
-    	pclass = prod_class[0];
+    Query(query);
+    vector<string> prod_class = FetchRow();
+    string pclass;
+
+    if (!prod_class.empty()) {
+      pclass = prod_class[0];
     	/* Switch the -'s to _'s for point producers */
-        if( (pclass == "2") | (pclass == "3") ) {
-          parm_name.replace(parm_name.find("-"), 1, "_");
-        }
+      if( (pclass == "2") | (pclass == "3") ) {
+        parm_name.replace(parm_name.find("-"), 1, "_");
       }
-   }
+    }
+  }
 
   return parm_name;
 }
 
 
 /*
- * NewbaseToGrib2Parameter(long, long, long)
+ * GetGrib2Parameter(long, long, long)
  *
  * Get GRIB 2 parameter id from newbase id and producer id.
  * 
@@ -181,7 +187,7 @@ string NeonsDB::GetGridParameterName(long InParmId,long InCodeTableVer,long OutC
  *
  */
 
-pair<int, int> NeonsDB::NewbaseToGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
+pair<int, int> NeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
 
 	string query = "SELECT category, param "
                    "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
@@ -205,9 +211,55 @@ pair<int, int> NeonsDB::NewbaseToGrib2Parameter(unsigned long producerId, unsign
 }
 
 /*
+ * GetUnivId(long, string)
+ *
+ * Get universal parameter id from producer/parameter name combination.
+ * This function is used with non-grib data types (most notably with netcdf).
+ *
+ * http://cf-pcmdi.llnl.gov/documents/cf-standard-names/ecmwf-grib-mapping
+ *
+ */
+
+std::string NeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &nc_param) {
+
+  string query = "SELECT producer_id, parm_name, nc_name "
+                   "FROM grid_param_nc "
+                   "WHERE nc_name = '" + nc_param + "' "
+                   "AND producer_id = " + boost::lexical_cast<string> (producerId);
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (row.empty())
+    return "";
+
+  return row[1];
+}
+
+map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, const string &parm_name) {
+
+  map <string, string> producer_info = GetProducerDefinition(producer_id);
+
+  string query = "SELECT univ_id FROM grid_param_xref WHERE no_vers = " + producer_info["no_vers"] + " AND parm_name = '" + parm_name + "'";
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (row.empty()) {
+    map<string, string> ret;
+    return ret;
+  }
+
+  return GetParameterDefinition(producer_id, boost::lexical_cast<unsigned long> (row[0]));
+
+}
+
+/*
  * GetParameterDefinition()
  * 
- * Retrieves parameter definition from neons meta-tables (NOT database system tables!).
+ * Retrieves parameter definition from NEONS meta-tables.
  * 
  * Replaces pro*c function 
  *
@@ -234,7 +286,7 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, u
   int producer_class = boost::lexical_cast<int> (producer_info["producer_class"]);
   string no_vers = producer_info["no_vers"];
   int dbclass_id = boost::lexical_cast<int> (producer_info["dbclass_id"]);
-  
+
   string query = "SELECT "
           "x.parm_name, "
           "x.base, "
@@ -242,7 +294,8 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, u
           "u.unit_name, "
           "nvl(g.parm_desc,'No Description') AS parm_desc, "
           "nvl(u.unit_desc,'No Description') AS unit_desc, "
-          "replace(x.parm_name,'-','_') AS col_name "
+          "replace(x.parm_name,'-','_') AS col_name, "
+          "x.univ_id "
           "FROM grid_param g, grid_unit u, grid_param_xref x "
           "WHERE u.unit_id = g.unit_id AND x.parm_name = g.parm_name"
           " AND x.univ_id = " + univ_id +
@@ -262,6 +315,7 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, u
   ret["parm_desc"] = row[4];
   ret["unit_desc"] = row[5];
   ret["col_name"] = row[6];
+  ret["univ_id"] = row[7]; // Fetch univ_id in cased called from GetParameterDefinition(ulong, string)
     
   switch (producer_class) {
     case 1:
@@ -315,7 +369,7 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, u
       break;
 
     }
-  
+
   parameterinfo[producer_id][universal_id] = ret;
   
   return ret;

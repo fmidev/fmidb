@@ -14,23 +14,29 @@ public:
         
   static Oracle & Instance();
 
-  virtual void Connect(void);
+  void Connect(void);
 
-  virtual void Connect( const std::string & user,
+  void Connect( const std::string & user,
                 const std::string & password,
                 const std::string & database);
         
-  virtual void Disconnect (void);
+  void Disconnect (void);
         
-  virtual void Query(const std::string & sql, const unsigned int buffer_size = 50);
-  virtual std::vector<std::string> FetchRow(void);
-  virtual std::vector<std::string> FetchRowFromCursor(void);
+  void Query(const std::string & sql, const unsigned int buffer_size = 50);
+  std::vector<std::string> FetchRow(void);
+  std::vector<std::string> FetchRowFromCursor(void);
   
-  virtual void Execute(const std::string & sql) throw (int);
-  virtual void ExecuteProcedure(const std::string & sql) throw (int);
+  void Execute(const std::string & sql) throw (int);
+  void ExecuteProcedure(const std::string & sql) throw (int);
   
-  virtual std::string MakeStandardDate(const otl_datetime &datetime);
-  virtual std::string MakeNEONSDate(const otl_datetime &datetime);
+  std::string MakeStandardDate(const otl_datetime &datetime);
+  std::string MakeNEONSDate(const otl_datetime &datetime);
+
+  void Commit() throw (int);
+  void Rollback() throw (int);
+
+  bool TestMode() { return test_mode_; }
+  void TestMode(bool test_mode) { test_mode_ = test_mode; }
 
 protected:
 
@@ -48,6 +54,8 @@ protected:
   std::string database_;
    
   std::string connection_string_;
+
+  bool test_mode_;
 
 };
 
