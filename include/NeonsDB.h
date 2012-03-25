@@ -34,10 +34,14 @@ public:
   
 private:
 
+  // These maps are used for caching
+
   std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > parameterinfo;
   std::map<std::string, std::map<std::string, std::string > > geometryinfo;
   std::map<unsigned long, std::map<std::string, std::string> > stationinfo;  
+  std::map<std::string, std::string> levelinfo;
+  std::map<std::string, std::string> gridparameterinfo;
 
 };
 #endif

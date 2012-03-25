@@ -1,7 +1,7 @@
 #include <NeonsDB.h>
 #include <boost/lexical_cast.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/gregorian/gregorian.hpp>
   
 using namespace std;
 
@@ -34,29 +34,40 @@ NeonsDB::~NeonsDB() {
 
 string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
 
-	string lvl_name;
-	string parm_name;
-	string univ_id;
-	string lvl_id = boost::lexical_cast<string>(InLvlId);
-	string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+  string lvl_name;
+  string parm_name;
+  string univ_id;
+  string lvl_id = boost::lexical_cast<string>(InLvlId);
+  string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+  string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
+  string parm_id = boost::lexical_cast<string> (InParmId);
 
-	parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
+  // Implement caching since this function is quite expensive
 
-	string query = "SELECT lvl_type "
+  string key = parm_id + "_" + lvl_id + "_" + no_vers + "_" + no_vers2;
+
+  if (levelinfo.find(key) != levelinfo.end())
+    return levelinfo[key];
+
+  parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
+
+  string query = "SELECT lvl_type "
                    "FROM grid_lvl_grib "
                    "WHERE lvl_id = " + lvl_id + " "
                    "AND no_vers2 = " +no_vers;
 
-	Query(query);
-	vector<string> row = FetchRow();
+  Query(query);
+  vector<string> row = FetchRow();
 
-	if (!row.empty())
-	  lvl_name = row[0];
+  if (!row.empty()) {
+    lvl_name = row[0];
+  }
+  else {
+    levelinfo[key] = "";
+    levelinfo[key];
+  }
 
-	else
-	  return "";
-
-	query = "SELECT univ_id "
+  query = "SELECT univ_id "
             "FROM grid_lvl_xref "
             "WHERE lvl_type like '" +lvl_name + "'";
             "AND no_vers2 = " +no_vers;
@@ -84,10 +95,10 @@ string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVe
   else {
     parm_name = "ALL_OTHERS";
     query = "SELECT lvl_type "
-    	      "FROM grid_lvl_xref "
-    	      "WHERE parm_name = '" +parm_name +"' "
-    	      "AND no_vers2 = " +no_vers +" "
-    	      "AND univ_id = " +univ_id;
+            "FROM grid_lvl_xref "
+            "WHERE parm_name = '" +parm_name +"' "
+            "AND no_vers2 = " +no_vers +" "
+            "AND univ_id = " +univ_id;
     Query(query);
     vector<string> lvltype = FetchRow();
 
@@ -96,7 +107,8 @@ string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVe
     }
   }
 
-  return lvl_name;
+  levelinfo[key] = lvl_name;
+  return levelinfo[key];
 }
 
 /*
@@ -111,37 +123,46 @@ string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVe
 
 string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer) {
 
-	string parm_name;
-	string univ_id;
-	string parm_id = boost::lexical_cast<string>(InParmId);
-	string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+  string parm_name;
+  string univ_id;
+  string parm_id = boost::lexical_cast<string>(InParmId);
+  string no_vers = boost::lexical_cast<string>(InCodeTableVer);
+  string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
 
-	string query = "SELECT parm_name "
-                   "FROM grid_param_grib "
-                   "WHERE parm_id = " + parm_id + " "
-                   "AND no_vers = " +no_vers;
+  // Implement some sort of caching: this function is quite expensive
 
-	Query(query);
-	vector<string> row = FetchRow();
+  string key = parm_id + "_" + no_vers + "_" + no_vers2;
 
-	if (!row.empty())
-	  parm_name = row[0];
+  if (gridparameterinfo.find(key) != gridparameterinfo.end())
+    return gridparameterinfo[key];
 
-	if (InCodeTableVer == OutCodeTableVer) {
-	  return parm_name;
-	}
-	else {
-	  /* We do some further digging */
-	  query = "SELECT univ_id "
-              "FROM grid_param_xref "
-              "WHERE parm_name like '" +parm_name + "'";
-              "AND no_vers = " +no_vers;
+  string query = "SELECT parm_name "
+                 "FROM grid_param_grib "
+                 "WHERE parm_id = " + parm_id + " "
+                 "AND no_vers = " +no_vers;
+
+  Query(query);
+  vector<string> row = FetchRow();
+
+  if (!row.empty())
+    parm_name = row[0];
+
+  if (InCodeTableVer == OutCodeTableVer) {
+    gridparameterinfo[key] = parm_name;
+    return gridparameterinfo[key];
+  }
+  else {
+    /* We do some further digging */
+    query = "SELECT univ_id "
+            "FROM grid_param_xref "
+            "WHERE parm_name like '" +parm_name + "'";
+            "AND no_vers = " +no_vers;
 
     Query(query);
     vector<string> id = FetchRow();
 
     if (!id.empty()) {
-    	univ_id = id[0];
+      univ_id = id[0];
     }
 
     /* Finally dig out the parm_name on OutCodeTableVer */
@@ -167,14 +188,15 @@ string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long Ou
 
     if (!prod_class.empty()) {
       pclass = prod_class[0];
-    	/* Switch the -'s to _'s for point producers */
+      /* Switch the -'s to _'s for point producers */
       if( (pclass == "2") | (pclass == "3") ) {
         parm_name.replace(parm_name.find("-"), 1, "_");
       }
     }
   }
 
-  return parm_name;
+  gridparameterinfo[key] = parm_name;
+  return gridparameterinfo[key];
 }
 
 
@@ -189,15 +211,15 @@ string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long Ou
 
 pair<int, int> NeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
 
-	string query = "SELECT category, param "
+  string query = "SELECT category, param "
                    "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
                    "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers "
                    "AND x.univ_id = " + boost::lexical_cast<string> (parameterId);
                    "AND f.producer_id = " + boost::lexical_cast<string> (producerId);
 
-	Query(query);
-	
-	vector<string> row = FetchRow();
+  Query(query);
+  
+  vector<string> row = FetchRow();
 
   pair<int, int> p = make_pair (-1, -1);  
   
@@ -473,13 +495,13 @@ map<string, string> NeonsDB::GetGridModelDefinition(unsigned long producer_id) {
   map <string, string> ret;
 
   string query = "SELECT fmi_producers.ref_prod, "
-                   "fmi_producers.no_vers, "
-                   "grid_model.model_name, "
-		           "grid_model.flag_mod, "
-                   "grid_model_name.model_desc, "
-                   "grid_num_model_grib.model_id, "
-                   "grid_model_ident.ident_name, "
-                   "grid_model_ident.ident_id "
+                 "fmi_producers.no_vers, "
+                 "grid_model.model_name, "
+                 "grid_model.flag_mod, "
+                 "grid_model_name.model_desc, "
+                 "grid_num_model_grib.model_id, "
+                 "grid_model_ident.ident_name, "
+                 "grid_model_ident.ident_id "
                  "FROM fmi_producers, grid_model, grid_model_name, grid_num_model_grib, grid_model_ident "
                  "WHERE fmi_producers.producer_id = " +boost::lexical_cast<string>(producer_id) + " "
                  "AND fmi_producers.producer_class = 1 "
@@ -526,13 +548,13 @@ vector<string> NeonsDB::GetNeonsTables(const string &start_time, const string &e
   Query(query);
   
   while (true) {
-  	
-  	vector<string> row = FetchRow();
-  	
-  	if (row.empty())
-  	  break;
-  	  
-    ret.push_back(row[0]);	
+    
+    vector<string> row = FetchRow();
+    
+    if (row.empty())
+      break;
+      
+    ret.push_back(row[0]);  
   }
   
   return ret;  
