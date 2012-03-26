@@ -55,7 +55,7 @@ cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to Oracle:" << endl;
+    cerr << "Unable to connect to Oracle  with DSN " << user << "/*@" << database << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }
@@ -82,7 +82,7 @@ cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << en
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
     
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to Oracle:" << endl;
+    cerr << "Unable to connect to Oracle with DSN " << user_ << "/*@" << database_ << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }    
