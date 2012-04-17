@@ -53,7 +53,11 @@ map<string, string> CLDB::GetStationInfo(unsigned long producer_id, unsigned lon
     case 20013:
       ret = GetRoadStationInfo(station_id, aggressive_cache);
       break;
-      
+    
+    case 20014:
+      ret = GetSwedishRoadStationInfo(station_id, aggressive_cache);
+      break;
+  
     default:
       ret = GetFMIStationInfo(station_id, aggressive_cache);
       break;
@@ -130,6 +134,76 @@ map<string, string> CLDB::GetRoadStationInfo(unsigned long station_id, bool aggr
   else
     // If station does not exist, place empty map as a placeholder
     road_weather_stations[station_id] = ret;
+    
+  return ret;
+}
+
+
+/*
+ * GetSwedishRoadStationInfo(int,bool)
+ * 
+ * Retrieves station information from CLDB views srw_stations and locations. 
+ * 
+ * Primary station identifier is FMISID.
+ */
+
+map<string, string> CLDB::GetSwedishRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
+
+  if (swedish_road_weather_stations.find(station_id) != swedish_road_weather_stations.end())
+    return swedish_road_weather_stations[station_id];
+  
+  string query = "SELECT "
+                 "r.fmisid as station_id, "
+                 "l.latitude, " 
+                 "l.longitude, "
+                 "r.station_formal_name, "
+                 "l.elevation "
+                 "FROM "
+                 "srw_stations r, "
+                 "locations l "
+                 "WHERE "
+                 "r.fmisid = l.fmisid";
+
+  /*
+   * If aggressive_cache is not set, query only for the individual station.
+   * Also, if aggressive_cache is set and map stationinfo is already populated
+   * do not fetch again all stations. This condition will happen when a station
+   * requested does not exist.
+   */
+  
+  if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
+    query += " AND r.fmisid = " + boost::lexical_cast<string> (station_id);
+  
+  Query(query);
+  
+  while (true) {
+    vector <string> values = FetchRow();
+      
+    map <string, string> station;
+        
+    if (values.empty())
+      break;
+      
+    int sid = boost::lexical_cast<int> (values[0]);
+      
+    station["station_id"] = sid;
+    station["latitude"] = values[1];
+    station["longitude"] = values[2];
+    station["name"] = values[3];
+    station["fmisid"] = sid;
+    station["elevation"] = values[4];
+      
+    road_weather_stations[sid] = station;
+  
+  }
+  
+  map <string, string> ret;
+
+  if (swedish_road_weather_stations.find(station_id) != road_weather_stations.end())
+    ret = swedish_road_weather_stations[station_id];
+  else
+    // If station does not exist, place empty map as a placeholder
+    swedish_road_weather_stations[station_id] = ret;
     
   return ret;
 }
@@ -399,7 +473,35 @@ map<int, map<string, string> > CLDB::GetStationListForArea(unsigned long produce
               " AND " +
               boost::lexical_cast<string> (max_longitude);
       break;
-      
+ 
+ case 20014:
+      // Swedish road weather
+
+      query = "SELECT "
+              "r.fmisid AS station_id, "
+              "l.latitude, " 
+              "l.longitude, "
+              "r.station_formal_name AS station_name, "
+              "r.fmisid, "
+              "NULL AS lpnn, "
+              "l.elevation "
+              "FROM "
+              "srw_stations r, "
+              "locations l "
+              "WHERE "
+              "r.fmisid = l.fmisid "
+              "AND "
+              "l.latitude BETWEEN " +
+              boost::lexical_cast<string> (min_latitude) +
+              " AND " +
+              boost::lexical_cast<string> (max_latitude) +
+              " AND "
+              "l.longitude BETWEEN " +
+              boost::lexical_cast<string> (min_longitude) +
+              " AND " +
+              boost::lexical_cast<string> (max_longitude);
+      break;     
+    
     default:
       /*
        *  LPNN stations
@@ -476,6 +578,10 @@ map<int, map<string, string> > CLDB::GetStationListForArea(unsigned long produce
       case 20013:  
         road_weather_stations[id] = station;
         break;
+	
+      case 20014:  
+        swedish_road_weather_stations[id] = station;
+        break;	
       
       default:
         fmi_stations[id] = station;
