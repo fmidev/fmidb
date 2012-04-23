@@ -1,4 +1,4 @@
-#include <ODBC.h>
+#include <NFmiODBC.h>
 #include <stdexcept>
 #include <exception>
 #include <sstream>
@@ -11,23 +11,23 @@
 using namespace std;
 
 /*
- * class ODBC
+ * class NFmiODBC
  * 
  * c++ does not have native string-compliant NULL value, replace NULL with 
  * empty string.
  * 
  */  
 
-ODBC & ODBC::Instance() {
-  static ODBC instance_;
+NFmiODBC & NFmiODBC::Instance() {
+  static NFmiODBC instance_;
   return instance_; 
 }
 
 
-ODBC::ODBC() {}
+NFmiODBC::NFmiODBC() {}
 
 
-void ODBC::Connect(const string & user,
+void NFmiODBC::Connect(const string & user,
                    const string & password,
                    const string & database) {
 
@@ -54,12 +54,12 @@ cout << "DEBUG: connected to ODBC " << database << endl;
 
 }
 
-void ODBC::Connect() {
+void NFmiODBC::Connect() {
 
   if (connected_)
     return;
 
-  odbc::otl_connect::otl_initialize(); // initialize ODBC environment
+  odbc::otl_connect::otl_initialize(); // initialize NFmiODBC environment
 
   connection_string_ = user_+"/"+password_+"@"+database_;
 
@@ -78,7 +78,7 @@ cout << "DEBUG: connected to ODBC " << database_ << endl;
   }    
 }
 
-void ODBC::Query(const string & sql) {
+void NFmiODBC::Query(const string & sql) {
 
   if (!connected_) {
   	cerr << "ERROR: must be connected before executing query" << endl;
@@ -107,10 +107,10 @@ cout << "DEBUG: " << sql.c_str() << endl;
   }
 }
 
-vector<string> ODBC::FetchRow() {
+vector<string> NFmiODBC::FetchRow() {
 
   if(!connected_)
-    throw runtime_error("ODBC: Cannot perform SQL query before connected");
+    throw runtime_error("NFmiODBC: Cannot perform SQL query before connected");
 
 #ifdef DEBUG
   assert(stream_.good());
@@ -218,7 +218,7 @@ vector<string> ODBC::FetchRow() {
  *
  */
 
-void ODBC::Execute(const string & sql) throw (int) { 
+void NFmiODBC::Execute(const string & sql) throw (int) { 
 
 #ifdef DEBUG
 cout << "DEBUG: " << sql.c_str() << endl;
@@ -238,12 +238,12 @@ cout << "DEBUG: " << sql.c_str() << endl;
 
 }
  
-ODBC::~ODBC() {
+NFmiODBC::~NFmiODBC() {
   Disconnect();              
 }
 
 
-void ODBC::Disconnect() {
+void NFmiODBC::Disconnect() {
   db_.logoff();
   connected_ = false;        
 }
@@ -254,7 +254,7 @@ void ODBC::Disconnect() {
  * Format an OTL datetime to standard ISO format.
 */
 
-string ODBC::MakeStandardDate(const otl_datetime &time) {
+string NFmiODBC::MakeStandardDate(const otl_datetime &time) {
   
   char date[20];
   sprintf(date, "%4d-%02d-%02d %02d:%02d:%02d", time.year, time.month, time.day, time.hour, time.minute, time.second);

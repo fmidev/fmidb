@@ -1,25 +1,21 @@
-#include <CLDB.h>
+#include <NFmiCLDB.h>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
 
-/*
- *
- */  
-
-CLDB & CLDB::Instance() {
-  static CLDB instance_;
+NFmiCLDB & NFmiCLDB::Instance() {
+  static NFmiCLDB instance_;
   return instance_; 
 }
 
-CLDB::CLDB() : Oracle() {
+NFmiCLDB::NFmiCLDB() : NFmiOracle() {
   connected_ = false;
   user_ = "neons_client";
   password_ = "kikka8si";
-  database_ = "cldb";
+  database_ = "CLDB";
 }
 
-CLDB::~CLDB() {
+NFmiCLDB::~NFmiCLDB() {
   Disconnect();              
 }
 
@@ -44,7 +40,7 @@ CLDB::~CLDB() {
  * 
  */
 
-map<string, string> CLDB::GetStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache) {
+map<string, string> NFmiCLDB::GetStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache) {
   
   map<string, string> ret;
 
@@ -76,7 +72,7 @@ map<string, string> CLDB::GetStationInfo(unsigned long producer_id, unsigned lon
  * station metadata) might not be stored at NEONS.
  */
 
-map<string, string> CLDB::GetRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
+map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
 
   if (road_weather_stations.find(station_id) != road_weather_stations.end())
     return road_weather_stations[station_id];
@@ -147,7 +143,7 @@ map<string, string> CLDB::GetRoadStationInfo(unsigned long station_id, bool aggr
  * Primary station identifier is FMISID.
  */
 
-map<string, string> CLDB::GetSwedishRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
+map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
 
   if (swedish_road_weather_stations.find(station_id) != swedish_road_weather_stations.end())
     return swedish_road_weather_stations[station_id];
@@ -232,7 +228,7 @@ map<string, string> CLDB::GetSwedishRoadStationInfo(unsigned long station_id, bo
  * 
  */
 
-map<string, string> CLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggressive_cache) {
+map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggressive_cache) {
   
   if (fmi_stations.find(wmo_id) != fmi_stations.end())
     return fmi_stations[wmo_id];
@@ -321,7 +317,7 @@ map<string, string> CLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggressiv
  * 
  */
 
-map<string, string> CLDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
+map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
   
   if (parameterinfo.find(producer_id) != parameterinfo.end())
     if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
@@ -391,7 +387,7 @@ map<string, string> CLDB::GetParameterDefinition(unsigned long producer_id, unsi
  * 
  */
 
-map<string, string> CLDB::GetProducerDefinition(unsigned long producer_id) {
+map<string, string> NFmiCLDB::GetProducerDefinition(unsigned long producer_id) {
 
   if (producerinfo.find(producer_id) != producerinfo.end())
     return producerinfo[producer_id];
@@ -436,7 +432,7 @@ map<string, string> CLDB::GetProducerDefinition(unsigned long producer_id) {
  *  
  */
 
-map<int, map<string, string> > CLDB::GetStationListForArea(unsigned long producer_id,
+map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long producer_id,
                                                           double max_latitude, 
                                                           double min_latitude, 
                                                           double max_longitude, 

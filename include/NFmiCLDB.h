@@ -1,16 +1,19 @@
+#ifndef __NFMICLDB_H__
+#define __NFMICLDB_H__
+
 #include <string>
 #include <vector>
 #include <map>
-#include "Oracle.h"
+#include "NFmiOracle.h"
 
-class CLDB : public Oracle {
+class NFmiCLDB : public NFmiOracle {
 
 public:
 
-  CLDB();
-  ~CLDB();
+  NFmiCLDB();
+  ~NFmiCLDB();
        
-  static CLDB & Instance();
+  static NFmiCLDB & Instance();
   
   std::map<std::string, std::string> GetStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache = true);
   std::map<int, std::map<std::string, std::string> > GetStationListForArea(unsigned long producer_id, 
@@ -36,3 +39,4 @@ private:
   std::map<unsigned long, std::map<std::string, std::string> > producerinfo;
   
 };
+#endif

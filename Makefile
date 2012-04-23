@@ -1,4 +1,5 @@
 PROG = dbtest
+LIB = fmidbng
 
 MAINFLAGS = -Wall -W -Wno-unused-parameter
 
@@ -40,7 +41,8 @@ LIBS =  -L$(libdir) \
         -lclntsh \
         -lnsl -ldl -laio -lm \
         -lodbc \
-	-lboost_date_time \
+	/usr/lib64/libboost_date_time.a \
+        /usr/lib64/libboost_thread.a
 
 # Common library compiling template
 
@@ -129,7 +131,7 @@ profile: objdir $(PROG)
 
 $(PROG): % : $(SUBOBJS) %.o
 	$(CC) $(LDFLAGS) -o $@ obj/$@.o $(SUBOBJFILES) $(LIBS)
-	ar rcs $(libdir)/libdatabase.a $(OBJFILES)
+	ar rcs $(libdir)/lib$(LIB).a $(OBJFILES)
 
 clean:
 	rm -f $(PROG) $(OBJFILES) *~ source/*~ include/*~

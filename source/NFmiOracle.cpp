@@ -1,4 +1,4 @@
-#include <Oracle.h>
+#include <NFmiOracle.h>
 #include <stdexcept>
 #include <exception>
 #include <sstream>
@@ -13,7 +13,7 @@
 using namespace std;
 
 /*
- * class Oracle
+ * class NFmiOracle
  * 
  * OTL does not read Oracle environment variables (NLS_DATE_FORMAT etc)
  * --> if special data formats are needed those queries should have 
@@ -25,15 +25,15 @@ using namespace std;
  * 
  */  
 
-Oracle & Oracle::Instance() {
-  static Oracle instance_;
+NFmiOracle & NFmiOracle::Instance() {
+  static NFmiOracle instance_;
   return instance_; 
 }
 
-Oracle::Oracle() : test_mode_(false) {} ;
+NFmiOracle::NFmiOracle() : test_mode_(false) {} ;
 
 
-void Oracle::Connect(const string & user,
+void NFmiOracle::Connect(const string & user,
                      const string & password,
                      const string & database) {
 
@@ -49,20 +49,20 @@ void Oracle::Connect(const string & user,
     connected_ = true;
 
 #ifdef DEBUG
-cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl;
+cout << "DEBUG: connected to NFmiOracle " << database << " as user " << user << endl;
 #endif
 
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to Oracle  with DSN " << user << "/*@" << database << endl;
+    cerr << "Unable to connect to NFmiOracle  with DSN " << user << "/*@" << database << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }
 
 }
 
-void Oracle::Connect() {
+void NFmiOracle::Connect() {
 
   if (connected_)
     return;
@@ -72,23 +72,23 @@ void Oracle::Connect() {
   connection_string_ = user_+"/"+password_+"@"+database_;
 
   try {
-    db_.rlogon(connection_string_.c_str(), 0); // connect to Oracle
+    db_.rlogon(connection_string_.c_str(), 0); // connect to NFmiOracle
     connected_ = true;
 
 #ifdef DEBUG
-cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << endl;
+cout << "DEBUG: connected to NFmiOracle " << database_ << " as user " << user_ << endl;
 #endif    
 
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
     
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to Oracle with DSN " << user_ << "/*@" << database_ << endl;
+    cerr << "Unable to connect to NFmiOracle with DSN " << user_ << "/*@" << database_ << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }    
 }
 
-void Oracle::Query(const string & sql, const unsigned int buffer_size) {
+void NFmiOracle::Query(const string & sql, const unsigned int buffer_size) {
 
   if (!connected_) {
     cerr << "ERROR: must be connected before executing query" << endl;
@@ -128,10 +128,10 @@ cout << "DEBUG: " << sql.c_str() << endl;
  * 
  */
  
-vector<string> Oracle::FetchRow() {
+vector<string> NFmiOracle::FetchRow() {
 
   if(!connected_)
-    throw runtime_error("Oracle: Cannot perform SQL query before connected");
+    throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
 
 #ifdef DEBUG
   assert(stream_.good());
@@ -262,10 +262,10 @@ vector<string> Oracle::FetchRow() {
  * 
  */
  
-vector<string> Oracle::FetchRowFromCursor() {
+vector<string> NFmiOracle::FetchRowFromCursor() {
 
   if(!connected_)
-    throw runtime_error("Oracle: Cannot perform SQL query before connected");
+    throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
 
 #ifdef DEBUG
   assert(stream_.good());
@@ -398,7 +398,7 @@ vector<string> Oracle::FetchRowFromCursor() {
  *
  */
 
-void Oracle::Execute(const string & sql) throw (int) { 
+void NFmiOracle::Execute(const string & sql) throw (int) { 
 
 #ifdef DEBUG
 cout << "DEBUG: " << sql.c_str() << endl;
@@ -420,11 +420,11 @@ cout << "DEBUG: " << sql.c_str() << endl;
 /*
  * ExecuteProcedure(string)
  * 
- * Function to execute Oracle pl/sql packages (procedures).
+ * Function to execute NFmiOracle pl/sql packages (procedures).
  * 
  */ 
  
-void Oracle::ExecuteProcedure(const string & sql) throw (int) { 
+void NFmiOracle::ExecuteProcedure(const string & sql) throw (int) { 
 
   if (!connected_) {
     cerr << "ERROR: must be connected before executing query" << endl;
@@ -460,13 +460,13 @@ cout << "DEBUG: " << temp_sql.c_str() << endl;
   
 }
 
-Oracle::~Oracle() {
+NFmiOracle::~NFmiOracle() {
   Disconnect();              
 }
 
 
-void Oracle::Disconnect() {
-  db_.logoff(); // disconnect from Oracle
+void NFmiOracle::Disconnect() {
+  db_.logoff(); // disconnect from NFmiOracle
   connected_ = false;        
 }
 
@@ -476,7 +476,7 @@ void Oracle::Disconnect() {
  * Format an OTL datetime to standard ISO format.
 */
 
-string Oracle::MakeStandardDate(const otl_datetime &time) {
+string NFmiOracle::MakeStandardDate(const otl_datetime &time) {
   
   char date[20];
   sprintf(date, "%4d-%02d-%02d %02d:%02d:%02d", time.year, time.month, time.day, time.hour, time.minute, time.second);
@@ -492,7 +492,7 @@ string Oracle::MakeStandardDate(const otl_datetime &time) {
  * Format an OTL datetime to NEONS time format (YYYYMMDDHH24MI).
 */
 
-string Oracle::MakeNEONSDate(const otl_datetime &time) {
+string NFmiOracle::MakeNEONSDate(const otl_datetime &time) {
   char date[15];
   sprintf(date, "%4d%02d%02d%02d%02d", time.year, time.month, time.day, time.hour, time.minute);
   date[14] = '\0';
@@ -506,7 +506,7 @@ string Oracle::MakeNEONSDate(const otl_datetime &time) {
  * Commit transaction.
  */
 
-void Oracle::Commit() throw (int) {
+void NFmiOracle::Commit() throw (int) {
 
 #ifdef DEBUG
 cout << "DEBUG: COMMIT" << endl;
@@ -526,16 +526,43 @@ cout << "DEBUG: COMMIT" << endl;
  * Rollback transaction.
  */
 
-void Oracle::Rollback() throw (int) {
+void NFmiOracle::Rollback() throw (int) {
 
 #ifdef DEBUG
 cout << "DEBUG: ROLLBACK" << endl;
 #endif
 
   try {
+  	db_.cancel();
+    rc_iterator_.detach();
+    stream_.close();
     db_.rollback();
   } catch (oracle::otl_exception& p) {
     cerr << p.msg;
     throw p.code;
   }
+}
+
+void NFmiOracle::TransactionIsolationLevel(const std::string &level) {
+/*
+ * This is supposed to be supported by OTL ?!
+
+	if (level == "READ UNCOMMITTED")
+	  db_.set_transaction_isolation_level(otl_tran_read_uncommitted);
+	  
+	else if (level == "READ COMMITTED")
+	  db_.set_transaction_isolation_level(otl_tran_read_committed);
+	
+	else if (level == "REPEATABLE READ")
+	  db_.set_transaction_isolation_level(otl_tran_repeatable_read);
+	
+	else if (level == "SERIALIZABLE")
+	  db_.set_transaction_isolation_level(otl_tran_read_uncommitted);
+	
+	else if (level == "READ ONLY")
+	  Execute("SET TRANSACTION TO READ ONLY");
+	  
+	else 
+	  throw runtime_error("Invalid isolation level: " + level);  
+*/
 }

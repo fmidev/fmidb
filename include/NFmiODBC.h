@@ -1,18 +1,18 @@
-#ifndef ODBC_H
-#define ODBC_H
+#ifndef __NFMIODBC_H__
+#define __NFMIODBC_H__
 
 #include <string>
 #include <vector>
 #include "otlsettings.h"
 
-class ODBC {
+class NFmiODBC {
 
 public:
 
-  ODBC();
-  virtual ~ODBC();
+  NFmiODBC();
+  virtual ~NFmiODBC();
         
-  static ODBC & Instance();
+  static NFmiODBC & Instance();
 
   virtual void Connect(void);
 

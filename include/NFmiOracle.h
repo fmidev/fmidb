@@ -1,18 +1,18 @@
-#ifndef ORACLE_H
-#define ORACLE_H
+#ifndef __NFMIORACLE_H__
+#define __NFMIORACLE_H__
 
 #include <string>
 #include <vector>
 #include "otlsettings.h"
 
-class Oracle {
+class NFmiOracle {
 
 public:
 
-  Oracle();
-  virtual ~Oracle();
+  NFmiOracle();
+  virtual ~NFmiOracle();
         
-  static Oracle & Instance();
+  static NFmiOracle & Instance();
 
   void Connect(void);
 
@@ -37,6 +37,8 @@ public:
 
   bool TestMode() { return test_mode_; }
   void TestMode(bool test_mode) { test_mode_ = test_mode; }
+  
+  void TransactionIsolationLevel(const std::string &level);
 
 protected:
 

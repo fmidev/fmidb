@@ -1,6 +1,6 @@
-#include <NeonsDB.h>
-#include <CLDB.h>
-#include <TestbedDB.h>
+#include <NFmiNeonsDB.h>
+#include <NFmiCLDB.h>
+#include <NFmiTestbedDB.h>
 #include <iostream>
 
 using namespace std;
@@ -10,10 +10,10 @@ int main()
  
   // CLDB
 
-  CLDB::Instance().Connect();
+  NFmiCLDB::Instance().Connect();
  
   try {
-    CLDB::Instance().ExecuteProcedure("STATION_QP.get_station_list_rc(20)");
+    NFmiCLDB::Instance().ExecuteProcedure("STATION_QP.get_station_list_rc(20)");
   }
   catch (int e)
   {
@@ -24,7 +24,7 @@ int main()
   int j = 0;
   
   while(true) {
-    vector<string> row = CLDB::Instance().FetchRowFromCursor();
+    vector<string> row = NFmiCLDB::Instance().FetchRowFromCursor();
 
     if(row.empty()) break;
  
@@ -44,7 +44,7 @@ int main()
   } 
   
   try {
-    CLDB::Instance().Execute("CREATE TABLE testi (id number)");
+    NFmiCLDB::Instance().Execute("CREATE TABLE testi (id number)");
   }
   catch (int e)
   {
@@ -54,8 +54,8 @@ int main()
       try
       {
         cout << "table exists, dropping it" << endl;
-        CLDB::Instance().Execute("DROP TABLE testi");
-        CLDB::Instance().Execute("CREATE TABLE testi (id number)");
+        NFmiCLDB::Instance().Execute("DROP TABLE testi");
+        NFmiCLDB::Instance().Execute("CREATE TABLE testi (id number)");
       }
       catch (int e)
       { 
@@ -66,7 +66,7 @@ int main()
   }
 
   try {
-    CLDB::Instance().Execute("INSERT INTO testi VALUES (1)");
+    NFmiCLDB::Instance().Execute("INSERT INTO testi VALUES (1)");
   }
   catch (int e)
   {
@@ -75,7 +75,7 @@ int main()
   }
 
   try {
-    CLDB::Instance().Query("SELECT * FROM testi");
+    NFmiCLDB::Instance().Query("SELECT * FROM testi");
   } catch (int e)
   {
     cout << "got code " << e << endl;
@@ -83,7 +83,7 @@ int main()
 
   while(true)
   {
-    vector<string> row = CLDB::Instance().FetchRow();
+    vector<string> row = NFmiCLDB::Instance().FetchRow();
 
     if(row.empty()) break;
  
@@ -101,15 +101,15 @@ int main()
 
   // NEONS
 
-  NeonsDB::Instance().Connect();
+  NFmiNeonsDB::Instance().Connect();
 
-  NeonsDB::Instance().Query("SELECT * FROM fmi_producers");
+  NFmiNeonsDB::Instance().Query("SELECT * FROM fmi_producers");
 
   j = 0;
 
   while(true)
   {
-    vector<string> row = NeonsDB::Instance().FetchRow();
+    vector<string> row = NFmiNeonsDB::Instance().FetchRow();
 
     if(row.empty()) break;
  
@@ -127,10 +127,10 @@ int main()
 
   // TESTBED (POSTGRESQL)
 
-  TestbedDB::Instance().Connect();
+  NFmiTestbedDB::Instance().Connect();
 
   try {
-    TestbedDB::Instance().Query("SELECT * FROM stations");
+    NFmiTestbedDB::Instance().Query("SELECT * FROM stations");
   }
   catch (int e)
   {
@@ -142,7 +142,7 @@ int main()
 
   while(true)
   {
-    vector<string> row = TestbedDB::Instance().FetchRow();
+    vector<string> row = NFmiTestbedDB::Instance().FetchRow();
 
     if(row.empty()) break;
  
@@ -166,9 +166,9 @@ int main()
   }
 
 
-  NeonsDB::Instance().Disconnect();
-  CLDB::Instance().Disconnect();
-  TestbedDB::Instance().Disconnect();
+  NFmiNeonsDB::Instance().Disconnect();
+  NFmiCLDB::Instance().Disconnect();
+  NFmiTestbedDB::Instance().Disconnect();
 
   exit (0);
 }

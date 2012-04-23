@@ -4,16 +4,16 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "Oracle.h"
+#include "NFmiOracle.h"
 
-class NeonsDB : public Oracle {
+class NFmiNeonsDB : public NFmiOracle {
 
 public:
 
-  NeonsDB();
-  ~NeonsDB();
+  NFmiNeonsDB(short theId = 0);
+  ~NFmiNeonsDB();
         
-  static NeonsDB & Instance();
+  static NFmiNeonsDB & Instance();
 
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
   std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer);
@@ -31,6 +31,8 @@ public:
   std::map<int, std::map<std::string, std::string> > GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp = false);
   
   std::vector<std::string> GetNeonsTables(const std::string &start_time, const std::string &end_time, const std::string &producer_name);
+
+  short Id() { return itsId; }
   
 private:
 
@@ -43,5 +45,17 @@ private:
   std::map<std::string, std::string> levelinfo;
   std::map<std::string, std::string> gridparameterinfo;
 
+  short itsId; // Only for connection pooling
+
 };
+
+class NFmiNeonsDBPool {
+	
+	public:
+	
+	  static NFmiNeonsDB * GetConnection();
+	  static void Release(NFmiNeonsDB *theWorker);
+	  
+};
+
 #endif

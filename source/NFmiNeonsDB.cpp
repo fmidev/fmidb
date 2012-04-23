@@ -1,23 +1,24 @@
-#include <NeonsDB.h>
+#include <NFmiNeonsDB.h>
 #include <boost/lexical_cast.hpp>
-//#include <boost/date_time/posix_time/posix_time.hpp>
-//#include <boost/date_time/gregorian/gregorian.hpp>
-  
+#include <boost/thread.hpp>
+#include <stdexcept>
+#include <algorithm>
+
 using namespace std;
 
-NeonsDB & NeonsDB::Instance() {
-  static NeonsDB instance_;
+NFmiNeonsDB & NFmiNeonsDB::Instance() {
+  static NFmiNeonsDB instance_;
   return instance_; 
 }
 
-NeonsDB::NeonsDB() : Oracle() {
+NFmiNeonsDB::NFmiNeonsDB(short theId) : NFmiOracle(), itsId(theId) {
   connected_ = false;
   user_ = "neons_client";
   password_ = "kikka8si";
   database_ = "neons";  
 }
 
-NeonsDB::~NeonsDB() {
+NFmiNeonsDB::~NFmiNeonsDB() {
   Disconnect();              
 }
 
@@ -32,7 +33,7 @@ NeonsDB::~NeonsDB() {
  *
  */
 
-string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
+string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
 
   string lvl_name;
   string parm_name;
@@ -121,7 +122,7 @@ string NeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVe
  *
  */
 
-string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer) {
+string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer) {
 
   string parm_name;
   string univ_id;
@@ -146,6 +147,9 @@ string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long Ou
 
   if (!row.empty())
     parm_name = row[0];
+
+  else
+    return "";
 
   if (InCodeTableVer == OutCodeTableVer) {
     gridparameterinfo[key] = parm_name;
@@ -209,7 +213,7 @@ string NeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long Ou
  *
  */
 
-pair<int, int> NeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
+pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
 
   string query = "SELECT category, param "
                    "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
@@ -242,7 +246,7 @@ pair<int, int> NeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned lon
  *
  */
 
-std::string NeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &nc_param) {
+std::string NFmiNeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &nc_param) {
 
   string query = "SELECT producer_id, parm_name, nc_name "
                    "FROM grid_param_nc "
@@ -259,7 +263,7 @@ std::string NeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, co
   return row[1];
 }
 
-map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, const string &parm_name) {
+map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_id, const string &parm_name) {
 
   map <string, string> producer_info = GetProducerDefinition(producer_id);
 
@@ -291,7 +295,7 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, c
  *
  */
 
-map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
+map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
 
   if (parameterinfo.find(producer_id) != parameterinfo.end())
     if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
@@ -411,9 +415,9 @@ map<string, string> NeonsDB::GetParameterDefinition(unsigned long producer_id, u
  *
  */
 
-map<string, string> NeonsDB::GetProducerDefinition(unsigned long producer_id) {
+map<string, string> NFmiNeonsDB::GetProducerDefinition(unsigned long producer_id) {
 
-  if (producerinfo.find(producer_id) != producerinfo.end())
+  if (producerinfo.count(producer_id) > 0)
     return producerinfo[producer_id];
 
   string query = "SELECT" 
@@ -462,7 +466,7 @@ map<string, string> NeonsDB::GetProducerDefinition(unsigned long producer_id) {
  *
  */
 
-map<string, string> NeonsDB::GetProducerDefinition(const string &producer_name) {
+map<string, string> NFmiNeonsDB::GetProducerDefinition(const string &producer_name) {
 
   string query = "SELECT"
                  " producer_id "
@@ -490,7 +494,7 @@ map<string, string> NeonsDB::GetProducerDefinition(const string &producer_name) 
  *
  */
 
-map<string, string> NeonsDB::GetGridModelDefinition(unsigned long producer_id) {
+map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_id) {
 
   map <string, string> ret;
 
@@ -539,7 +543,7 @@ return ret;
  * date and producer name.
  */
 
-vector<string> NeonsDB::GetNeonsTables(const string &start_time, const string &end_time, const string &producer_name) {
+vector<string> NFmiNeonsDB::GetNeonsTables(const string &start_time, const string &end_time, const string &producer_name) {
 
   vector<string> ret;
   
@@ -573,7 +577,7 @@ vector<string> NeonsDB::GetNeonsTables(const string &start_time, const string &e
  *
  */
 
-map<string, string> NeonsDB::GetGeometryDefinition(const string &geometry_name) {
+map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string &geometry_name) {
 
   if (geometryinfo.find(geometry_name) != geometryinfo.end())
     return geometryinfo[geometry_name];
@@ -648,7 +652,7 @@ map<string, string> NeonsDB::GetGeometryDefinition(const string &geometry_name) 
  * 
  */
 
-map<string, string> NeonsDB::GetStationInfo(unsigned long wmo_id, bool aggressive_cache) {
+map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggressive_cache) {
 
   if (stationinfo.find(wmo_id) != stationinfo.end())
     return stationinfo[wmo_id];
@@ -746,7 +750,7 @@ map<string, string> NeonsDB::GetStationInfo(unsigned long wmo_id, bool aggressiv
  * 
  */
 
-map<int, map<string, string> > NeonsDB::GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp ) {
+map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp ) {
   
   map<int, map<string, string> > stationlist;
   
@@ -830,4 +834,64 @@ map<int, map<string, string> > NeonsDB::GetStationListForArea(double max_latitud
   }  
 
   return stationlist;
+}
+
+const int MAX_WORKERS = boost::thread::hardware_concurrency() == 0 ? 4 : boost::thread::hardware_concurrency(); // Should be same as MAX_THREADS
+
+static std::vector<int> itsWorkingList(MAX_WORKERS, -1);
+static std::vector<NFmiNeonsDB *> itsWorkerList(MAX_WORKERS);
+
+NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
+ 
+  /*
+   *  1 --> active
+   *  0 --> inactive
+   * -1 --> uninitialized
+   *
+   * Logic of returning connections:
+   * 
+   * 1. Check if worker is idle, if so return that worker.
+   * 2. Check if worker is uninitialized, if so create worker and return that.
+   * 3. Sleep and start over
+   */ 
+
+  while (true) {
+  	
+    for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
+
+	    if (itsWorkingList[i] == 0) {
+	      itsWorkingList[i] = 1;
+        return itsWorkerList[i];
+      
+	    } else if (itsWorkingList[i] == -1) {
+
+	  	  itsWorkerList[i] = new NFmiNeonsDB(i);
+	  	  itsWorkerList[i]->Connect();
+	  	  itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY"); 
+	  	
+	  	  itsWorkingList[i] = 1;
+	  	  return itsWorkerList[i];
+	  	}
+	  }
+	  
+  	// All threads active
+#ifdef DEBUG
+  	cout << "Waiting for worker release" << endl;
+#endif
+ 
+  	sleep(3);  
+  }
+  	
+	throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
+	 
+}
+
+void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
+	
+	theWorker->Rollback();
+  itsWorkingList[theWorker->Id()] = 0;
+#ifdef DEBUG
+	cout << "Worker released for id " << theWorker->Id() << endl;
+#endif
+	sleep(1); // Do we need this ?
 }
