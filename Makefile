@@ -1,5 +1,5 @@
 PROG = dbtest
-LIB = fmidbng
+LIB = fmidb
 
 MAINFLAGS = -Wall -W -Wno-unused-parameter
 
