@@ -1,6 +1,5 @@
 #include <NFmiNeonsDB.h>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
 #include <stdexcept>
 #include <algorithm>
 
@@ -836,10 +835,22 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
   return stationlist;
 }
 
-const int MAX_WORKERS = boost::thread::hardware_concurrency() == 0 ? 4 : boost::thread::hardware_concurrency(); // Should be same as MAX_THREADS
+// Default to two workers
 
-static std::vector<int> itsWorkingList(MAX_WORKERS, -1);
-static std::vector<NFmiNeonsDB *> itsWorkerList(MAX_WORKERS);
+int NFmiNeonsDBPool::itsMaxWorkers = 2;
+
+static std::vector<int> itsWorkingList(NFmiNeonsDBPool::MaxWorkers(), -1);
+static std::vector<NFmiNeonsDB *> itsWorkerList(NFmiNeonsDBPool::MaxWorkers(), NULL);
+
+/*
+ * GetConnection()
+ * 
+ * Returns a read-only connection to Neons. When calling program has
+ * finished, it should return the connection to the pool.
+ * 
+ * TODO: smart pointers ?
+ * 
+ */
 
 NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
  
@@ -866,32 +877,54 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
 	    } else if (itsWorkingList[i] == -1) {
 
 	  	  itsWorkerList[i] = new NFmiNeonsDB(i);
-	  	  itsWorkerList[i]->Connect();
+	  	  itsWorkerList[i]->Connect(1);
 	  	  itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY"); 
 	  	
 	  	  itsWorkingList[i] = 1;
 	  	  return itsWorkerList[i];
 	  	}
 	  }
-	  
+
   	// All threads active
 #ifdef DEBUG
-  	cout << "Waiting for worker release" << endl;
+  	cout << "DEBUG: Waiting for worker release" << endl;
 #endif
  
-  	sleep(3);  
+  	sleep(2);  
   }
   	
 	throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
 	 
 }
 
+/*
+ * Release()
+ * 
+ * Clears the database connection (does not disconnect!) and returns it
+ * to pool.
+ */
+
 void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
 	
 	theWorker->Rollback();
   itsWorkingList[theWorker->Id()] = 0;
 #ifdef DEBUG
-	cout << "Worker released for id " << theWorker->Id() << endl;
+	cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
 #endif
-	sleep(1); // Do we need this ?
+	usleep(1000); // Do we need this ?
+}
+
+bool NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
+	
+	// Making pool smaller is not supported
+	
+	if (theMaxWorkers <= itsMaxWorkers)
+	  return false;
+	
+	itsMaxWorkers = theMaxWorkers;
+
+	itsWorkingList.resize(itsMaxWorkers, -1);
+	itsWorkerList.resize(itsMaxWorkers, NULL);
+	
+	return true;
 }
