@@ -55,7 +55,12 @@ class NFmiNeonsDBPool {
 	
 	  static NFmiNeonsDB * GetConnection();
 	  static void Release(NFmiNeonsDB *theWorker);
+	  static bool MaxWorkers(int theMaxWorkers);
+	  static int MaxWorkers() { return itsMaxWorkers; }
 	  
+	private:
+	  
+	  static int itsMaxWorkers;
 };
 
 #endif
