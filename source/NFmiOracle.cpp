@@ -34,13 +34,14 @@ NFmiOracle::NFmiOracle() : test_mode_(false) {} ;
 
 
 void NFmiOracle::Connect(const string & user,
-                     const string & password,
-                     const string & database) {
+                         const string & password,
+                         const string & database,
+                         const int threadedMode) {
 
   if (connected_)
     return;
     
-  oracle::otl_connect::otl_initialize(); // initialize OCI environment
+  oracle::otl_connect::otl_initialize(threadedMode); // initialize OCI environment
 
   connection_string_ = user+"/"+password+"@"+database;
 
@@ -49,7 +50,7 @@ void NFmiOracle::Connect(const string & user,
     connected_ = true;
 
 #ifdef DEBUG
-cout << "DEBUG: connected to NFmiOracle " << database << " as user " << user << endl;
+cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl;
 #endif
 
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
@@ -62,12 +63,12 @@ cout << "DEBUG: connected to NFmiOracle " << database << " as user " << user << 
 
 }
 
-void NFmiOracle::Connect() {
+void NFmiOracle::Connect(const int threadedMode) {
 
   if (connected_)
     return;
 
-  oracle::otl_connect::otl_initialize(); // initialize OCI environment
+  oracle::otl_connect::otl_initialize(threadedMode); // initialize OCI environment
 
   connection_string_ = user_+"/"+password_+"@"+database_;
 
@@ -76,13 +77,13 @@ void NFmiOracle::Connect() {
     connected_ = true;
 
 #ifdef DEBUG
-cout << "DEBUG: connected to NFmiOracle " << database_ << " as user " << user_ << endl;
+cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << endl;
 #endif    
 
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
     
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to NFmiOracle with DSN " << user_ << "/*@" << database_ << endl;
+    cerr << "Unable to connect to Oracle with DSN " << user_ << "/*@" << database_ << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }    
@@ -105,9 +106,10 @@ cout << "DEBUG: " << sql.c_str() << endl;
   try {
     if (stream_.eof() || stream_.good())  {
       // Stream is open but a new query needs to executed OR
-                // stream is at eof
+      // stream is at eof
       rs_iterator_.detach();
       stream_.close();
+
     }
     
     stream_.open(buffer_size,sql.c_str(),db_);
@@ -131,7 +133,7 @@ cout << "DEBUG: " << sql.c_str() << endl;
 vector<string> NFmiOracle::FetchRow() {
 
   if(!connected_)
-    throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
+    throw runtime_error("Cannot perform SQL query before connected");
 
 #ifdef DEBUG
   assert(stream_.good());
@@ -533,7 +535,8 @@ cout << "DEBUG: ROLLBACK" << endl;
 #endif
 
   try {
-  	db_.cancel();
+
+  //	db_.cancel();
     rc_iterator_.detach();
     stream_.close();
     db_.rollback();

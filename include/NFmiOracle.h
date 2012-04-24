@@ -14,11 +14,12 @@ public:
         
   static NFmiOracle & Instance();
 
-  void Connect(void);
+  void Connect(const int threadedMode = 0);
 
   void Connect( const std::string & user,
                 const std::string & password,
-                const std::string & database);
+                const std::string & database,
+                const int threadedMode = 0);
         
   void Disconnect (void);
         
