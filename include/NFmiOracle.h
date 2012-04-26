@@ -41,6 +41,13 @@ public:
   
   void TransactionIsolationLevel(const std::string &level);
 
+  // These function are used with connection pooling
+
+  void Attach();
+  void Detach();
+  void BeginSession();
+  void EndSession();
+  
 protected:
 
   oracle::otl_connect db_;

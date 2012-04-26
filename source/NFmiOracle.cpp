@@ -104,15 +104,17 @@ cout << "DEBUG: " << sql.c_str() << endl;
 #endif
 
   try {
-    if (stream_.eof() || stream_.good())  {
+    if (stream_.good() || stream_.eof())  {
       // Stream is open but a new query needs to executed OR
       // stream is at eof
+
       rs_iterator_.detach();
       stream_.close();
 
     }
     
     stream_.open(buffer_size,sql.c_str(),db_);
+
     rs_iterator_.attach(stream_);
 
   } catch (oracle::otl_exception& p) {
@@ -403,7 +405,7 @@ vector<string> NFmiOracle::FetchRowFromCursor() {
 void NFmiOracle::Execute(const string & sql) throw (int) { 
 
 #ifdef DEBUG
-cout << "DEBUG: " << sql.c_str() << endl;
+  cout << "DEBUG: " << sql.c_str() << endl;
 #endif
 
   try {
@@ -436,7 +438,7 @@ void NFmiOracle::ExecuteProcedure(const string & sql) throw (int) {
   string temp_sql = "BEGIN\n:cur<refcur,out> := " + sql + ";\nEND;";
    
 #ifdef DEBUG
-cout << "DEBUG: " << temp_sql.c_str() << endl;
+  cout << "DEBUG: " << temp_sql.c_str() << endl;
 #endif
 
   try {
@@ -511,7 +513,7 @@ string NFmiOracle::MakeNEONSDate(const otl_datetime &time) {
 void NFmiOracle::Commit() throw (int) {
 
 #ifdef DEBUG
-cout << "DEBUG: COMMIT" << endl;
+  cout << "DEBUG: COMMIT" << endl;
 #endif
 
   try {
@@ -531,14 +533,18 @@ cout << "DEBUG: COMMIT" << endl;
 void NFmiOracle::Rollback() throw (int) {
 
 #ifdef DEBUG
-cout << "DEBUG: ROLLBACK" << endl;
+  cout << "DEBUG: ROLLBACK" << endl;
 #endif
 
   try {
 
   //	db_.cancel();
-    rc_iterator_.detach();
-    stream_.close();
+    if (stream_.good()) {
+
+      rs_iterator_.detach();
+      stream_.close();
+
+    }
     db_.rollback();
   } catch (oracle::otl_exception& p) {
     cerr << p.msg;
@@ -568,4 +574,87 @@ void NFmiOracle::TransactionIsolationLevel(const std::string &level) {
 	else 
 	  throw runtime_error("Invalid isolation level: " + level);  
 */
+}
+
+void NFmiOracle::Attach() {
+
+	if (connected_)
+    return;
+    
+  oracle::otl_connect::otl_initialize(1); // initialize OCI environment
+
+  //connection_string_ = user_+"/"+password_+"@"+database_;
+
+  try {
+    db_.server_attach(database_.c_str());
+    connected_ = true;
+
+#ifdef DEBUG
+cout << "DEBUG: attached to Oracle " << database_ << endl;
+#endif
+
+  } catch(oracle::otl_exception& p) {
+    cerr << "Unable to attach to Oracle " << database_ << endl;
+    cerr << p.msg << endl; // print out error message
+    exit(1);
+  }
+}
+
+void NFmiOracle::Detach() {
+	
+	if (!connected_)
+    return;
+  
+  try {
+    db_.server_detach();
+    connected_ = false;
+
+#ifdef DEBUG
+cout << "DEBUG: detached from Oracle " << database_ << endl;
+#endif
+
+  } catch(oracle::otl_exception& p) {
+    cerr << "Unable to detach from Oracle " << database_ << endl;
+    cerr << p.msg << endl; // print out error message
+    exit(1);
+  }
+}
+
+void NFmiOracle::BeginSession() {
+	
+	if (!connected_)
+	  throw runtime_error("Cannot begin session before connected");
+		
+  try {
+    db_.session_begin(user_.c_str() , password_.c_str()); // 0 --> auto commit off
+    Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
+
+#ifdef DEBUG
+cout << "DEBUG: session started" << endl;
+#endif
+
+  } catch(oracle::otl_exception& p) {
+    cerr << "Unable to begin session as user " << user_ << endl;
+    cerr << p.msg << endl; // print out error message
+    exit(1);
+  }
+}
+
+void NFmiOracle::EndSession() {
+	
+	if (!connected_)
+	  throw runtime_error("Cannot end session if not connected");
+		
+  try {
+    db_.session_end();
+
+#ifdef DEBUG
+cout << "DEBUG: session ended" << endl;
+#endif
+
+  } catch(oracle::otl_exception& p) {
+    cerr << "Unable to end session" << endl;
+    cerr << p.msg << endl; // print out error message
+    exit(1);
+  }
 }

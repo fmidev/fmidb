@@ -867,34 +867,38 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
    */ 
 
   while (true) {
-  	
+    
     for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
 
-	    if (itsWorkingList[i] == 0) {
-	      itsWorkingList[i] = 1;
+      if (itsWorkingList[i] == 0) {
+        itsWorkingList[i] = 1;
+        itsWorkerList[i]->BeginSession();
         return itsWorkerList[i];
       
-	    } else if (itsWorkingList[i] == -1) {
+      } else if (itsWorkingList[i] == -1) {
 
-	  	  itsWorkerList[i] = new NFmiNeonsDB(i);
-	  	  itsWorkerList[i]->Connect(1);
-	  	  itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY"); 
-	  	
-	  	  itsWorkingList[i] = 1;
-	  	  return itsWorkerList[i];
-	  	}
-	  }
+        itsWorkerList[i] = new NFmiNeonsDB(i);
+        //itsWorkerList[i]->Connect(1);
+        //itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+        itsWorkerList[i]->Attach();
+        itsWorkerList[i]->BeginSession();
+        itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");         
+      
+        itsWorkingList[i] = 1;
+        return itsWorkerList[i];
+      }
+    }
 
-  	// All threads active
+    // All threads active
 #ifdef DEBUG
-  	cout << "DEBUG: Waiting for worker release" << endl;
+    cout << "DEBUG: Waiting for worker release" << endl;
 #endif
  
-  	sleep(2);  
+    usleep(100000); // 100 ms  
   }
-  	
-	throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
-	 
+    
+  throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
+   
 }
 
 /*
@@ -905,26 +909,28 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
  */
 
 void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
-	
-	theWorker->Rollback();
+  
+  theWorker->Rollback();
+  theWorker->EndSession();
   itsWorkingList[theWorker->Id()] = 0;
+
 #ifdef DEBUG
-	cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
+  cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
 #endif
-	usleep(1000); // Do we need this ?
+
 }
 
 bool NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
-	
-	// Making pool smaller is not supported
-	
-	if (theMaxWorkers <= itsMaxWorkers)
-	  return false;
-	
-	itsMaxWorkers = theMaxWorkers;
+  
+  // Making pool smaller is not supported
+  
+  if (theMaxWorkers <= itsMaxWorkers)
+    return false;
+  
+  itsMaxWorkers = theMaxWorkers;
 
-	itsWorkingList.resize(itsMaxWorkers, -1);
-	itsWorkerList.resize(itsMaxWorkers, NULL);
-	
-	return true;
+  itsWorkingList.resize(itsMaxWorkers, -1);
+  itsWorkerList.resize(itsMaxWorkers, NULL);
+  
+  return true;
 }
