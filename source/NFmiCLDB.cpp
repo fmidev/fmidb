@@ -70,6 +70,8 @@ map<string, string> NFmiCLDB::GetStationInfo(unsigned long producer_id, unsigned
  * 
  * This function is needed since in the future road weather data (and road weather 
  * station metadata) might not be stored at NEONS.
+ * 
+ * Primary station identifier is FMISID. 
  */
 
 map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool aggressive_cache) {
@@ -78,7 +80,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
     return road_weather_stations[station_id];
   
   string query = "SELECT "
-                 "r.rw_station_id, "
+                 "r.fmisid AS station_id, "
                  "l.latitude, " 
                  "l.longitude, "
                  "r.station_formal_name, "
@@ -98,7 +100,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
    */
   
   if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
-    query += " AND r.rw_station_id = " + boost::lexical_cast<string> (station_id);
+    query += " AND r.fmisid = " + boost::lexical_cast<string> (station_id);
   
   Query(query);
   
@@ -112,11 +114,11 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
       
     int sid = boost::lexical_cast<int> (values[0]);
       
-    station["station_id"] = values[0];
+    station["station_id"] = sid;
     station["latitude"] = values[1];
     station["longitude"] = values[2];
     station["name"] = values[3];
-    station["fmisid"] = values[4];
+    station["fmisid"] = sid;
     station["elevation"] = values[5];
       
     road_weather_stations[sid] = station;
@@ -446,7 +448,7 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
       // Road weather
 
       query = "SELECT "
-              "r.rw_station_id AS station_id, "
+              "r.fmisid AS station_id, "
               "l.latitude, " 
               "l.longitude, "
               "r.station_formal_name AS station_name, "
@@ -547,7 +549,7 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
 
     int id = boost::lexical_cast<int> (values[0]);
 
-    station["station_id"] = values[0];
+    station["station_id"] = id;
     station["latitude"] = values[1];
     station["longitude"] = values[2];
     station["station_name"] = values[3];
