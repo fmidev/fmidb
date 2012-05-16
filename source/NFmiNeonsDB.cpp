@@ -82,7 +82,7 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
   query = "SELECT lvl_type "
             "FROM grid_lvl_xref "
             "WHERE parm_name = '" +parm_name +"' "
-            "AND no_vers2 = " +no_vers +" "
+            "AND no_vers2 = " +no_vers2 +" "
             "AND univ_id = " +univ_id;
 
   Query(query);
@@ -97,7 +97,7 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
     query = "SELECT lvl_type "
             "FROM grid_lvl_xref "
             "WHERE parm_name = '" +parm_name +"' "
-            "AND no_vers2 = " +no_vers +" "
+            "AND no_vers2 = " +no_vers2 +" "
             "AND univ_id = " +univ_id;
     Query(query);
     vector<string> lvltype = FetchRow();
