@@ -3,6 +3,10 @@
 #include <stdexcept>
 #include <algorithm>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 using namespace std;
 
 NFmiNeonsDB & NFmiNeonsDB::Instance() {
@@ -878,8 +882,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       } else if (itsWorkingList[i] == -1) {
 
         itsWorkerList[i] = new NFmiNeonsDB(i);
-        //itsWorkerList[i]->Connect(1);
-        //itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+
         itsWorkerList[i]->Attach();
         itsWorkerList[i]->BeginSession();
         itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");         
@@ -893,10 +896,15 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
 #ifdef DEBUG
     cout << "DEBUG: Waiting for worker release" << endl;
 #endif
- 
+
+#ifdef _MSC_VER
+    Sleep(100); // 100 ms
+#else
     usleep(100000); // 100 ms  
+#endif
+
   }
-    
+
   throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
    
 }
