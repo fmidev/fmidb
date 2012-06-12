@@ -699,7 +699,7 @@ map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggre
     int wid = boost::lexical_cast<int> (values[0]);
       
     station["indicatif_omm"] = values[0];
-    station["name"] = values[1];
+    station["station_name"] = values[1];
     station["latitude"] = values[2];
     station["longitude"] = values[3];
     station["lpnn"] = values[4];
@@ -809,7 +809,7 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
     int wid = boost::lexical_cast<int> (values[0]);
 
     station["indicatif_omm"] = values[0];
-    station["name"] = values[4];
+    station["station_name"] = values[4];
     station["latitude"] = values[5];
     station["longitude"] = values[6];
     station["lpnn"] = values[7];

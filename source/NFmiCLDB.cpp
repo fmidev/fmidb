@@ -117,7 +117,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
     station["station_id"] = sid;
     station["latitude"] = values[1];
     station["longitude"] = values[2];
-    station["name"] = values[3];
+    station["station_name"] = values[3];
     station["fmisid"] = sid;
     station["elevation"] = values[5];
       
@@ -187,7 +187,7 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
     station["station_id"] = sid;
     station["latitude"] = values[1];
     station["longitude"] = values[2];
-    station["name"] = values[3];
+    station["station_name"] = values[3];
     station["fmisid"] = sid;
     station["elevation"] = values[4];
       
@@ -288,7 +288,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggre
     station["wmon"] = values[0];
     station["latitude"] = values[1];
     station["longitude"] = values[2];
-    station["name"] = values[3];
+    station["station_name"] = values[3];
     station["fmisid"] = values[4];
     station["lpnn"] = values[5];
     station["elevation"] = values[6];
