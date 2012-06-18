@@ -56,7 +56,7 @@ cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to connect to NFmiOracle  with DSN " << user << "/*@" << database << endl;
+    cerr << "Unable to connect to Oracle with DSN " << user << "/*@" << database << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }
