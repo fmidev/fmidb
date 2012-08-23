@@ -343,37 +343,6 @@ int NFmiVerifDB::StatId(const string & theStat)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get parameter id
- */
-// ----------------------------------------------------------------------
-
-int NFmiVerifDB::ParamId(const string & theParameter)
-{
-
-  if (!metadata.instantiated)
-    Initialize();
-
-  if (metadata.paramIds.find(theParameter) != metadata.paramIds.end())
-    return metadata.paramIds[theParameter];
-
-  throw runtime_error("could not find id for parameter "+theParameter);
-
-  /*
-  int elements = atoi(metadata.paramIds[0].c_str());
-
-  for (int i = 1; i <= elements; i++)
-  {
-    if (metadata.paramIds[i] == theParameter)
-      return i;
-
-  }
-  throw runtime_error("could not find id for parameter "+theParameter);
-  return -99;*/
-}
-
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Get periodtype id
  */
 // ----------------------------------------------------------------------
@@ -423,11 +392,11 @@ int NFmiVerifDB::PeriodId(const string & thePeriodName)
   if(parts.size() != 3)
     throw runtime_error("The period name must be list of three comma-separated values");
 
-  string sql = "insert into periods (type,start_date,end_date) values (" + parts[0] + ",'" + parts[1] + "','" + parts[2] + "') returning id";
+  string sql = "insert into periods (period,start_date,end_date) values ('" + parts[0] + "','" + parts[1] + "','" + parts[2] + "') returning id";
 
   Execute(sql);
 
-  sql = "SELECT id FROM periods WHERE type = " + parts[0] + " AND start_date = '" + parts[1] + "' AND end_date = '" + parts[2] + "'";
+  sql = "SELECT id FROM periods WHERE period = '" + parts[0] + "' AND start_date = '" + parts[1] + "' AND end_date = '" + parts[2] + "'";
 
   vector<string> row = FetchRow();
 
@@ -459,30 +428,10 @@ void NFmiVerifDB::Initialize(void)
 {
 
   /* Retrieve metadata once from the database since its very static
-   * so we don't need to retrieve it again every time we ouput something.
-   *
-   * I'm not sure if the PostgreSQL class is the correct place for this
-   * structure/function/info but it seems to fit here the best (without a
-   * large reconstruction of the code)
+   * so we don't need to retrieve it again every time we output something.
    */
 
-  /* parameter is fetched from table parameters */
-
   vector<string> row;
-  Query("select id,newbase_name from verifng.parameters where newbase_name is not null order by id");
-
-  while (true)
-  {
-  	row = FetchRow();
-
-  	if (row.empty())
-  		break;
-
-  	int id = boost::lexical_cast<int> (row[0]);
-  	string name = row[1];
-  	metadata.paramIds[name] = id;
-
-  }
 
   /* stat is fetched from table estimators */
 
@@ -493,7 +442,7 @@ void NFmiVerifDB::Initialize(void)
   	row = FetchRow();
 
   	if (row.empty())
-  		break;
+      break;
 
   	int id = boost::lexical_cast<int> (row[0]);
   	string name = row[1];
@@ -504,7 +453,7 @@ void NFmiVerifDB::Initialize(void)
 
   /* periodtype id is fetched from table periodtypes */
 
-  Query("select id,name from verifng.periodtypes");
+  /*Query("select id,name from verifng.periodtypes");
 
   while (true)
   {
@@ -518,11 +467,15 @@ void NFmiVerifDB::Initialize(void)
 
   	metadata.periodTypeIds[name] = id;
 
-  }
+  }*/
+
+  metadata.periodTypeIds["annual"] = 1;
+  metadata.periodTypeIds["monthly"] = 3;
+  metadata.periodTypeIds["seasonal"] = 2;
 
   /* periodid is fetched from table periods */
 
-  Query("select id,type||','||start_date||','||end_date from verifng.periods");
+  Query("select id,period||','||start_date||','||end_date from verifng.periods");
 
   while (true)
   {

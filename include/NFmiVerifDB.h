@@ -25,8 +25,6 @@ public:
   std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, unsigned long universal_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer);
   
-
-  int ParamId(const std::string & theParameter);
   int StatId(const std::string & theStat);
   int PeriodTypeId(const std::string & thePeriod);
   int PeriodId(const std::string & thePeriodName);
@@ -44,7 +42,6 @@ private:
 
     std::map <std::string, int> periodTypeIds;
     std::map <std::string, int> statIds;
-    std::map <std::string, int> paramIds;
     std::map <std::string, int> periodIds;
 
     Metadata()
