@@ -677,9 +677,9 @@ void NFmiOracle::DateFormat(const string &dateFormat) {
 
   transform(tempFormat.begin(), tempFormat.end(), tempFormat.begin(), ::toupper);
 
-  if (dateFormat == "YYYYMMDDHH24MISS")
+  if (tempFormat == "YYYYMMDDHH24MISS")
     date_mask_ = "%4d%02d%02d%02d%02d"; // Note: seconds missing
-  else if (dateFormat == "YYYY-MM-DD HH24:MI:SS")
+  else if (tempFormat == "YYYY-MM-DD HH24:MI:SS")
     date_mask_ ="%4d-%02d-%02d %02d:%02d:%02d";
   else
     throw runtime_error("Invalid date mask: " + dateFormat);
