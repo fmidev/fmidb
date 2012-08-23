@@ -3,6 +3,7 @@
 #include <exception>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "boost/lexical_cast.hpp"
 
@@ -30,7 +31,7 @@ NFmiOracle & NFmiOracle::Instance() {
   return instance_; 
 }
 
-NFmiOracle::NFmiOracle() : test_mode_(false) {} ;
+NFmiOracle::NFmiOracle() : test_mode_(false), verbose_(false) {} ;
 
 
 void NFmiOracle::Connect(const string & user,
@@ -53,7 +54,7 @@ void NFmiOracle::Connect(const string & user,
 cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl;
 #endif
 
-    Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
+    DateFormat("YYYYMMDDHH24MISS");
 
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to connect to Oracle with DSN " << user << "/*@" << database << endl;
@@ -80,7 +81,7 @@ void NFmiOracle::Connect(const int threadedMode) {
 cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << endl;
 #endif    
 
-    Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
+    DateFormat("YYYYMMDDHH24MISS");
     
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to connect to Oracle with DSN " << user_ << "/*@" << database_ << endl;
@@ -118,8 +119,12 @@ cout << "DEBUG: " << sql.c_str() << endl;
     rs_iterator_.attach(stream_);
 
   } catch (oracle::otl_exception& p) {
-    cerr << p.msg;
-    cerr << "Query: " << p.stm_text << endl;
+
+    if (verbose_) {
+      cerr << p.msg;
+      cerr << "Query: " << p.stm_text << endl;
+    }
+
     throw p.code;
   }
 }
@@ -221,7 +226,7 @@ vector<string> NFmiOracle::FetchRow() {
         
         rs_iterator_.get(n+1, tval);
 
-        ret.push_back(MakeNEONSDate(tval));
+        ret.push_back(MakeDate(tval));
         break;
 
       case 10:
@@ -357,7 +362,7 @@ vector<string> NFmiOracle::FetchRowFromCursor() {
         
         rc_iterator_.get(n+1, tval);
  
-        ret.push_back(MakeNEONSDate(tval));
+        ret.push_back(MakeDate(tval));
         break;
 
       case 10:
@@ -404,6 +409,11 @@ vector<string> NFmiOracle::FetchRowFromCursor() {
 
 void NFmiOracle::Execute(const string & sql) throw (int) { 
 
+  if (!connected_) {
+    cerr << "ERROR: must be connected before executing query" << endl;
+    exit(1);
+  }
+
 #ifdef DEBUG
   cout << "DEBUG: " << sql.c_str() << endl;
 #endif
@@ -414,9 +424,13 @@ void NFmiOracle::Execute(const string & sql) throw (int) {
         sql.c_str(),
         oracle::otl_exception::enabled);
   } catch(oracle::otl_exception& p) {
-    // re-throw error code 
-    cerr << p.msg;
-    cerr << "Query: " << p.stm_text << endl;
+
+    if (verbose_) {
+      cerr << p.msg;
+      cerr << "Query: " << p.stm_text << endl;
+    }
+
+    // re-throw error code
     throw p.code;  
   }
 }
@@ -457,8 +471,12 @@ void NFmiOracle::ExecuteProcedure(const string & sql) throw (int) {
     rc_iterator_.attach(refcur_);
   
   } catch (oracle::otl_exception& p) {
-    cerr << p.msg;
-    cerr << "Query: " << p.stm_text << endl;
+
+    if (verbose_) {
+      cerr << p.msg;
+      cerr << "Query: " << p.stm_text << endl;
+    }
+
     throw p.code;
   }
   
@@ -477,31 +495,16 @@ void NFmiOracle::Disconnect() {
 /*
  * MakeStandardDate()
  * 
- * Format an OTL datetime to standard ISO format.
+ * Format an OTL datetime to string format.
 */
 
-string NFmiOracle::MakeStandardDate(const otl_datetime &time) {
+string NFmiOracle::MakeDate(const otl_datetime &time) {
   
-  char date[20];
-  sprintf(date, "%4d-%02d-%02d %02d:%02d:%02d", time.year, time.month, time.day, time.hour, time.minute, time.second);
-  date[19] = '\0';
+  char date[date_mask_.size()+1];
+  snprintf(date, date_mask_.size()+1, date_mask_.c_str(), time.year, time.month, time.day, time.hour, time.minute, time.second);
   
   return static_cast<string>(date);
   
-}
-
-/*
- * MakeNEONSDate()
- * 
- * Format an OTL datetime to NEONS time format (YYYYMMDDHH24MI).
-*/
-
-string NFmiOracle::MakeNEONSDate(const otl_datetime &time) {
-  char date[15];
-  sprintf(date, "%4d%02d%02d%02d%02d", time.year, time.month, time.day, time.hour, time.minute);
-  date[14] = '\0';
-
-  return static_cast<string>(date);
 }
 
 /*
@@ -519,6 +522,9 @@ void NFmiOracle::Commit() throw (int) {
   try {
     db_.commit();
   } catch (oracle::otl_exception& p) {
+
+    // Always print error if commit fails
+
     cerr << p.msg << endl;
     throw p.code;
   }
@@ -547,6 +553,9 @@ void NFmiOracle::Rollback() throw (int) {
     }
     db_.rollback();
   } catch (oracle::otl_exception& p) {
+
+    // Always print error if rollback fails (it should be impossible though)
+
     cerr << p.msg;
     throw p.code;
   }
@@ -657,4 +666,21 @@ cout << "DEBUG: session ended" << endl;
     cerr << p.msg << endl; // print out error message
     exit(1);
   }
+}
+
+void NFmiOracle::DateFormat(const string &dateFormat) {
+  Execute("ALTER SESSION SET NLS_DATE_FORMAT = '" + dateFormat + "'");
+
+  // set date mask; only two common cases supported for now
+
+  string tempFormat = dateFormat; // input being const
+
+  transform(tempFormat.begin(), tempFormat.end(), tempFormat.begin(), ::toupper);
+
+  if (dateFormat == "YYYYMMDDHH24MISS")
+    date_mask_ = "%4d%02d%02d%02d%02d"; // Note: seconds missing
+  else if (dateFormat == "YYYY-MM-DD HH24:MI:SS")
+    date_mask_ ="%4d-%02d-%02d %02d:%02d:%02d";
+  else
+    throw runtime_error("Invalid date mask: " + dateFormat);
 }

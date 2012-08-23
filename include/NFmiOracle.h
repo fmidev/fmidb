@@ -30,8 +30,8 @@ public:
   void Execute(const std::string & sql) throw (int);
   void ExecuteProcedure(const std::string & sql) throw (int);
   
-  std::string MakeStandardDate(const otl_datetime &datetime);
-  std::string MakeNEONSDate(const otl_datetime &datetime);
+  std::string MakeDate(const otl_datetime &datetime);
+  //std::string MakeNEONSDate(const otl_datetime &datetime);
 
   void Commit() throw (int);
   void Rollback() throw (int);
@@ -41,12 +41,18 @@ public:
   
   void TransactionIsolationLevel(const std::string &level);
 
+  void DateFormat(const std::string &dateFormat);
+
+  bool Verbose() { return verbose_; }
+  void Verbose(bool verbose) { verbose_ = verbose; }
+
   // These function are used with connection pooling
 
   void Attach();
   void Detach();
   void BeginSession();
   void EndSession();
+
   
 protected:
 
@@ -66,6 +72,10 @@ protected:
   std::string connection_string_;
 
   bool test_mode_;
+
+  std::string date_mask_;
+
+  bool verbose_;
 
 };
 
