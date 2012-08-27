@@ -12,7 +12,14 @@ public:
 
   NFmiCLDB();
   ~NFmiCLDB();
-       
+
+  void Connect(const int threadedMode = 0);
+
+  void Connect(const std::string & user,
+                const std::string & password,
+                const std::string & database,
+                const int threadedMode = 0);
+
   static NFmiCLDB & Instance();
   
   std::map<std::string, std::string> GetStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache = true);

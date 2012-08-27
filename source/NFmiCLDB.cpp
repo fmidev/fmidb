@@ -19,6 +19,18 @@ NFmiCLDB::~NFmiCLDB() {
   Disconnect();              
 }
 
+void NFmiCLDB::Connect(const int threadedMode) {
+  NFmiOracle::Connect(threadedMode);
+  DateFormat("YYYYMMDDHH24MISS");
+  Verbose(true);
+}
+
+void NFmiCLDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
+  NFmiOracle::Connect(user,password,database,threadedMode);
+  DateFormat("YYYYMMDDHH24MISS");
+  Verbose(true);
+}
+
 
 /*
  * GetStationInfo(int, int)

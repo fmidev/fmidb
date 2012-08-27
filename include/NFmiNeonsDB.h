@@ -12,7 +12,14 @@ public:
 
   NFmiNeonsDB(short theId = 0);
   ~NFmiNeonsDB();
-        
+
+  void Connect(const int threadedMode = 0);
+
+  void Connect(const std::string & user,
+                const std::string & password,
+                const std::string & database,
+                const int threadedMode = 0);
+
   static NFmiNeonsDB & Instance();
 
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer);

@@ -54,8 +54,6 @@ void NFmiOracle::Connect(const string & user,
 cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl;
 #endif
 
-    DateFormat("YYYYMMDDHH24MISS");
-
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to connect to Oracle with DSN " << user << "/*@" << database << endl;
     cerr << p.msg << endl; // print out error message
@@ -92,10 +90,8 @@ cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << en
 
 void NFmiOracle::Query(const string & sql, const unsigned int buffer_size) {
 
-  if (!connected_) {
-    cerr << "ERROR: must be connected before executing query" << endl;
-    exit(1);
-  }
+  if (!connected_)
+    throw runtime_error("ERROR: must be connected before executing query");
 
   if (TestMode())
     return;
@@ -150,6 +146,8 @@ vector<string> NFmiOracle::FetchRow() {
 
   if (!rs_iterator_.next_row()) {
     rs_iterator_.detach();
+
+    stream_.flush();
     stream_.close();
     return ret;
   }

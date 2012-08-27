@@ -25,6 +25,18 @@ NFmiNeonsDB::~NFmiNeonsDB() {
   Disconnect();              
 }
 
+void NFmiNeonsDB::Connect(const int threadedMode) {
+  NFmiOracle::Connect(threadedMode);
+  DateFormat("YYYYMMDDHH24MISS");
+  Verbose(true);
+}
+
+void NFmiNeonsDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
+  NFmiOracle::Connect(user,password,database,threadedMode);
+  DateFormat("YYYYMMDDHH24MISS");
+  Verbose(true);
+}
+
 /*
  * GetGridLevelName(long, long, long, ,long)
  *
