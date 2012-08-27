@@ -22,13 +22,14 @@ public:
                                                                            double max_longitude, 
                                                                            double min_longitude);
   
-  std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, unsigned long universal_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer);
   
   int StatId(const std::string & theStat);
   int PeriodTypeId(const std::string & thePeriod);
   int PeriodId(const std::string & thePeriodName);
   void Initialize(void);
+
+  std::map<std::string,std::string> GetForecastIds(const std::string &theProducer);
 
 private:
 

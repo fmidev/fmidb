@@ -109,80 +109,6 @@ map<string, string> NFmiVerifDB::GetStationInfo(unsigned long station_id, bool a
   
 }
 
-
-/*
- * GetParameterDefinition(unsigned long int, int)
- * 
- * Retrieves parameter definition from CLDB meta-tables 
- * (NOT database system tables!). Function uses aggressive
- * caching -- when first parameter is fetched, all parameters
- * for that producer are fetched.
- * 
- */
-
-map<string, string> NFmiVerifDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
-  
-  if (parameterinfo.find(producer_id) != parameterinfo.end())
-    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
-      return parameterinfo[producer_id][universal_id];
-  
-  if (parameterinfo.find(producer_id) == parameterinfo.end() || parameterinfo[producer_id].size() == 0) {
-  
-    map <string, string> pinfo;
-  
-    // TODO: from where to read scale and base ??
-  
-    string query = "SELECT "
-                   "univ_id, "
-                   "responding_col, "
-                   "responding_sensor, "
-                   "producer_no, "
-                   "1 AS scale, "
-                   "precision, "
-                   "0 AS base, "
-                   "data_type "
-                   "FROM "
-                   "clim_param_xref "
-                   "WHERE producer_no = " + boost::lexical_cast<string> (producer_id);
-  
-    Query(query);
-  
-    while(true) {
-    
-      vector <string> values = FetchRow();
-    
-      if (values.empty())
-        break;
-
-      int uid = boost::lexical_cast<int> (values[0]);
-      int pid = boost::lexical_cast<int> (values[3]);
-    
-      pinfo["univ_id"] = values[0];
-      pinfo["responding_col"] = values[1];
-      pinfo["responding_sensor"] = values[2];
-      pinfo["producer_no"] = values[3];
-      pinfo["scale"] = values[4];
-      pinfo["precision"] = values[5];
-      pinfo["base"] = values[6];
-      pinfo["data_type"] = values[7];
-   
-      parameterinfo[pid][uid] = pinfo;
-   
-      pinfo.clear();
-  
-    }
-  }
-  
-  map <string, string> ret;
-
-  if (parameterinfo.find(producer_id) != parameterinfo.end())
-    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
-      ret = parameterinfo[producer_id][universal_id];
-
-  return ret;
-  
-}
-
 /*
  * GetProducerDefinition(string)
  * 
@@ -328,17 +254,6 @@ int NFmiVerifDB::StatId(const string & theStat)
 
   throw runtime_error("could not find id for stat "+stat);
 
-  /*
-  int elements = atoi(metadata.statIds[0].c_str());
-
-  for (int i = 1; i <= elements; i++)
-  {
-    if (metadata.statIds[i] == stat)
-      return i;
-
-  }
-  throw runtime_error("could not find id for stat "+stat);
-  return -99;*/
 }
 
 // ----------------------------------------------------------------------
@@ -355,18 +270,8 @@ int NFmiVerifDB::PeriodTypeId(const string & thePeriod)
   if (metadata.periodTypeIds.find(thePeriod) != metadata.periodTypeIds.end())
     return metadata.periodTypeIds[thePeriod];
 
-
-/*  int elements = atoi(metadata.periodTypeIds[0].c_str());
-
-  for (int i = 1; i <= elements; i++)
-  {
-    if (metadata.periodTypeIds[i] == thePeriod)
-      return i;
-
-  }*/
-
   throw runtime_error("could not find id for period "+thePeriod);
-  //return -99;
+
 }
 
 // ----------------------------------------------------------------------
@@ -390,9 +295,9 @@ int NFmiVerifDB::PeriodId(const string & thePeriodName)
   boost::split(parts, thePeriodName, boost::is_any_of(","));
 
   if(parts.size() != 3)
-    throw runtime_error("The period name must be list of three comma-separated values");
+    throw runtime_error("The period name must be list of three comma-separated values (" + thePeriodName + ")");
 
-  string sql = "insert into periods (period,start_date,end_date) values ('" + parts[0] + "','" + parts[1] + "','" + parts[2] + "') returning id";
+  string sql = "insert into periods (period,start_date,end_date) values ('" + parts[0] + "','" + parts[1] + "','" + parts[2] + "')";
 
   Execute(sql);
 
@@ -406,13 +311,6 @@ int NFmiVerifDB::PeriodId(const string & thePeriodName)
   int periodId = boost::lexical_cast<int> (row[0]);
 
   metadata.periodIds[thePeriodName] = periodId;
-
-  //int periodId = atoi(periodIds[0].c_str());
-
-  // Updates the metadata look up table for periods
-
-//  metadata.periodIds[0] = boost::lexical_cast<string> (periodId);
- // metadata.periodIds[periodId] = thePeriodName;
 
   return periodId;
 }
@@ -451,31 +349,13 @@ void NFmiVerifDB::Initialize(void)
 
   }
 
-  /* periodtype id is fetched from table periodtypes */
-
-  /*Query("select id,name from verifng.periodtypes");
-
-  while (true)
-  {
-  	row = FetchRow();
-
-  	if (row.empty())
-  		break;
-
-  	int id = boost::lexical_cast<int> (row[0]);
-  	string name = row[1];
-
-  	metadata.periodTypeIds[name] = id;
-
-  }*/
-
   metadata.periodTypeIds["annual"] = 1;
   metadata.periodTypeIds["monthly"] = 3;
   metadata.periodTypeIds["seasonal"] = 2;
 
   /* periodid is fetched from table periods */
 
-  Query("select id,period||','||start_date||','||end_date from verifng.periods");
+  Query("SELECT id,period||','||to_char(start_date, 'yyyy-mm-dd')||','||to_char(end_date, 'yyyy-mm-dd') FROM verifng.periods");
 
   while (true)
   {
@@ -495,3 +375,30 @@ void NFmiVerifDB::Initialize(void)
   metadata.instantiated = true;
 
 }
+/*
+map<string, string> NFmiVerifDB::GetForecastIds(const string &theProducer) {
+
+  string query = "SELECT f.id,f.arrive_time FROM verifng.forecasts f, verifng.producers p WHERE f.producer_id = p.id AND p.name = '" + theProducer + "'";
+
+  Query(query);
+
+  map<string,string> ret;
+
+  otl_datetime t;
+  int i;
+
+  while (rs_iterator_.next_row()) {
+	rs_iterator_.get(1, i);
+	rs_iterator_.get(2, t);
+    ret[MakeDate(t)] = boost::lexical_cast<string> (i);
+  }
+
+  rs_iterator_.detach();
+
+  stream_.flush();
+  stream_.close();
+
+  return ret;
+
+}
+*/
