@@ -233,7 +233,7 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
   string query = "SELECT category, param "
                    "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
                    "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers "
-                   "AND x.univ_id = " + boost::lexical_cast<string> (parameterId);
+                   "AND x.univ_id = " + boost::lexical_cast<string> (parameterId) + " "
                    "AND f.producer_id = " + boost::lexical_cast<string> (producerId);
 
   Query(query);
