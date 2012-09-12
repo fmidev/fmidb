@@ -230,24 +230,41 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 
 pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned long parameterId) {
 
-  string query = "SELECT category, param "
-                   "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f "
-                   "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers "
+ /* string query = "SELECT category, param "
+                   "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f, grid_num_model_grib n "
+                   "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers AND f.producer_id = n.model_id "
+		           "AND n.model_id = f.producer_id AND (n.ident_id = g.producer OR g.producer = 9999) "
                    "AND x.univ_id = " + boost::lexical_cast<string> (parameterId) + " "
-                   "AND f.producer_id = " + boost::lexical_cast<string> (producerId);
+                   "AND f.producer_id = " + boost::lexical_cast<string> (producerId);*/
+
+  pair<int, int> p = make_pair (-1, -1);
+
+  string query = "SELECT g.parm_name FROM grid_param_xref g, fmi_producers f WHERE g.univ_id = " + boost::lexical_cast<string> (parameterId) +
+		         " AND f.no_vers = g.no_vers AND f.producer_id = " + boost::lexical_cast<string> (producerId);
 
   Query(query);
   
   vector<string> row = FetchRow();
 
-  pair<int, int> p = make_pair (-1, -1);  
-  
+  if (row.empty())
+    return p;
+
+  string parm_name = row[0];
+
+  query = "SELECT category,param FROM grid_param_grib2 WHERE parm_name = '" + parm_name + "' AND "
+		  "(producer = 9999 OR producer = (SELECT ident_id FROM grid_num_model_grib WHERE model_id = " + boost::lexical_cast<string> (producerId) +
+		  ")) ORDER BY producer";
+
+  Query(query);
+
+  row = FetchRow();
+
   if (row.empty())
     return p;
 
   p = make_pair(boost::lexical_cast<int> (row[0]),
                 boost::lexical_cast<int> (row[1]));
-                     
+
   return p;
 }
 
