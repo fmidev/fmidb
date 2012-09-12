@@ -29,8 +29,6 @@ public:
   int PeriodId(const std::string & thePeriodName);
   void Initialize(void);
 
-  std::map<std::string,std::string> GetForecastIds(const std::string &theProducer);
-
 private:
 
   std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string> > > parameterinfo;

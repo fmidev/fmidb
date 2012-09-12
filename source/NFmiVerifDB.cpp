@@ -375,30 +375,3 @@ void NFmiVerifDB::Initialize(void)
   metadata.instantiated = true;
 
 }
-/*
-map<string, string> NFmiVerifDB::GetForecastIds(const string &theProducer) {
-
-  string query = "SELECT f.id,f.arrive_time FROM verifng.forecasts f, verifng.producers p WHERE f.producer_id = p.id AND p.name = '" + theProducer + "'";
-
-  Query(query);
-
-  map<string,string> ret;
-
-  otl_datetime t;
-  int i;
-
-  while (rs_iterator_.next_row()) {
-	rs_iterator_.get(1, i);
-	rs_iterator_.get(2, t);
-    ret[MakeDate(t)] = boost::lexical_cast<string> (i);
-  }
-
-  rs_iterator_.detach();
-
-  stream_.flush();
-  stream_.close();
-
-  return ret;
-
-}
-*/
