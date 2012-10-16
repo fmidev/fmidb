@@ -128,6 +128,62 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
 }
 
 /*
+ * GetGridLevelName(long,long)
+ *
+ * Replaces old proC function GetGridLvlNameForGRIB2.
+ *
+ */
+
+string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId) {
+
+  string lvl_name;
+  string lvl_id = boost::lexical_cast<string>(InLvlId);
+  string producer_id = boost::lexical_cast<string> (InProducerId);
+
+  // Implement caching since this function is quite expensive
+
+  string key = lvl_id + "_" + producer_id;
+
+  if (levelinfo.find(key) != levelinfo.end())
+    return levelinfo[key];
+
+  string query = "SELECT lvltype_name "
+                   "FROM grid_lvltype_grib2 "
+                   "WHERE lvltype = " + lvl_id + " "
+                   "AND producer = " + producer_id;
+
+  Query(query);
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    lvl_name = row[0];
+
+    levelinfo[key] = lvl_name;
+    return lvl_name;
+  }
+
+  // Try "universal" producer 9999
+
+  query = "SELECT lvltype_name "
+          "FROM grid_lvltype_grib2 "
+          "WHERE lvltype = " + lvl_id + " "
+          "AND producer = 9999";
+
+  Query(query);
+  row = FetchRow();
+
+  if (row.empty()) {
+    return "";
+  }
+
+  lvl_name = row[0];
+
+  levelinfo[key] = lvl_name;
+  return lvl_name;
+
+}
+
+/*
  * GetGridParameterName(long, long, long)
  *
  * Replaces old proC function GetGridParNameFromNeons.
@@ -213,6 +269,71 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
       }
     }
   }
+
+  gridparameterinfo[key] = parm_name;
+  return gridparameterinfo[key];
+}
+
+
+/*
+ * GetGridParameterName(long, long, long, long)
+ *
+ * Replaces old proC function GetGridParNameForGrib2.
+ *
+ */
+
+string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCategory, long InDiscipline, long InProducerId) {
+
+  string parm_name;
+  string parm_id = boost::lexical_cast<string>(InParmId);
+  string category = boost::lexical_cast<string>(InCategory);
+  string discipline = boost::lexical_cast<string>(InDiscipline);
+  string producer_id = boost::lexical_cast<string>(InProducerId);
+
+  // Implement some sort of caching: this function is quite expensive
+
+  string key = parm_id + "_" + category + "_" + discipline + "_" + producer_id;
+
+  if (gridparameterinfo.find(key) != gridparameterinfo.end())
+    return gridparameterinfo[key];
+
+  // First try to fetch the parm_name with the actual producer id
+
+  string query = "SELECT parm_name "
+                 "FROM grid_param_grib2 "
+                 "WHERE discipline = " + discipline + " "
+                 "AND category = " + category + " "
+                 "AND producer = " + producer_id + " "
+                 "AND param = " + parm_id;
+
+  Query(query);
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+	parm_name = row[0];
+
+    gridparameterinfo[key] = parm_name;
+    return parm_name;
+  }
+
+
+  // If parm_name was not found, try to fetch the parm_name using the general
+  // producer_id ( = 9999)
+
+  query = "SELECT parm_name "
+          "FROM grid_param_grib2 "
+          "WHERE discipline = " + discipline + " "
+          "AND category = " + category + " "
+          "AND producer = 9999 "
+          "AND param = " + parm_id;
+
+  Query(query);
+  row = FetchRow();
+
+  if (row.empty())
+    return "";
+
+  parm_name = row[0];
 
   gridparameterinfo[key] = parm_name;
   return gridparameterinfo[key];
