@@ -138,19 +138,21 @@ string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId) {
 
   string lvl_name;
   string lvl_id = boost::lexical_cast<string>(InLvlId);
-  string producer_id = boost::lexical_cast<string> (InProducerId);
+  //string producer_id = boost::lexical_cast<string> (InProducerId);
 
   // Implement caching since this function is quite expensive
 
-  string key = lvl_id + "_" + producer_id;
+  string key = lvl_id + "_" + boost::lexical_cast<string> (InProducerId);
 
   if (levelinfo.find(key) != levelinfo.end())
     return levelinfo[key];
 
+  map<string, string> producer = GetGridModelDefinition(InProducerId);
+
   string query = "SELECT lvltype_name "
                    "FROM grid_lvltype_grib2 "
                    "WHERE lvltype = " + lvl_id + " "
-                   "AND producer = " + producer_id;
+                   "AND producer = " + producer["ident_id"];
 
   Query(query);
   vector<string> row = FetchRow();
