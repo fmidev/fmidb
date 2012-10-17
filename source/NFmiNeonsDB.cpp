@@ -131,28 +131,28 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
  * GetGridLevelName(long,long)
  *
  * Replaces old proC function GetGridLvlNameForGRIB2.
- *
+ * Parameter InProducerId refers to the generatingProcessIdentifier found
+ * inside grib.
  */
 
 string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId) {
 
   string lvl_name;
   string lvl_id = boost::lexical_cast<string>(InLvlId);
-  //string producer_id = boost::lexical_cast<string> (InProducerId);
+  string producer_id = boost::lexical_cast<string> (InProducerId);
 
   // Implement caching since this function is quite expensive
 
-  string key = lvl_id + "_" + boost::lexical_cast<string> (InProducerId);
+  string key = lvl_id + "_" + producer_id;
 
   if (levelinfo.find(key) != levelinfo.end())
     return levelinfo[key];
 
-  map<string, string> producer = GetGridModelDefinition(InProducerId);
 
-  string query = "SELECT lvltype_name "
-                   "FROM grid_lvltype_grib2 "
-                   "WHERE lvltype = " + lvl_id + " "
-                   "AND producer = " + producer["ident_id"];
+  string query = "SELECT l.lvltype_name "
+                   "FROM grid_lvltype_grib2 l, grid_num_model_grib g "
+                   "WHERE l.lvltype = " + lvl_id + " AND g.model_id = " + producer_id +
+                   " AND l.producer = g.ident_id";
 
   Query(query);
   vector<string> row = FetchRow();
@@ -301,12 +301,13 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCategory, long In
 
   // First try to fetch the parm_name with the actual producer id
 
-  string query = "SELECT parm_name "
-                 "FROM grid_param_grib2 "
+  string query = "SELECT g.parm_name "
+                 "FROM grid_param_grib2 g, grid_num_model_grib gg "
                  "WHERE discipline = " + discipline + " "
-                 "AND category = " + category + " "
-                 "AND producer = " + producer_id + " "
-                 "AND param = " + parm_id;
+                 "AND g.producer = gg.ident_id "
+                 "AND g.category = " + category + " "
+                 "AND gg.model_id = " + producer_id + " "
+                 "AND g.param = " + parm_id;
 
   Query(query);
   vector<string> row = FetchRow();
