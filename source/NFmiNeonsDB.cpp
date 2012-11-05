@@ -1,11 +1,15 @@
 #include <NFmiNeonsDB.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 #include <stdexcept>
 #include <algorithm>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
+
+boost::mutex itsGetMutex;
+boost::mutex itsReleaseMutex;
 
 using namespace std;
 
@@ -1023,6 +1027,8 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
    * 3. Sleep and start over
    */ 
 
+  boost::mutex::scoped_lock lock(itsGetMutex);
+
   while (true) {
     
     for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
@@ -1071,6 +1077,8 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
 
 void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
   
+  boost::mutex::scoped_lock lock(itsReleaseMutex);
+
   theWorker->Rollback();
   theWorker->EndSession();
   itsWorkingList[theWorker->Id()] = 0;
