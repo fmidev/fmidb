@@ -232,7 +232,7 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
  * 
  * This function will fetch rain station information from table 
  * neons_client.station, since that table has forged station numbers
- * for these rain stations (numbers are >= 100000).
+ * for these rain stations (numbers are >= 110000).
  * 
  * Results are placed in an STL map.
  * 
@@ -254,37 +254,12 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggre
    * requested does not exist.
    */
 
-  string query = "SELECT "
-                 "lpad(wmo_bloc, 2, 0) || lpad(wmon, 3, 0) as wmon,"
-                 "floor(lat/100) + mod(lat,100)/60 + CASE WHEN lat_sec IS NOT NULL THEN lat_sec/3600 ELSE 0 END AS lat, "
-                 "floor(lon/100) + mod(lon,100)/60 + CASE WHEN lon_sec IS NOT NULL THEN lon_sec/3600 ELSE 0 END AS lon, "
-                 "name, "
-                 "NULL AS fmisid, "
-                 "lpnn, "
-                 "elstat AS elevation "
-                 "FROM "
-                 "sreg " 
-                 "WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL ";
-                 
-  if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-    query += " AND to_number(lpad(wmo_bloc, 2, 0) || lpad(wmon, 3, 0)) = " + boost::lexical_cast<string> (wmo_id);
-                   
-  query += "UNION "
-           "SELECT "
-           "indicatif_omm AS wmon,"
-           "lat/1e5 AS lat,"
-           "lon/1e5 AS lon,"
-           "nom_station AS name,"
-           "NULL AS fmisid,"
-           "lpnn,"
-           "elevation_hp AS elevation "
-           "FROM neons_client.station "
-           "WHERE "
-           "indicatif_omm >= 110000";
+  string query = "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
+		         "FROM sreg_view WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL";
 
   if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-    query += " AND indicatif_omm = '" + boost::lexical_cast<string> (wmo_id) + "'";
-  
+    query += " AND wmon = " + boost::lexical_cast<string> (wmo_id);
+
   Query(query);
   
   map <string, string> station;
