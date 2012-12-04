@@ -404,13 +404,14 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
  *
  * http://cf-pcmdi.llnl.gov/documents/cf-standard-names/ecmwf-grib-mapping
  *
+ * Parameter name refers to the Neons parameter name!
  */
 
-std::string NFmiNeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &nc_param) {
+std::string NFmiNeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &neons_param) {
 
   string query = "SELECT producer_id, parm_name, nc_name "
                    "FROM grid_param_nc "
-                   "WHERE nc_name = '" + nc_param + "' "
+                   "WHERE parm_name = '" + neons_param + "' "
                    "AND producer_id = " + boost::lexical_cast<string> (producerId);
 
   Query(query);
