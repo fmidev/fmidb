@@ -10,4 +10,8 @@
 #define OTL_STL
 #define OTL_STREAM_READ_ITERATOR_ON
 
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wconversion"
 #include <otlv4.h> // include the OTL 4.0 header file
+#pragma GCC pop_options
+
