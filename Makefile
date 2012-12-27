@@ -21,25 +21,26 @@ CC = /usr/bin/g++
 
 # Default compiler flags
 
-CFLAGS = -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
+CFLAGS = -fPIC -std=c++0x -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
 LDFLAGS = -s
 
 # Special modes
 
-CFLAGS_DEBUG = -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
-CFLAGS_PROFILE = -DUNIX -O2 -g -pg -DNDEBUG $(MAINFLAGS)
+CFLAGS_DEBUG = -fPIC -std=c++0x -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
+CFLAGS_PROFILE = -fPIC -std=c++0x -DUNIX -O2 -g -pg -DNDEBUG $(MAINFLAGS)
 
 LDFLAGS_DEBUG =
 LDFLAGS_PROFILE =
 
 INCLUDES = -I$(includedir) \
-           -I$(ORACLE_HOME)/rdbms/public
+           -I/usr/include/oracle
 
 LIBS =  -L$(libdir) \
         -L$(libdir)/odbc \
-        -L$(ORACLE_HOME)/lib \
+        -L/lib64 \
+        -L/usr/lib64/oracle \
         -lclntsh \
-        -lnsl -ldl -laio -lm \
+        -lnsl -ldl -lm \
         -lodbc \
 	/usr/lib64/libboost_date_time.a \
         /usr/lib64/libboost_thread.a \
