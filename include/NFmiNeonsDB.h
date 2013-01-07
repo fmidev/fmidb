@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include "NFmiOracle.h"
+#include <mutex>
 
 class NFmiNeonsDB : public NFmiOracle {
 
@@ -64,14 +65,30 @@ class NFmiNeonsDBPool {
 	
 	public:
 	
-	  static NFmiNeonsDB * GetConnection();
-	  static void Release(NFmiNeonsDB *theWorker);
-	  static bool MaxWorkers(int theMaxWorkers);
-	  static int MaxWorkers() { return itsMaxWorkers; }
-	  
+	  static NFmiNeonsDBPool* Instance();
+
+	  ~NFmiNeonsDBPool() { delete itsInstance; }
+
+	  NFmiNeonsDB * GetConnection();
+	  void Release(NFmiNeonsDB *theWorker);
+	  void MaxWorkers(int theMaxWorkers);
+	  int MaxWorkers() const { return itsMaxWorkers; }
+
 	private:
-	  
-	  static int itsMaxWorkers;
+
+	  // Default to two workers
+
+	  NFmiNeonsDBPool() : itsMaxWorkers(2), itsWorkingList(itsMaxWorkers, -1), itsWorkerList(itsMaxWorkers, NULL) {}
+
+	  static NFmiNeonsDBPool* itsInstance;
+
+	  int itsMaxWorkers;
+	  std::vector<int> itsWorkingList;
+	  std::vector<NFmiNeonsDB *> itsWorkerList;
+
+	  std::mutex itsGetMutex;
+	  std::mutex itsReleaseMutex;
+
 };
 
 #endif

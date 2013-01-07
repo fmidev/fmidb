@@ -1,15 +1,12 @@
 #include <NFmiNeonsDB.h>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 #include <stdexcept>
 #include <algorithm>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
-
-boost::mutex itsGetMutex;
-boost::mutex itsReleaseMutex;
 
 using namespace std;
 
@@ -1037,12 +1034,17 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
   return stationlist;
 }
 
-// Default to two workers
+NFmiNeonsDBPool* NFmiNeonsDBPool::itsInstance = NULL;
 
-int NFmiNeonsDBPool::itsMaxWorkers = 2;
+NFmiNeonsDBPool* NFmiNeonsDBPool::Instance()
+{
+    if (!itsInstance)
+    {
+        itsInstance = new NFmiNeonsDBPool();
+    }
 
-static std::vector<int> itsWorkingList(NFmiNeonsDBPool::MaxWorkers(), -1);
-static std::vector<NFmiNeonsDB *> itsWorkerList(NFmiNeonsDBPool::MaxWorkers(), NULL);
+    return itsInstance;
+}
 
 /*
  * GetConnection()
@@ -1068,10 +1070,10 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
    * 3. Sleep and start over
    */ 
 
-  boost::mutex::scoped_lock lock(itsGetMutex);
+  lock_guard<mutex> lock(itsGetMutex);
 
   while (true) {
-    
+
     for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
 
       if (itsWorkingList[i] == 0) {
@@ -1118,7 +1120,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
 
 void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
   
-  boost::mutex::scoped_lock lock(itsReleaseMutex);
+  lock_guard<mutex> lock(itsReleaseMutex);
 
   theWorker->Rollback();
   theWorker->EndSession();
@@ -1130,17 +1132,19 @@ void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
 
 }
 
-bool NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
+void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
   
+	if (theMaxWorkers == itsMaxWorkers)
+	  return;
+
   // Making pool smaller is not supported
   
-  if (theMaxWorkers <= itsMaxWorkers)
-    return false;
+  if (theMaxWorkers < itsMaxWorkers)
+    throw runtime_error("Making NeonsDB pool size smaller is not supported (" + boost::lexical_cast<string> (itsMaxWorkers) + " to " + boost::lexical_cast<string> (theMaxWorkers) + ")");
   
   itsMaxWorkers = theMaxWorkers;
 
   itsWorkingList.resize(itsMaxWorkers, -1);
   itsWorkerList.resize(itsMaxWorkers, NULL);
-  
-  return true;
+
 }
