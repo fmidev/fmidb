@@ -466,6 +466,9 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
   
   map <string, string> producer_info = GetProducerDefinition(producer_id);
 
+  if (producer_info.empty())
+	  return ret;
+
   string forecast_type = producer_info["seq_type_prfx"];
   int producer_class = boost::lexical_cast<int> (producer_info["producer_class"]);
   string no_vers = producer_info["no_vers"];
@@ -792,9 +795,10 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string &geometry_na
                  " pas_latitude,"
                  " geom_parm_1,"
                  " geom_parm_2,"
-                 " geom_parm_3 "
-                 "FROM grid_reg_geom "
-                 "WHERE geom_name like '" +geometry_name + "'";
+                 " geom_parm_3,"
+               	 " stor_desc "
+                 "FROM grid_reg_geom gr, grid_geom gm "
+                 "WHERE gr.geom_name = '" +geometry_name + "' AND gr.geom_name = gm.geom_name";
 
   map <string, string> ret;
 
@@ -815,6 +819,7 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string &geometry_na
     ret["geom_parm_1"] = row[9];
     ret["geom_parm_2"] = row[10];
     ret["geom_parm_3"] = row[11];
+    ret["stor_desc"] = row[12];
 
     geometryinfo[geometry_name] = ret;
   }
@@ -1083,14 +1088,18 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       
       } else if (itsWorkingList[i] == -1) {
 
-        itsWorkerList[i] = new NFmiNeonsDB(i);
+    	try {
+          itsWorkerList[i] = new NFmiNeonsDB(i);
 
-        itsWorkerList[i]->Attach();
-        itsWorkerList[i]->BeginSession();
-        itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");         
+          itsWorkerList[i]->Attach();
+          itsWorkerList[i]->BeginSession();
+          itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
       
-        itsWorkingList[i] = 1;
-        return itsWorkerList[i];
+          itsWorkingList[i] = 1;
+          return itsWorkerList[i];
+    	} catch (int e) {
+    	  throw e;
+    	}
       }
     }
 
