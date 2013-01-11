@@ -233,8 +233,8 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     /* We do some further digging */
     query = "SELECT univ_id "
             "FROM grid_param_xref "
-            "WHERE parm_name like '" +parm_name + "'";
-            "AND no_vers = " +no_vers;
+            "WHERE parm_name like '" +parm_name + "'"
+            " AND no_vers = " +no_vers;
 
     Query(query);
     vector<string> id = FetchRow();
@@ -1084,6 +1084,9 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
         itsWorkerList[i]->BeginSession();
+        itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
+        itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+
         return itsWorkerList[i];
       
       } else if (itsWorkingList[i] == -1) {
@@ -1091,8 +1094,10 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
     	try {
           itsWorkerList[i] = new NFmiNeonsDB(i);
 
+          itsWorkerList[i]->Verbose(true);
           itsWorkerList[i]->Attach();
           itsWorkerList[i]->BeginSession();
+          itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
           itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
       
           itsWorkingList[i] = 1;
