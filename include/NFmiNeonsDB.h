@@ -7,9 +7,13 @@
 #include "NFmiOracle.h"
 #include <mutex>
 
+class NFmiNeonsDBPool;
+
 class NFmiNeonsDB : public NFmiOracle {
 
 public:
+
+  friend class NFmiNeonsDBPool;
 
   NFmiNeonsDB(short theId = 0);
   ~NFmiNeonsDB();
@@ -74,11 +78,17 @@ class NFmiNeonsDBPool {
 	  void MaxWorkers(int theMaxWorkers);
 	  int MaxWorkers() const { return itsMaxWorkers; }
 
+	  void ExternalAuthentication(bool theExternalAuthentication) { itsExternalAuthentication = theExternalAuthentication; }
+	  bool ExternalAuthentication() const { return itsExternalAuthentication; }
+
+	  void ReadWriteTransaction(bool theReadWriteTransaction) { itsReadWriteTransaction = theReadWriteTransaction; }
+	  bool ReadWriteTransaction() const { return itsReadWriteTransaction; }
+
 	private:
 
 	  // Default to two workers
 
-	  NFmiNeonsDBPool() : itsMaxWorkers(2), itsWorkingList(itsMaxWorkers, -1), itsWorkerList(itsMaxWorkers, NULL) {}
+	  NFmiNeonsDBPool();
 
 	  static NFmiNeonsDBPool* itsInstance;
 
@@ -89,6 +99,8 @@ class NFmiNeonsDBPool {
 	  std::mutex itsGetMutex;
 	  std::mutex itsReleaseMutex;
 
+	  bool itsExternalAuthentication;
+	  bool itsReadWriteTransaction;
 };
 
 #endif

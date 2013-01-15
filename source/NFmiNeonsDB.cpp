@@ -1051,6 +1051,14 @@ NFmiNeonsDBPool* NFmiNeonsDBPool::Instance()
     return itsInstance;
 }
 
+NFmiNeonsDBPool::NFmiNeonsDBPool()
+  : itsMaxWorkers(2)
+  , itsWorkingList(itsMaxWorkers, -1)
+  , itsWorkerList(itsMaxWorkers, NULL)
+  , itsExternalAuthentication(false)
+  , itsReadWriteTransaction(false)
+{}
+
 /*
  * GetConnection()
  * 
@@ -1085,7 +1093,11 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
         itsWorkingList[i] = 1;
         itsWorkerList[i]->BeginSession();
         itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
-        itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+
+        if (!itsReadWriteTransaction)
+        {
+          itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+        }
 
         return itsWorkerList[i];
       
@@ -1094,12 +1106,22 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
     	try {
           itsWorkerList[i] = new NFmiNeonsDB(i);
 
+          if (itsExternalAuthentication)
+          {
+        	  itsWorkerList[i]->user_ = "";
+        	  itsWorkerList[i]->password_ = "";
+          }
+
           itsWorkerList[i]->Verbose(true);
           itsWorkerList[i]->Attach();
           itsWorkerList[i]->BeginSession();
           itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
-          itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
-      
+
+          if (!itsReadWriteTransaction)
+          {
+        	  itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
+          }
+
           itsWorkingList[i] = 1;
           return itsWorkerList[i];
     	} catch (int e) {
