@@ -33,12 +33,12 @@ LDFLAGS_DEBUG =
 LDFLAGS_PROFILE =
 
 INCLUDES = -I$(includedir) \
-           -I/usr/include/oracle
+           -I$(ORACLE_HOME)/rdbms/public
 
 LIBS =  -L$(libdir) \
         -L$(libdir)/odbc \
         -L/lib64 \
-        -L/usr/lib64/oracle \
+        -L$(ORACLE_HOME)/lib \
         -lclntsh \
         -lnsl -ldl -lm \
         -lodbc \

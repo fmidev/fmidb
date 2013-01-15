@@ -637,7 +637,7 @@ void NFmiOracle::BeginSession() {
     Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
 #ifdef DEBUG
-cout << "DEBUG: session started" << endl;
+cout << "DEBUG: session started as " << user_ << "/***" << endl;
 #endif
 
   } catch(oracle::otl_exception& p) {
