@@ -187,6 +187,42 @@ string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId) {
 }
 
 /*
+ * GetGridParameterId()
+ *
+ * Return the parm_id that matches given no_vers and parameter name.
+ *
+ */
+
+long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
+{
+	string no_vers_str = boost::lexical_cast<string> (no_vers);
+
+	string key = name + "_" + no_vers_str;
+
+	if (gridparamid.find(key) != gridparamid.end())
+	   return gridparamid[key];
+
+	string query = "SELECT parm_id FROM grid_param_grib WHERE no_vers = " +
+			no_vers_str + " AND parm_name = '" + name + "'";
+
+	Query(query);
+
+	vector<string> row = FetchRow();
+
+	if (row.empty())
+	{
+		gridparamid[key] = -1;
+	}
+	else
+	{
+		gridparamid[key] = boost::lexical_cast<long> (row[0]);
+	}
+
+	return gridparamid[key];
+}
+
+
+/*
  * GetGridParameterName(long, long, long)
  *
  * Replaces old proC function GetGridParNameFromNeons.

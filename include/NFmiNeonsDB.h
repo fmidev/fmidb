@@ -47,6 +47,8 @@ public:
   std::vector<std::string> GetNeonsTables(const std::string &start_time, const std::string &end_time, const std::string &producer_name);
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime);
 
+  long GetGridParameterId(long no_vers, const std::string& name);
+
   short Id() { return itsId; }
   
 private:
@@ -60,6 +62,7 @@ private:
   std::map<std::string, std::string> levelinfo;
   std::map<std::string, std::string> gridparameterinfo;
   std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
+  std::map<std::string, long> gridparamid;
 
   short itsId; // Only for connection pooling
 
