@@ -585,7 +585,7 @@ void NFmiOracle::TransactionIsolationLevel(const std::string &level) {
 
 void NFmiOracle::Attach() {
 
-	if (connected_)
+  if (connected_)
     return;
     
   oracle::otl_connect::otl_initialize(1); // initialize OCI environment
@@ -629,12 +629,12 @@ cout << "DEBUG: detached from Oracle " << database_ << endl;
 
 void NFmiOracle::BeginSession() {
 	
-	if (!connected_)
-	  throw runtime_error("Cannot begin session before connected");
+  if (!connected_)
+    throw runtime_error("Cannot begin session before connected");
 		
   try {
     db_.session_begin(user_.c_str() , password_.c_str()); // 0 --> auto commit off
-    Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
+  //  Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
 #ifdef DEBUG
 cout << "DEBUG: session started as " << user_ << "/***" << endl;
