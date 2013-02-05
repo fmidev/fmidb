@@ -38,6 +38,31 @@ void NFmiNeonsDB::Connect(const std::string & user, const std::string & password
   Verbose(true);
 }
 
+string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name) {
+
+  string query = "SELECT to_char(max(base_date),'YYYYMMDDHH24MI') "
+ 		"FROM as_grid "
+		"WHERE model_type = '" +ref_prod + "' "
+		//		"AND base_date > TO_DATE(SYSDATE - " +hours_in_interest +"/24 - " +offset + "/24) "
+		"AND rec_cnt_dset > 0 ";
+
+  if (!geom_name.empty())
+  {
+     //query += "AND geom_name = '" + geom_name + "'";
+  }
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (row.size() == 0)
+  {
+    return "";
+  }
+
+  return row[0];
+}
+
 /*
  * GetGridLevelName(long, long, long, ,long)
  *

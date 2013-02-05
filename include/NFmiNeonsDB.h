@@ -49,6 +49,8 @@ public:
 
   long GetGridParameterId(long no_vers, const std::string& name);
 
+  std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
+
   short Id() { return itsId; }
   
 private:
