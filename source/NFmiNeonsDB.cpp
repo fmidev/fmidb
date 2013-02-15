@@ -63,6 +63,26 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
   return row[0];
 }
 
+
+/*
+ * GetGridLevelName(string, long, long, long)
+ *
+ * GetGridLevellName will convert the given InLvlId on the given
+ * InCodeTableVer to the correct lvl_type on the given OutCodeTableVer
+ * for the given neons param.
+ *
+ */
+
+
+string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
+
+  long parm_id = GetGridParameterId(OutCodeTableVer, parm_name);
+
+  return GetGridLevelName(parm_id, InLvlId, InCodeTableVer, OutCodeTableVer);
+
+}
+
+
 /*
  * GetGridLevelName(long, long, long, ,long)
  *
@@ -106,7 +126,6 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
   }
   else {
     levelinfo[key] = "";
-    levelinfo[key];
   }
 
   query = "SELECT univ_id "

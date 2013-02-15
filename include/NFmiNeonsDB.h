@@ -27,6 +27,7 @@ public:
 
   static NFmiNeonsDB & Instance();
 
+  std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer); // GRIB 1
   std::string GetGridLevelName(long InLvlId, long InProducerId); // GRIB 2
   std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer); // GRIB 1
