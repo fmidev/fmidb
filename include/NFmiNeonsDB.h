@@ -66,6 +66,7 @@ private:
   std::map<std::string, std::string> gridparameterinfo;
   std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
   std::map<std::string, long> gridparamid;
+  std::map<unsigned long, std::map<std::string, std::string> > gridmodeldefinition;
 
   short itsId; // Only for connection pooling
 

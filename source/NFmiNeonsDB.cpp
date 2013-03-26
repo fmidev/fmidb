@@ -777,6 +777,13 @@ vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const 
 
 map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_id) {
 
+  if (gridmodeldefinition.count(producer_id) > 0) {
+#ifdef DEBUG
+    cout << "DEBUG: GetGridModelDefinition() cache hit!" << endl;
+#endif
+    return gridmodeldefinition[producer_id];
+  }
+
   map <string, string> ret;
 
   string query = "SELECT fmi_producers.ref_prod, "
@@ -809,6 +816,9 @@ map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_i
     ret["model_id"] = row[5];
     ret["ident_name"] = row[6];
     ret["ident_id"] = row[7];
+
+    gridmodeldefinition[producer_id] = ret;
+
   }
 
 return ret;
