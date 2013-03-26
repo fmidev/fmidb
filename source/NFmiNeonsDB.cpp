@@ -244,8 +244,12 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
 	string key = name + "_" + no_vers_str;
 
 	if (gridparamid.find(key) != gridparamid.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: GetGridParameterId() cache hit!" << endl;
+#endif
 	   return gridparamid[key];
-
+	}
 	string query = "SELECT parm_id FROM grid_param_grib WHERE no_vers = " +
 			no_vers_str + " AND parm_name = '" + name + "'";
 
