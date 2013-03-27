@@ -605,7 +605,7 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
   
         break;
         
-      if (producer_id == 1005 || producer_id == 1034)
+      if (producer_id == 1005 || producer_id == 1032 || producer_id == 1034)
        
         /* For temp-data there is no openened columns in the database. */
         /* So we can't make the parameter name and database column name conversion */
@@ -1264,8 +1264,8 @@ void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
 
 void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
   
-	if (theMaxWorkers == itsMaxWorkers)
-	  return;
+  if (theMaxWorkers == itsMaxWorkers)
+    return;
 
   // Making pool smaller is not supported
   
