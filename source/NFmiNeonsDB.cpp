@@ -737,19 +737,25 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(const string &producer_na
  * Retrieve geometries defined for producer and origintime
  */
 
-vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const string& analtime) {
+vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const string& analtime, const string& geom_name) {
 
-  if (gridgeoms.count(ref_prod + "_" + analtime) > 0) {
+	string key = ref_prod + "_" + analtime + "_" + geom_name;
+  if (gridgeoms.count(key) > 0) {
 #ifdef DEBUG
   cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
 #endif
-    return gridgeoms[ref_prod + "_" + analtime];
+    return gridgeoms[key];
   }
   string query = "SELECT geom_name, table_name, dset_id "
 	                 "FROM as_grid "
 	                 "WHERE rec_cnt_dset > 0 "
 	                 "AND model_type like '" +ref_prod + "' "
 	                 "AND base_date = '" +analtime +"'";
+
+  if (!geom_name.empty())
+  {
+	  query += " AND geom_name = '" + geom_name + "'";
+  }
 
   Query(query);
 
@@ -766,7 +772,7 @@ vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const 
 	ret.push_back(values);
   }
 
-  gridgeoms[ref_prod + "_" + analtime] = ret;
+  gridgeoms[key] = ret;
 
   return ret;
 }

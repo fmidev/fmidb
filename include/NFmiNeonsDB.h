@@ -46,7 +46,7 @@ public:
   std::map<int, std::map<std::string, std::string> > GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp = false);
   
   std::vector<std::string> GetNeonsTables(const std::string &start_time, const std::string &end_time, const std::string &producer_name);
-  std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime);
+  std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
 
   long GetGridParameterId(long no_vers, const std::string& name);
 
