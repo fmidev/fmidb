@@ -43,7 +43,6 @@ LIBS =  -L$(libdir) \
         -lnsl -ldl -lm \
         -lodbc \
 	/usr/lib64/libboost_date_time.a \
-        /usr/lib64/libboost_thread.a \
         /usr/lib64/libboost_system.a
 
 # Common library compiling template
