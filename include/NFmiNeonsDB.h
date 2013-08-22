@@ -91,6 +91,10 @@ class NFmiNeonsDBPool {
 	  void ReadWriteTransaction(bool theReadWriteTransaction) { itsReadWriteTransaction = theReadWriteTransaction; }
 	  bool ReadWriteTransaction() const { return itsReadWriteTransaction; }
 
+	  void Username(const std::string& theUsername) { itsUsername = theUsername; }
+	  void Password(const std::string& thePassword) { itsPassword = thePassword; }
+	  void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
+
 	private:
 
 	  // Default to two workers
@@ -108,6 +112,10 @@ class NFmiNeonsDBPool {
 
 	  bool itsExternalAuthentication;
 	  bool itsReadWriteTransaction;
+
+	  std::string itsUsername;
+	  std::string itsPassword;
+	  std::string itsDatabase;
 };
 
 #endif

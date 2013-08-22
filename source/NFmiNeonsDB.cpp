@@ -1157,6 +1157,9 @@ NFmiNeonsDBPool::NFmiNeonsDBPool()
   , itsWorkerList(itsMaxWorkers, NULL)
   , itsExternalAuthentication(false)
   , itsReadWriteTransaction(false)
+  , itsUsername("")
+  , itsPassword("")
+  , itsDatabase("")
 {}
 
 /*
@@ -1210,6 +1213,16 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
           {
         	  itsWorkerList[i]->user_ = "";
         	  itsWorkerList[i]->password_ = "";
+          }
+          else if (itsUsername != "" && itsPassword != "")
+          {
+        	  itsWorkerList[i]->user_ = itsUsername;
+        	  itsWorkerList[i]->password_ = itsPassword;
+          }
+
+          if (itsDatabase != "")
+          {
+        	  itsWorkerList[i]->database_ = itsDatabase;
           }
 
           itsWorkerList[i]->Verbose(true);
