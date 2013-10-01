@@ -1,4 +1,3 @@
-PROG = dbtest
 LIB = fmidb
 
 MAINFLAGS = -Wall -W -Wno-unused-parameter
@@ -22,7 +21,7 @@ CC = /usr/bin/g++
 # Default compiler flags
 
 CFLAGS = -fPIC -std=c++0x -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
-LDFLAGS = -s
+LDFLAGS = -shared -Wl,-soname,libfmidb.so.0.0.0
 
 # Special modes
 
@@ -35,8 +34,8 @@ LDFLAGS_PROFILE =
 INCLUDES = -I$(includedir) \
            -I/usr/include/oracle
 
-LIBS =  -L$(libdir) \
-        -L$(libdir)/odbc \
+LIBS =  -L$(LIBDIR) \
+        -L$(LIBDIR)/odbc \
         -L/lib64 \
         -L/usr/lib64/oracle \
         -lclntsh \
@@ -58,13 +57,13 @@ else
 endif
 
 ifeq ($(processor), x86_64)
-  libdir = $(PREFIX)/lib64
+  LIBDIR = $(PREFIX)/lib64
 else
-  libdir = $(PREFIX)/lib
+  LIBDIR = $(PREFIX)/lib
 endif
 
 objdir = obj
-libdir = lib
+LIBDIR = lib
 
 includedir = $(PREFIX)/include
 
@@ -123,35 +122,39 @@ ALLSRCS = $(wildcard *.cpp source/*.cpp)
 
 .PHONY: test rpm
 
+rpmsourcedir = /tmp/$(shell whoami)/rpmbuild
+
 # The rules
 
-all: objdir $(PROG)
-debug: objdir $(PROG)
-release: objdir $(PROG)
-profile: objdir $(PROG)
+all: objdir $(LIB)
+debug: objdir $(LIB)
+release: objdir $(LIB)
+profile: objdir $(LIB)
 
-$(PROG): % : $(SUBOBJS) %.o
-	$(CC) $(LDFLAGS) -o $@ obj/$@.o $(SUBOBJFILES) $(LIBS)
-	ar rcs $(libdir)/lib$(LIB).a $(OBJFILES)
-
+$(LIB): $(OBJS)
+	ar rcs $(LIBDIR)/lib$(LIB).a $(OBJFILES)
+	$(CC) -o $(LIBDIR)/lib$(LIB).so $(LDFLAGS) $(OBJFILES)
 clean:
 	rm -f $(PROG) $(OBJFILES) *~ source/*~ include/*~
 
 install:
-	mkdir -p $(bindir)
-	@list='$(PROG)'; \
-	for prog in $$list; do \
-	  echo $(INSTALL_PROG) $$prog $(bindir)/$$prog; \
-	  $(INSTALL_PROG) $$prog $(bindir)/$$prog; \
-	done
-
-depend:
-	gccmakedep -fDependencies -- $(CFLAGS) $(INCLUDES) -- $(ALLSRCS)
+	  mkdir -p $(libdir)
+	  $(INSTALL_DATA) lib/* $(libdir)
 
 objdir:
 	@mkdir -p $(objdir)
-	@mkdir -p $(libdir)
+	@mkdir -p $(LIBDIR)
 
+rpm:    clean
+	mkdir -p $(rpmsourcedir) ; \
+        if [ -f $(LIB).spec ]; then \
+          tar -C .. --exclude .svn -cf $(rpmsourcedir)/$(LIB).tar $(LIB) ; \
+          gzip -f $(rpmsourcedir)/$(LIB).tar ; \
+          rpmbuild -ta $(rpmsourcedir)/$(LIB).tar.gz ; \
+          rm -f $(rpmsourcedir)/$(LIB).tar.gz ; \
+        else \
+          echo $(rpmerr); \
+        fi;
 
 .SUFFIXES: $(SUFFIXES) .cpp
 
