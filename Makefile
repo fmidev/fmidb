@@ -18,18 +18,19 @@ DIFFICULTFLAGS = -pedantic -Weffc++ -Wredundant-decls -Wshadow -Woverloaded-virt
 
 CC = /usr/bin/g++
 
+MAJOR_VERSION=0
+MINOR_VERSION=0
+
 # Default compiler flags
 
 CFLAGS = -fPIC -std=c++0x -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
-LDFLAGS = -shared -Wl,-soname,libfmidb.so.0.0
+LDFLAGS = -shared -Wl,-soname,$(LIB).so.$(MAJOR_VERSION)
 
 # Special modes
 
 CFLAGS_DEBUG = -fPIC -std=c++0x -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
-CFLAGS_PROFILE = -fPIC -std=c++0x -DUNIX -O2 -g -pg -DNDEBUG $(MAINFLAGS)
 
 LDFLAGS_DEBUG =
-LDFLAGS_PROFILE =
 
 INCLUDES = -I$(includedir) \
            -I/usr/include/oracle
@@ -85,11 +86,6 @@ ifneq (,$(findstring debug,$(MAKECMDGOALS)))
   LDFLAGS = $(LDFLAGS_DEBUG)
 endif
 
-ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-  CFLAGS = $(CFLAGS_PROFILE)
-  LDFLAGS = $(LDFLAGS_PROFILE)
-endif
-
 # Compilation directories
 
 vpath %.cpp source
@@ -129,13 +125,13 @@ rpmsourcedir = /tmp/$(shell whoami)/rpmbuild
 all: objdir $(LIB)
 debug: objdir $(LIB)
 release: objdir $(LIB)
-profile: objdir $(LIB)
 
 $(LIB): $(OBJS)
-	ar rcs $(LIBDIR)/lib$(LIB).a $(OBJFILES)
-	$(CC) -o $(LIBDIR)/lib$(LIB).so $(LDFLAGS) $(OBJFILES)
+	ar rcs $(LIBDIR)/libfmidb.a $(OBJFILES)
+	$(CC) -o $(LIBDIR)/libfmidb.so.$(MAJOR_VERSION).$(MINOR_VERSION) $(LDFLAGS) $(OBJFILES)
+
 clean:
-	rm -f $(PROG) $(OBJFILES) *~ source/*~ include/*~
+	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/$(LIB).* *~ source/*~ include/*~
 
 install:
 	  mkdir -p $(libdir)
@@ -147,11 +143,11 @@ objdir:
 
 rpm:    clean
 	mkdir -p $(rpmsourcedir) ; \
-        if [ -f $(LIB).spec ]; then \
-          tar -C .. --exclude .svn -cf $(rpmsourcedir)/$(LIB).tar $(LIB) ; \
-          gzip -f $(rpmsourcedir)/$(LIB).tar ; \
-          rpmbuild -ta $(rpmsourcedir)/$(LIB).tar.gz ; \
-          rm -f $(rpmsourcedir)/$(LIB).tar.gz ; \
+        if [ -e $(LIB).spec ]; then \
+          tar -C .. --exclude .svn -cf $(rpmsourcedir)/lib$(LIB).tar $(LIB) ; \
+          gzip -f $(rpmsourcedir)/lib$(LIB).tar ; \
+          rpmbuild -ta $(rpmsourcedir)/lib$(LIB).tar.gz ; \
+          rm -f $(rpmsourcedir)/lib$(LIB).tar.gz ; \
         else \
           echo $(rpmerr); \
         fi;

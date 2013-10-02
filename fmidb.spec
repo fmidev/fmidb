@@ -1,7 +1,8 @@
 %define LIBNAME fmidb
+
 Summary: fmidb library
-Name: %{LIBNAME}
-Version: 13.10.1
+Name: lib%{LIBNAME}
+Version: 13.10.2
 Release: 1.el6.fmi
 License: FMI
 Group: Development/Tools
@@ -41,9 +42,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0644)
-%{_libdir}/lib%{LIBNAME}.so
+%{_libdir}/lib%{LIBNAME}.so*
 %{_libdir}/lib%{LIBNAME}.a
 
 %changelog
+* Wed Oct  2 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.2-1.el6.fmi
+- Add SONAME
 * Tue Oct  1 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.1-1.el6.fmi
 - Initial build
