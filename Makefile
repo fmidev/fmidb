@@ -21,7 +21,7 @@ CC = /usr/bin/g++
 # Default compiler flags
 
 CFLAGS = -fPIC -std=c++0x -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
-LDFLAGS = -shared -Wl,-soname,libfmidb.so.0.0.0
+LDFLAGS = -shared -Wl,-soname,libfmidb.so.0.0
 
 # Special modes
 

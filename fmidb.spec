@@ -1,5 +1,5 @@
 %define LIBNAME fmidb
-Summary: fload utility
+Summary: fmidb library
 Name: %{LIBNAME}
 Version: 13.10.1
 Release: 1.el6.fmi
