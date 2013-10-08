@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 13.10.2
+Version: 13.10.8
 Release: 1.el6.fmi
 License: FMI
 Group: Development/Tools
@@ -17,6 +17,13 @@ Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
 FMI database library
+
+%package devel
+Summary: development package
+Group: Development/Tools
+
+%description devel
+Headers and static libraries for fmidb
 
 %prep
 rm -rf $RPM_BUILD_ROOT
@@ -43,9 +50,15 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,0644)
 %{_libdir}/lib%{LIBNAME}.so*
+
+%files devel
+%defattr(-,root,root,0644)
 %{_libdir}/lib%{LIBNAME}.a
+%{_includedir}/*.h
 
 %changelog
+* Tue Oct  8 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.8-1.el6.fmi
+- Separating devel-package
 * Wed Oct  2 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.2-1.el6.fmi
 - Add SONAME
 * Tue Oct  1 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.1-1.el6.fmi

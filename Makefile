@@ -134,8 +134,14 @@ clean:
 	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/$(LIB).* *~ source/*~ include/*~
 
 install:
-	  mkdir -p $(libdir)
-	  $(INSTALL_DATA) lib/* $(libdir)
+	mkdir -p $(libdir)
+	mkdir -p $(includedir)
+	@list=`cd include && ls -1 *.h`; \
+	for hdr in $$list; do \
+	  $(INSTALL_DATA) include/$$hdr $(includedir)/$$hdr; \
+	done
+
+	 $(INSTALL_DATA) lib/* $(libdir)
 
 objdir:
 	@mkdir -p $(objdir)
