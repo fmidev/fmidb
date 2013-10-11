@@ -76,42 +76,18 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
 
 string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
 
-  long parm_id = GetGridParameterId(OutCodeTableVer, parm_name);
-
-  return GetGridLevelName(parm_id, InLvlId, InCodeTableVer, OutCodeTableVer);
-
-}
-
-
-/*
- * GetGridLevelName(long, long, long, ,long)
- *
- * Replaces old proC function GetGridLvlNameFromNeons.
- *
- * GetGridLevellName will convert the given InLvlId on the given
- * InCodeTableVer to the correct lvl_type on the given OutCodeTableVer
- * for the given parameter InParmId.
- *
- */
-
-string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
-
   string lvl_name;
-  string parm_name;
   string univ_id;
   string lvl_id = boost::lexical_cast<string>(InLvlId);
   string no_vers = boost::lexical_cast<string>(InCodeTableVer);
   string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
-  string parm_id = boost::lexical_cast<string> (InParmId);
 
   // Implement caching since this function is quite expensive
 
-  string key = parm_id + "_" + lvl_id + "_" + no_vers + "_" + no_vers2;
+  string key = parm_name + "_" + lvl_id + "_" + no_vers + "_" + no_vers2;
 
   if (levelinfo.find(key) != levelinfo.end())
     return levelinfo[key];
-
-  parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
 
   string query = "SELECT lvl_type "
                    "FROM grid_lvl_grib "
@@ -154,10 +130,9 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
     lvl_name = prod_class[0];
   }
   else {
-    parm_name = "ALL_OTHERS";
     query = "SELECT lvl_type "
             "FROM grid_lvl_xref "
-            "WHERE parm_name = '" +parm_name +"' "
+            "WHERE parm_name = 'ALL_OTHERS' "
             "AND no_vers2 = " +no_vers2 +" "
             "AND univ_id = " +univ_id;
     Query(query);
@@ -170,6 +145,27 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
 
   levelinfo[key] = lvl_name;
   return levelinfo[key];
+
+}
+
+
+/*
+ * GetGridLevelName(long, long, long, ,long)
+ *
+ * Replaces old proC function GetGridLvlNameFromNeons.
+ *
+ * GetGridLevellName will convert the given InLvlId on the given
+ * InCodeTableVer to the correct lvl_type on the given OutCodeTableVer
+ * for the given parameter InParmId.
+ *
+ */
+
+string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
+
+  string parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
+
+  return GetGridLevelName(parm_name, InLvlId, InCodeTableVer, OutCodeTableVer);
+
 }
 
 /*
@@ -1191,7 +1187,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
   while (true) {
 
     for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
-
+      // Return connection that has been initialized but is idle
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
         itsWorkerList[i]->BeginSession();
@@ -1201,11 +1197,13 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
         {
           itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
         }
-
+#ifdef DEBUG
+		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
+#endif
         return itsWorkerList[i];
       
       } else if (itsWorkingList[i] == -1) {
-
+        // Create new connection
     	try {
           itsWorkerList[i] = new NFmiNeonsDB(i);
 
@@ -1236,6 +1234,10 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
           }
 
           itsWorkingList[i] = 1;
+
+#ifdef DEBUG
+		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
+#endif
           return itsWorkerList[i];
     	} catch (int e) {
     	  throw e;
