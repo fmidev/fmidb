@@ -117,6 +117,7 @@ string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId,
   }
   else
   {
+	  levelinfo[key] = "";
 	  return "";
   }
 
