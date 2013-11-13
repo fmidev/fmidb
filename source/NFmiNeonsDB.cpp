@@ -115,6 +115,10 @@ string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId,
   if (!id.empty()) {
     univ_id = id[0];
   }
+  else
+  {
+	  return "";
+  }
 
   query = "SELECT lvl_type "
             "FROM grid_lvl_xref "
