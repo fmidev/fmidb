@@ -272,7 +272,7 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
 
 
 /*
- * GetGridParameterName(long, long, long)
+ * GetGridParameterName(long, long, long, long)
  *
  * Replaces old proC function GetGridParNameFromNeons.
  *
@@ -281,17 +281,18 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
  *
  */
 
-string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer) {
+string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator) {
 
   string parm_name;
   string univ_id;
   string parm_id = boost::lexical_cast<string>(InParmId);
   string no_vers = boost::lexical_cast<string>(InCodeTableVer);
   string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
+  string trInd = boost::lexical_cast<string>(timeRangeIndicator);
 
   // Implement some sort of caching: this function is quite expensive
 
-  string key = parm_id + "_" + no_vers + "_" + no_vers2;
+  string key = parm_id + "_" + no_vers + "_" + no_vers2 + "_" + trInd;
 
   if (gridparameterinfo.find(key) != gridparameterinfo.end())
     return gridparameterinfo[key];
@@ -299,7 +300,8 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
   string query = "SELECT parm_name "
                  "FROM grid_param_grib "
                  "WHERE parm_id = " + parm_id + " "
-                 "AND no_vers = " +no_vers;
+                 "AND no_vers = " + no_vers + " "
+                 "AND timerange_ind = " + trInd;
 
   Query(query);
   vector<string> row = FetchRow();
@@ -364,13 +366,13 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 
 
 /*
- * GetGridParameterName(long, long, long, long)
+ * GetGridParameterNameForGrib2(long, long, long, long)
  *
  * Replaces old proC function GetGridParNameForGrib2.
  *
  */
 
-string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCategory, long InDiscipline, long InProducerId) {
+string NFmiNeonsDB::GetGridParameterNameForGrib2(long InParmId, long InCategory, long InDiscipline, long InProducerId) {
 
   string parm_name;
   string parm_id = boost::lexical_cast<string>(InParmId);

@@ -30,8 +30,8 @@ public:
   std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer); // GRIB 1
   std::string GetGridLevelName(long InLvlId, long InProducerId); // GRIB 2
-  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer); // GRIB 1
-  std::string GetGridParameterName(long InParmId,long InCategory,long InDiscipline, long InProducerId); // GRIB 2
+  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0); // GRIB 1
+  std::string GetGridParameterNameForGrib2(long InParmId,long InCategory,long InDiscipline, long InProducerId); // GRIB 2
   std::string GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &param);
 
   std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, const std::string &parm_name);
