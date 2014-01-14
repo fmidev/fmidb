@@ -50,10 +50,26 @@ public:
 
   void Attach();
   void Detach();
+
+  /*
+   * This function can be called directly by the connection pool, or the library
+   * can take care of calling it. If latter option is used, the session will only
+   * be started if it is absolutely needed (ie. requested data is not found from
+   * cache).
+   */
+
   void BeginSession();
+
+  /*
+   * Connection pool should always call this function before "releasing" a used
+   * connection back to pool.
+   */
+
   void EndSession();
 
-  
+  void PooledConnection(bool pooled_connection);
+  bool PooledConnection() const;
+
 protected:
 
   oracle::otl_connect db_;
@@ -74,8 +90,11 @@ protected:
   bool test_mode_;
 
   std::string date_mask_;
+  std::string date_mask_sql_;
 
   bool verbose_;
+  bool initialized_;
+  bool pooled_connection_;
 
 };
 

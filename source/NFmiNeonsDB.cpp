@@ -1142,6 +1142,19 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
   return stationlist;
 }
 
+void NFmiNeonsDB::SQLDateMask(const std::string& theDateMask) {
+  /* 
+   * Set date mask to class variable, not to database.
+   * This is used in connection pool to store the required
+   * date mask value. The date mask is set only when it is actually
+   * required (ie. during the first Query() because lots of NFmiNeonsDB
+   * functionality is just to return values from cache and connecting
+   * to database every time is time consuming.
+   */
+
+  date_mask_sql_ = theDateMask;
+}
+
 NFmiNeonsDBPool* NFmiNeonsDBPool::itsInstance = NULL;
 
 NFmiNeonsDBPool* NFmiNeonsDBPool::Instance()
@@ -1197,13 +1210,9 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       // Return connection that has been initialized but is idle
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
-        itsWorkerList[i]->BeginSession();
-        itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
 
-        if (!itsReadWriteTransaction)
-        {
-          itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
-        }
+        itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
+
 #ifdef DEBUG
 		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
@@ -1213,6 +1222,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
         // Create new connection
     	try {
           itsWorkerList[i] = new NFmiNeonsDB(i);
+		  itsWorkerList[i]->PooledConnection(true);
 
           if (itsExternalAuthentication)
           {
@@ -1232,13 +1242,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
 
           itsWorkerList[i]->Verbose(true);
           itsWorkerList[i]->Attach();
-          itsWorkerList[i]->BeginSession();
-          itsWorkerList[i]->DateFormat("YYYYMMDDHH24MISS");
-
-          if (!itsReadWriteTransaction)
-          {
-        	  itsWorkerList[i]->Execute("SET TRANSACTION READ ONLY");
-          }
+          itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
 
           itsWorkingList[i] = 1;
 

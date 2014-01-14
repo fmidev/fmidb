@@ -53,6 +53,7 @@ public:
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
 
   short Id() { return itsId; }
+  void SQLDateMask(const std::string& theDateMask);
   
 private:
 

@@ -31,7 +31,12 @@ NFmiOracle & NFmiOracle::Instance() {
   return instance_; 
 }
 
-NFmiOracle::NFmiOracle() : test_mode_(false), verbose_(false) {} ;
+NFmiOracle::NFmiOracle() 
+  : test_mode_(false)
+  , verbose_(false)
+  , initialized_(false)
+  , pooled_connection_(false)
+{} ;
 
 
 void NFmiOracle::Connect(const string & user,
@@ -92,6 +97,8 @@ void NFmiOracle::Query(const string & sql, const unsigned int buffer_size) {
 
   if (!connected_)
     throw runtime_error("ERROR: must be connected before executing query");
+
+  BeginSession();
 
   if (TestMode())
     return;
@@ -412,6 +419,8 @@ void NFmiOracle::Execute(const string & sql) throw (int) {
     exit(1);
   }
 
+  BeginSession();
+
 #ifdef DEBUG
   cout << "DEBUG: " << sql.c_str() << endl;
 #endif
@@ -447,6 +456,11 @@ void NFmiOracle::ExecuteProcedure(const string & sql) throw (int) {
     exit(1);
   }
 
+  BeginSession();
+
+  if (TestMode())
+    return;
+  
   string temp_sql = "BEGIN\n:cur<refcur,out> := " + sql + ";\nEND;";
    
 #ifdef DEBUG
@@ -487,7 +501,8 @@ NFmiOracle::~NFmiOracle() {
 
 void NFmiOracle::Disconnect() {
   db_.logoff(); // disconnect from NFmiOracle
-  connected_ = false;        
+  connected_ = false;
+  initialized_ = false;
 }
 
 /*
@@ -603,7 +618,8 @@ cout << "DEBUG: attached to Oracle " << database_ << endl;
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to attach to Oracle " << database_ << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw p.code;
+    // exit(1);
   }
 }
 
@@ -623,7 +639,8 @@ cout << "DEBUG: detached from Oracle " << database_ << endl;
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to detach from Oracle " << database_ << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw p.code;
+    //exit(1);
   }
 }
 
@@ -631,30 +648,46 @@ void NFmiOracle::BeginSession() {
 	
   if (!connected_)
     throw runtime_error("Cannot begin session before connected");
-		
+
+  if (initialized_ || !pooled_connection_)
+  {
+    return;
+  }
+
   try {
     db_.session_begin(user_.c_str() , password_.c_str()); // 0 --> auto commit off
-  //  Execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYYMMDDHH24MISS'");
 
 #ifdef DEBUG
 cout << "DEBUG: session started as " << user_ << "/***" << endl;
 #endif
 
+    initialized_ = true;
+
+    if (!date_mask_sql_.empty()) {
+      DateFormat("YYYYMMDDHH24MISS");
+    }
+
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to begin session as user " << user_ << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw (p.code);
+    //exit(1);
   }
 }
 
 void NFmiOracle::EndSession() {
 	
-	if (!connected_)
-	  throw runtime_error("Cannot end session if not connected");
-		
+  if (!connected_)
+    throw runtime_error("Cannot end session if not connected");
+
+  if (!initialized_) {
+    return;
+  }
+  
   try {
     db_.session_end();
-
+	initialized_ = false;
+	
 #ifdef DEBUG
 cout << "DEBUG: session ended" << endl;
 #endif
@@ -662,7 +695,8 @@ cout << "DEBUG: session ended" << endl;
   } catch(oracle::otl_exception& p) {
     cerr << "Unable to end session" << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw p.code;
+    //exit(1);
   }
 }
 
@@ -681,4 +715,14 @@ void NFmiOracle::DateFormat(const string &dateFormat) {
     date_mask_ ="%4d-%02d-%02d %02d:%02d:%02d";
   else
     throw runtime_error("Invalid date mask: " + dateFormat);
+}
+
+void NFmiOracle::PooledConnection(bool pooled_connection)
+{
+	pooled_connection_ = pooled_connection;
+}
+
+bool NFmiOracle::PooledConnection() const
+{
+	return pooled_connection_;
 }
