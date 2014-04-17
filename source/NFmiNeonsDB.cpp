@@ -614,7 +614,7 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
         /* So we can't make the parameter name and database column name conversion */
       
         break;
-  
+
       query = "SELECT 1 FROM lltbufr_seq_col WHERE col_name = replace('" + ret["parm_name"] + "','-','_') AND seq_type = '" + forecast_type + "'";
   
       Query(query);
@@ -742,7 +742,7 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(const string &producer_na
 
 vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const string& analtime, const string& geom_name) {
 
-	string key = ref_prod + "_" + analtime + "_" + geom_name;
+  string key = ref_prod + "_" + analtime + "_" + geom_name;
   if (gridgeoms.count(key) > 0) {
 #ifdef DEBUG
   cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
