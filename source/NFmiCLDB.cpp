@@ -67,7 +67,7 @@ map<string, string> NFmiCLDB::GetStationInfo(unsigned long producer_id, unsigned
       break;
   
     default:
-      ret = GetFMIStationInfo(station_id, aggressive_cache);
+      ret = GetFMIStationInfo(producer_id, station_id, aggressive_cache);
       break;
   }
   
@@ -242,10 +242,12 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
  * 
  */
 
-map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggressive_cache) {
-  
-  if (fmi_stations.find(wmo_id) != fmi_stations.end())
-    return fmi_stations[wmo_id];
+map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache) {
+
+  string key = boost::lexical_cast<string> (producer_id) + "_" + boost::lexical_cast<string> (station_id);
+
+  if (fmi_stations.find(key) != fmi_stations.end())
+    return fmi_stations[key];
 
   /*
    * If aggressive_cache is not set, query only for the individual station.
@@ -254,11 +256,24 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggre
    * requested does not exist.
    */
 
-  string query = "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
+  string query;
+
+  if (producer_id != 20015)
+  {
+    query = "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
 		         "FROM sreg_view WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL";
 
-  if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-    query += " AND wmon = " + boost::lexical_cast<string> (wmo_id);
+    if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
+      query += " AND wmon = " + boost::lexical_cast<string> (station_id);
+  }
+  else
+  {
+    query = "SELECT n.member_code AS wmon, round(s.station_geometry.sdo_point.y, 5) AS latitude, round(s.station_geometry.sdo_point.x, 5) AS longitude, "
+				"s.station_name, s.station_id, NULL, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
+
+    if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
+      query += " WHERE (s.station_id = " + boost::lexical_cast<string> (station_id) + " OR to_number(n.member_code) = " + boost::lexical_cast<string> (station_id) + ")";
+  }
 
   Query(query);
   
@@ -270,7 +285,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggre
     if (values.empty())
       break;
       
-    int currid = boost::lexical_cast<int> (values[0]);
+    //int currid = boost::lexical_cast<int> (values[0]);
       
     station["wmon"] = values[0];
     station["latitude"] = values[1];
@@ -280,18 +295,18 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long wmo_id, bool aggre
     station["lpnn"] = values[5];
     station["elevation"] = values[6];
 
-    fmi_stations[currid] = station;
+    fmi_stations[key] = station;
       
     station.clear();  
   }
 
   map <string, string> ret;
 
-  if (fmi_stations.find(wmo_id) != fmi_stations.end())
-    ret = fmi_stations[wmo_id];
+  if (fmi_stations.find(key) != fmi_stations.end())
+    ret = fmi_stations[key];
   else
     // If station does not exist, place empty map as a placeholder
-    fmi_stations[wmo_id] = ret;
+    fmi_stations[key] = ret;
     
   return ret;
 }
@@ -326,7 +341,8 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
                    "1 AS scale, "
                    "precision, "
                    "0 AS base, "
-                   "data_type "
+                   "data_type, "
+                   "responding_id "
                    "FROM "
                    "clim_param_xref "
                    "WHERE producer_no = " + boost::lexical_cast<string> (producer_id);
@@ -351,7 +367,8 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
       pinfo["precision"] = values[5];
       pinfo["base"] = values[6];
       pinfo["data_type"] = values[7];
-   
+      pinfo["responding_id"] = values[8];
+
       parameterinfo[pid][uid] = pinfo;
    
       pinfo.clear();
@@ -486,7 +503,11 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
               " AND " +
               boost::lexical_cast<string> (max_longitude);
       break;     
-    
+
+    case 20015:
+	  throw runtime_error("Area-based queries not supported for producer 20015 yet");
+	  break;
+
     default:
       /*
        *  LPNN stations
@@ -569,7 +590,7 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
         break;	
       
       default:
-        fmi_stations[id] = station;
+        fmi_stations[boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string> (id)] = station;
         break;
     }
 
