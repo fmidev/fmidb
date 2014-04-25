@@ -806,7 +806,8 @@ map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_i
                  "grid_model_name.model_desc, "
                  "grid_num_model_grib.model_id, "
                  "grid_model_ident.ident_name, "
-                 "grid_model_ident.ident_id "
+                 "grid_model_ident.ident_id, "
+                 "grid_model.model_type "
                  "FROM fmi_producers, grid_model, grid_model_name, grid_num_model_grib, grid_model_ident "
                  "WHERE fmi_producers.producer_id = " +boost::lexical_cast<string>(producer_id) + " "
                  "AND fmi_producers.producer_class = 1 "
@@ -829,6 +830,7 @@ map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_i
     ret["model_id"] = row[5];
     ret["ident_name"] = row[6];
     ret["ident_id"] = row[7];
+    ret["model_type"] = row[8];
 
     gridmodeldefinition[producer_id] = ret;
 
