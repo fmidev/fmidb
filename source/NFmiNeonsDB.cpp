@@ -542,9 +542,14 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
 
 map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
 
-  if (parameterinfo.find(producer_id) != parameterinfo.end())
-    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
+  if (parameterinfo.find(producer_id) != parameterinfo.end()) {
+    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end()) {
+#ifdef DEBUG
+    cout << "DEBUG: GetParameterDefinition() cache hit!" << endl;
+#endif
       return parameterinfo[producer_id][universal_id];
+    }
+  }
   
   map <string, string> ret;
   
@@ -666,7 +671,12 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
 map<string, string> NFmiNeonsDB::GetProducerDefinition(unsigned long producer_id) {
 
   if (producerinfo.count(producer_id) > 0)
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
+#endif
     return producerinfo[producer_id];
+  }
 
   string query = "SELECT" 
                  " producer_id,"
@@ -886,7 +896,13 @@ vector<string> NFmiNeonsDB::GetNeonsTables(const string &start_time, const strin
 map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string &geometry_name) {
 
   if (geometryinfo.find(geometry_name) != geometryinfo.end())
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
+#endif
+
     return geometryinfo[geometry_name];
+  }
 
   string query = "SELECT"
                  " prjn_name,"
