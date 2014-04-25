@@ -36,6 +36,7 @@ NFmiOracle::NFmiOracle()
   , verbose_(false)
   , initialized_(false)
   , pooled_connection_(false)
+  , credentials_set_(false)
 {} ;
 
 
@@ -655,13 +656,18 @@ void NFmiOracle::BeginSession() {
   }
 
   try {
-    db_.session_begin(user_.c_str() , password_.c_str()); // 0 --> auto commit off
+	if (credentials_set_) {
+	  db_.session_reopen();
+	} else {
+	  db_.session_begin(user_.c_str() , password_.c_str());
+	}
 
 #ifdef DEBUG
 cout << "DEBUG: session started as " << user_ << "/***" << endl;
 #endif
 
     initialized_ = true;
+    credentials_set_ = true;
 
     if (!date_mask_sql_.empty()) {
       DateFormat("YYYYMMDDHH24MISS");

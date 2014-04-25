@@ -95,6 +95,7 @@ protected:
   bool verbose_;
   bool initialized_;
   bool pooled_connection_;
+  bool credentials_set_;
 
 };
 
