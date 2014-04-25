@@ -626,7 +626,7 @@ cout << "DEBUG: attached to Oracle " << database_ << endl;
 
 void NFmiOracle::Detach() {
 	
-	if (!connected_)
+  if (!connected_)
     return;
   
   try {
@@ -674,10 +674,21 @@ cout << "DEBUG: session started as " << user_ << "/***" << endl;
     }
 
   } catch(oracle::otl_exception& p) {
-    cerr << "Unable to begin session as user " << user_ << endl;
-    cerr << p.msg << endl; // print out error message
-    throw (p.code);
-    //exit(1);
+   switch (p.code) {
+	case 3135:
+	  cerr << "Got ORA-03135: connection lost contact, reconnecting ...\n";
+	  Detach();
+	  Attach();
+	  // Should we have a counter here? This might turn into an eternal loop ...
+	  BeginSession();
+	  break;
+
+	default:
+	  cerr << "Unable to begin session as user " << user_ << endl;
+	  cerr << p.msg << endl; // print out error message
+	  throw (p.code);
+	  break;
+	}
   }
 }
 
