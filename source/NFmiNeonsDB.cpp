@@ -1180,6 +1180,15 @@ NFmiNeonsDBPool::NFmiNeonsDBPool()
   , itsDatabase("")
 {}
 
+NFmiNeonsDBPool::~NFmiNeonsDBPool()
+{
+  for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
+	  itsWorkerList[i]->Detach();
+    delete itsWorkerList[i];
+  }
+  itsWorkerList.clear(); itsWorkingList.clear();
+  delete itsInstance;
+}
 /*
  * GetConnection()
  * 

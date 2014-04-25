@@ -79,7 +79,7 @@ class NFmiNeonsDBPool {
 	
 	  static NFmiNeonsDBPool* Instance();
 
-	  ~NFmiNeonsDBPool() { delete itsInstance; }
+	  ~NFmiNeonsDBPool();
 
 	  NFmiNeonsDB * GetConnection();
 	  void Release(NFmiNeonsDB *theWorker);
