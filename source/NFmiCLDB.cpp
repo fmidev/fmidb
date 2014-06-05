@@ -386,6 +386,48 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
   
 }
 
+vector<map<string, string>> NFmiCLDB::GetParameterMapping(unsigned long producer_id, unsigned long universal_id) {
+
+  string key = boost::lexical_cast<string> (producer_id) + "_" + boost::lexical_cast<string> (universal_id);
+
+  if (parametermapping.find(key) != parametermapping.end())
+      return parametermapping[key];
+
+  vector<map<string,string>> ret;
+
+  string query = "SELECT "
+                   "measurand_id, "
+		  	  	   "sensor_no, "
+                   "scale, "
+                   "base "
+                   "FROM "
+                   "clim_param_xref_ng "
+                   "WHERE producer_id = " + boost::lexical_cast<string> (producer_id) +
+                   " AND univ_id = " + boost::lexical_cast<string> (universal_id) ;
+
+  Query(query);
+
+  while(true) {
+    map <string, string> pinfo;
+
+    vector <string> values = FetchRow();
+
+    if (values.empty())
+      break;
+
+    pinfo["measurand_id"] = values[0];
+    pinfo["sensor_no"] = values[1];
+    pinfo["scale"] = values[2];
+    pinfo["base"] = values[3];
+
+    ret.push_back(pinfo);
+  }
+
+  parametermapping[key] = ret;
+
+  return ret;
+}
+
 /*
  * GetProducerDefinition(int)
  * 

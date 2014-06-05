@@ -31,7 +31,8 @@ public:
   
   std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, unsigned long universal_id);
   std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
-  
+  std::vector<std::map<std::string, std::string>> GetParameterMapping(unsigned long producer_id, unsigned long universal_id);
+
 
 private:
 
@@ -39,6 +40,7 @@ private:
   std::map<std::string, std::string> GetRoadStationInfo(unsigned long station_id, bool aggressive_cache);
   std::map<std::string, std::string> GetFMIStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache);
   
+  std::map<std::string, std::vector<std::map<std::string, std::string>>> parametermapping;
   std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string> > > parameterinfo;
   std::map<unsigned long, std::map<std::string, std::string> > road_weather_stations;
   std::map<unsigned long, std::map<std::string, std::string> > swedish_road_weather_stations;
