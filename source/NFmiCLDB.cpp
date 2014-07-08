@@ -244,7 +244,8 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
 
 map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache) {
 
-  string key = boost::lexical_cast<string> (producer_id) + "_" + boost::lexical_cast<string> (station_id);
+  string producer_id_str = boost::lexical_cast<string> (producer_id);
+  string key = producer_id_str + "_" + boost::lexical_cast<string> (station_id);
 
   if (fmi_stations.find(key) != fmi_stations.end())
     return fmi_stations[key];
@@ -286,7 +287,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
       break;
       
     //int currid = boost::lexical_cast<int> (values[0]);
-      
+
     station["wmon"] = values[0];
     station["latitude"] = values[1];
     station["longitude"] = values[2];
@@ -295,7 +296,9 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
     station["lpnn"] = values[5];
     station["elevation"] = values[6];
 
-    fmi_stations[key] = station;
+    string tempkey = producer_id_str + "_" + station["wmon"];
+
+    fmi_stations[tempkey] = station;
       
     station.clear();  
   }
