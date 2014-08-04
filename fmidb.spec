@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 13.11.13
+Version: 13.11.19
 Release: 1.fmi
 License: FMI
 Group: Development/Tools
@@ -34,7 +34,8 @@ rm -rf $RPM_BUILD_ROOT
 make %{_smp_mflags} 
 
 %install
-%makeinstall
+rm -rf $RPM_BUILD_ROOT
+make install libdir=$RPM_BUILD_ROOT/%{_libdir} includedir=$RPM_BUILD_ROOT/%{_includedir}
 
 %post
 umask 007
@@ -57,6 +58,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Nov 19  2013 Mikko Partio <mikko.partio@fmi.fi> - 13.11.19-1.fmi
+- Supporting timeRangeIndicator in parameter metadata retrieval - API change!
 * Wed Nov 13 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.11.13-1.fmi
 - Bugfix release
 * Tue Oct  8 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.10.8-1.fmi

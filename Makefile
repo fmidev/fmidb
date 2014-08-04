@@ -18,7 +18,7 @@ DIFFICULTFLAGS = -pedantic -Weffc++ -Wredundant-decls -Wshadow -Woverloaded-virt
 
 CC = /usr/bin/g++
 
-MAJOR_VERSION=0
+MAJOR_VERSION=1
 MINOR_VERSION=0
 
 # Default compiler flags
