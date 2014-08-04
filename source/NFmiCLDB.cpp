@@ -296,7 +296,8 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
     station["lpnn"] = values[5];
     station["elevation"] = values[6];
 
-    string tempkey = producer_id_str + "_" + station["wmon"];
+    // for 20015 use fmisid, else use wmo number
+    string tempkey = producer_id_str + "_" + (producer_id == 20015 ? station["fmisid"] : station["wmon"]);
 
     fmi_stations[tempkey] = station;
       
