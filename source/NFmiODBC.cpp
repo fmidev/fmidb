@@ -55,7 +55,7 @@ cout << "DEBUG: connected to ODBC " << database << endl;
   } catch(odbc::otl_exception& p) {
     cerr << "Unable to connect to ODBC:" << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw p.code;
   }
 
 }
@@ -80,7 +80,7 @@ cout << "DEBUG: connected to ODBC " << database_ << endl;
   } catch(odbc::otl_exception& p) {
     cerr << "Unable to connect to ODBC:" << endl;
     cerr << p.msg << endl; // print out error message
-    exit(1);
+    throw p.code;
   }    
 }
 
