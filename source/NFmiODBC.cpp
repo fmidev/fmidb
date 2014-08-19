@@ -24,8 +24,14 @@ NFmiODBC & NFmiODBC::Instance() {
 }
 
 
-NFmiODBC::NFmiODBC() {}
+NFmiODBC::NFmiODBC() : connected_(false){}
 
+NFmiODBC::NFmiODBC(const std::string& user, const std::string& password, const std::string& database)
+	: connected_(false)
+	, user_(user)
+	, password_(password)
+	, database_(database)
+{}
 
 void NFmiODBC::Connect(const string & user,
                    const string & password,
@@ -221,7 +227,7 @@ vector<string> NFmiODBC::FetchRow() {
 void NFmiODBC::Execute(const string & sql) throw (int) { 
 
 #ifdef DEBUG
-cout << "DEBUG: " << sql.c_str() << endl;
+cout << "DEBUG: " << sql << endl;
 #endif
 
   try { 
@@ -231,7 +237,7 @@ cout << "DEBUG: " << sql.c_str() << endl;
         odbc::otl_exception::enabled);
   } catch(odbc::otl_exception& p) {
     // re-throw error code
-    cerr << p.msg;
+    cerr << p.msg << endl;
     cerr << "Query: " << p.stm_text << endl;
     throw p.code;  
   }
@@ -246,6 +252,48 @@ NFmiODBC::~NFmiODBC() {
 void NFmiODBC::Disconnect() {
   db_.logoff();
   connected_ = false;        
+}
+
+void NFmiODBC::Commit() throw (int) {
+
+#ifdef DEBUG
+  cout << "DEBUG: COMMIT" << endl;
+#endif
+
+  try {
+    db_.commit();
+  } catch (odbc::otl_exception& p) {
+
+    // Always print error if commit fails
+
+    cerr << p.msg << endl;
+    throw p.code;
+  }
+}
+
+void NFmiODBC::Rollback() throw (int) {
+
+#ifdef DEBUG
+  cout << "DEBUG: ROLLBACK" << endl;
+#endif
+
+  try {
+
+  //	db_.cancel();
+    if (stream_.good()) {
+
+      rs_iterator_.detach();
+      stream_.close();
+
+    }
+    db_.rollback();
+  } catch (odbc::otl_exception& p) {
+
+    // Always print error if rollback fails (it should be impossible though)
+
+    cerr << p.msg;
+    throw p.code;
+  }
 }
 
 /*

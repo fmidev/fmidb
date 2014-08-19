@@ -10,6 +10,7 @@ class NFmiODBC {
 public:
 
   NFmiODBC();
+  NFmiODBC(const std::string& user, const std::string& password, const std::string& database);
   virtual ~NFmiODBC();
         
   static NFmiODBC & Instance();
@@ -28,6 +29,9 @@ public:
   virtual void Execute(const std::string & sql) throw (int);
 
   virtual std::string MakeStandardDate(const otl_datetime &datetime);
+
+  void Commit() throw (int);
+  void Rollback() throw (int);
 
 protected:
 
