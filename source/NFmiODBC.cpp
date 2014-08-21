@@ -92,7 +92,7 @@ void NFmiODBC::Query(const string & sql) {
   }
   
 #ifdef DEBUG
-cout << "DEBUG: " << sql.c_str() << endl;
+cout << "DEBUG: " << sql << endl;
 #endif
 
   try {
