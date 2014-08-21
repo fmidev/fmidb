@@ -29,25 +29,11 @@ public:
 
   static NFmiNeon2DB & Instance();
 
-  std::map<std::string, std::string> ProducerFromGrib1(long centre, long process);
-  std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId = kFloatMissing, double levelValue = kFloatMissing); // GRIB 1
-  std::map<std::string, std::string> LevelFromGrib1(long producerId, long levelId);
+  std::map<std::string, std::string> ProducerFromGrib(long centre, long process);
+  std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
+  std::map<std::string, std::string> ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
 
-  std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
-  std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
-  std::map<std::string, std::string> GetGeometryDefinition(const std::string &geometry_name);
-  std::map<std::string, std::string> GetGridModelDefinition(unsigned long producer_id);
-  std::pair<int, int> GetGrib2Parameter(unsigned long producerId, unsigned long parameterId);
-
-  std::map<std::string, std::string> GetStationInfo(unsigned long wmo_id, bool aggressive_cache = true);
-  std::map<int, std::map<std::string, std::string> > GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp = false);
-  
-  std::vector<std::string> GetNeonsTables(const std::string &start_time, const std::string &end_time, const std::string &producer_name);
-  std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
-
-  long GetGridParameterId(long no_vers, const std::string& name);
-
-  std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
+  std::map<std::string, std::string> LevelFromGrib(long producerId, long levelId, long edition);
 
   short Id() { return itsId; }
   void SQLDateMask(const std::string& theDateMask);
@@ -56,16 +42,10 @@ private:
 
   // These maps are used for caching
 
-  std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
-  std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > parameterinfo;
-  std::map<std::string, std::map<std::string, std::string > > geometryinfo;
-  std::map<unsigned long, std::map<std::string, std::string> > stationinfo;  
-  std::map<std::string, std::string> levelinfo;
-  std::map<std::string, std::string> levelinfosimple;
-  std::map<std::string, std::string> gridparameterinfo;
-  std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
-  std::map<std::string, long> gridparamid;
-  std::map<unsigned long, std::map<std::string, std::string> > gridmodeldefinition;
+  std::map<std::string, std::map<std::string, std::string > > producerinfo;
+  std::map<std::string, std::map<std::string, std::string> > levelinfo;
+  std::map<std::string, std::map<std::string, std::string> > paramgrib1info;
+  std::map<std::string, std::map<std::string, std::string> > paramgrib2info;
 
   short itsId; // Only for connection pooling
 

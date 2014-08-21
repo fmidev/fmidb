@@ -29,9 +29,19 @@ void NFmiNeonsDB::Connect(const std::string & user, const std::string & password
 }*/
 
 
-map<string, string> NFmiNeon2DB::ProducerFromGrib1(long centre, long process)
+map<string, string> NFmiNeon2DB::ProducerFromGrib(long centre, long process)
 {
 	using boost::lexical_cast;
+
+	string key = lexical_cast<string> (centre) + "_" + lexical_cast<string> (process);
+
+	if (producerinfo.find(key) != producerinfo.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: ProducerFromGrib() cache hit!" << endl;
+#endif
+		return producerinfo[key];
+	}
 
 	stringstream query;
 
@@ -61,38 +71,28 @@ map<string, string> NFmiNeon2DB::ProducerFromGrib1(long centre, long process)
 		ret["centre"] = lexical_cast<string> (centre);
 		ret["ident"] = lexical_cast<string> (process);
 
-		//param_grib1[key] = p
-		//gridparamid[key] = boost::lexical_cast<long> (row[0]);
+		producerinfo[key] = ret;
 
 	}
 
 	return ret;
 }
-
-
-/*
- * Parameter(unsigned long, unsigned long, unsigned long)
- *
- * Return the parm_id that matches given
- * producer id, grib 1 table version and grib 1 parameter number
- *
- */
-
 map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
 {
-	
-	//string key = name + "_" + no_vers_str;
 
-/*	if (gridparamid.find(key) != gridparamid.end())
+	using boost::lexical_cast;
+
+	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (tableVersion) + "_" +
+		lexical_cast<string> (paramId) + "_" + lexical_cast<string> (timeRangeIndicator) + "_" + lexical_cast<string> (levelId) + lexical_cast<string> (levelValue) ;
+
+	if (paramgrib1info.find(key) != paramgrib1info.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetGridParameterId() cache hit!" << endl;
+	   cout << "DEBUG: ParameterFromGrib1() cache hit!" << endl;
 #endif
-	   return gridparamid[key];
+		return paramgrib1info[key];
 	}
-*/
-	using boost::lexical_cast;
-	
+
 	stringstream query;
 
 	// always include level_id = 1 (ANYLEVEL) in query since that's the general case
@@ -116,10 +116,9 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 	vector<string> row = FetchRow();
 
 	map<string,string> ret;
-	
+
 	if (row.empty())
 	{
-		//gridparamid[key] = -1;
 #ifdef DEBUG
 		cout << "DEBUG Parameter not found\n";
 #endif
@@ -128,28 +127,98 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
-		ret["grib1TableVersion"] = lexical_cast<string> (tableVersion);
-		ret["grib1Number"] = lexical_cast<string> (paramId);
-		ret["interpolationMethod"] = row[5];
+		ret["grib1_table_version"] = lexical_cast<string> (tableVersion);
+		ret["grib1_number"] = lexical_cast<string> (paramId);
+		ret["interpolation_method"] = row[5];
 		ret["level_id"] = row[6];
 
-		//param_grib1[key] = p
-		//gridparamid[key] = boost::lexical_cast<long> (row[0]);
+		paramgrib1info[key] = ret;
 
 	}
 
 	return ret;
 }
 
-map<string, string> NFmiNeon2DB::LevelFromGrib1(long producerId, long levelNumber)
+map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
+	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (discipline) + "_" + 
+		lexical_cast<string> (category) + "_" + lexical_cast<string> (paramId) + "_" + lexical_cast<string> (levelId) + lexical_cast<string> (levelValue) ;
+
+	if (paramgrib2info.find(key) != paramgrib2info.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: ParameterFromGrib2() cache hit!" << endl;
+#endif
+		return paramgrib2info[key];
+	}
+
+	stringstream query;
+
+	// always include level_id = 1 (ANYLEVEL) in query since that's the general case
+	// only in some exception we have a parameter that has a different meaning
+	// depending on the level it is found (for example harmonie and precipitation/mixing ratio)
+
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id "
+			<< "FROM param_grib2 g, param p, param_unit u, interpolation_method i, fmi_producer f "
+			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
+			<< " AND f.id = " << producerId
+			<< " AND discipline = " << discipline
+			<< " AND category = " << category
+			<< " AND number = " << paramId
+			<< " AND level_id IN (1, " << levelId << ")"
+			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+			<< " ORDER BY CASE level_id WHEN 1 THEN 2 ELSE 1 END, level_value NULLS LAST LIMIT 1"
+		;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	map<string,string> ret;
+	
+	if (row.empty())
+	{
+#ifdef DEBUG
+		cout << "DEBUG Parameter not found\n";
+#endif
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+		ret["grib2_discipline"] = lexical_cast<string> (discipline);
+		ret["grib2_category"] = lexical_cast<string> (category);
+		ret["grib2_number"] = lexical_cast<string> (paramId);
+		ret["interpolationMethod"] = row[5];
+		ret["level_id"] = row[6];
+
+		paramgrib2info[key] = ret;
+	}
+
+	return ret;
+}
+
+map<string, string> NFmiNeon2DB::LevelFromGrib(long producerId, long levelNumber, long edition)
+{
+	using boost::lexical_cast;
+
+	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (levelNumber) + "_" + lexical_cast<string> (edition);
+
+	if (levelinfo.find(key) != levelinfo.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: LevelFromGrib() cache hit!" << endl;
+#endif
+		return levelinfo[key];
+	}
+		
 	stringstream query;
 
 	query << "SELECT id, name "
-			<< "FROM level l, level_grib1 g "
-			<< "WHERE l.id = g.level_id "
+			<< "FROM level l, " << (edition == 1 ? "level_grib1 g " : "level_grib2 g")
+			<< " WHERE l.id = g.level_id "
 			<< " AND g.producer_id = " << producerId
 			<< " AND g.grib_level_id = " << levelNumber
 	;
@@ -162,7 +231,6 @@ map<string, string> NFmiNeon2DB::LevelFromGrib1(long producerId, long levelNumbe
 
 	if (row.empty())
 	{
-		//gridparamid[key] = -1;
 #ifdef DEBUG
 		cout << "DEBUG Level not found\n";
 #endif
@@ -176,6 +244,7 @@ map<string, string> NFmiNeon2DB::LevelFromGrib1(long producerId, long levelNumbe
 		//param_grib1[key] = p
 		//gridparamid[key] = boost::lexical_cast<long> (row[0]);
 
+		levelinfo[key] = ret;
 	}
 
 	return ret;
