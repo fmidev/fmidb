@@ -95,10 +95,6 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 
 	stringstream query;
 
-	// always include level_id = 1 (ANYLEVEL) in query since that's the general case
-	// only in some exception we have a parameter that has a different meaning
-	// depending on the level it is found (for example harmonie and precipitation/mixing ratio)
-
 	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id "
 			<< "FROM param_grib1 g, param p, param_unit u, interpolation_method i, fmi_producer f "
 			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
@@ -106,9 +102,9 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 			<< " AND table_version = " << tableVersion
 			<< " AND number = " << paramId
 			<< " AND timerange_indicator = " << timeRangeIndicator
-			<< " AND level_id IN (1, " << levelId << ")"
+			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
 			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-			<< " ORDER BY CASE level_id WHEN 1 THEN 2 ELSE 1 END, level_value NULLS LAST LIMIT 1"
+			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
 		;
 
 	Query(query.str());
@@ -156,10 +152,6 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discip
 
 	stringstream query;
 
-	// always include level_id = 1 (ANYLEVEL) in query since that's the general case
-	// only in some exception we have a parameter that has a different meaning
-	// depending on the level it is found (for example harmonie and precipitation/mixing ratio)
-
 	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id "
 			<< "FROM param_grib2 g, param p, param_unit u, interpolation_method i, fmi_producer f "
 			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
@@ -167,9 +159,9 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discip
 			<< " AND discipline = " << discipline
 			<< " AND category = " << category
 			<< " AND number = " << paramId
-			<< " AND level_id IN (1, " << levelId << ")"
+			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
 			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-			<< " ORDER BY CASE level_id WHEN 1 THEN 2 ELSE 1 END, level_value NULLS LAST LIMIT 1"
+			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
 		;
 
 	Query(query.str());
