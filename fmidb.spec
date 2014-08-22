@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 13.11.19
+Version: 14.8.22
 Release: 1.fmi
 License: FMI
 Group: Development/Tools
@@ -58,7 +58,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Tue Nov 19  2013 Mikko Partio <mikko.partio@fmi.fi> - 13.11.19-1.fmi
+* Fri Aug 22 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.8.22-1.fmi
+- Adding functions to NFmiNeon2DB
+* Tue Aug 19 2014 Andreas Tack <andreas.tack@fmi.fi> - 14.8.19-2.fmi
+- Change some exit statements to throw error instead
+* Tue Aug 19 2014 Andreas Tack <andreas.tack@fmi.fi> - 14.8.19-1.fmi
+- Neon2 support
+* Mon Aug  4 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.8.4-1.fmi
+- Smaller fixes
+* Tue Nov 19 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.11.19-1.fmi
 - Supporting timeRangeIndicator in parameter metadata retrieval - API change!
 * Wed Nov 13 2013 Mikko Partio <mikko.partio@fmi.fi> - 13.11.13-1.fmi
 - Bugfix release
