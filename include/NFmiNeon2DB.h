@@ -32,6 +32,7 @@ public:
   std::map<std::string, std::string> ProducerFromGrib(long centre, long process);
   std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
   std::map<std::string, std::string> ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
+  std::map<std::string, std::string> ParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
 
   std::map<std::string, std::string> LevelFromGrib(long producerId, long levelId, long edition);
 
@@ -46,6 +47,7 @@ private:
   std::map<std::string, std::map<std::string, std::string> > levelinfo;
   std::map<std::string, std::map<std::string, std::string> > paramgrib1info;
   std::map<std::string, std::map<std::string, std::string> > paramgrib2info;
+  std::map<std::string, std::map<std::string, std::string> > paramnetcdfinfo;
 
   short itsId; // Only for connection pooling
 

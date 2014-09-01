@@ -123,10 +123,12 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
+		ret["version"] = row[2];
 		ret["grib1_table_version"] = lexical_cast<string> (tableVersion);
 		ret["grib1_number"] = lexical_cast<string> (paramId);
-		ret["interpolation_method"] = row[5];
-		ret["level_id"] = row[6];
+		ret["interpolation_method"] = row[4];
+		ret["level_id"] = row[5];
+		ret["level_value"] = row[6];
 
 		paramgrib1info[key] = ret;
 
@@ -140,7 +142,7 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discip
 	using boost::lexical_cast;
 
 	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (discipline) + "_" + 
-		lexical_cast<string> (category) + "_" + lexical_cast<string> (paramId) + "_" + lexical_cast<string> (levelId) + lexical_cast<string> (levelValue) ;
+		lexical_cast<string> (category) + "_" + lexical_cast<string> (paramId) + "_" + lexical_cast<string> (levelId) + "_" + lexical_cast<string> (levelValue) ;
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
@@ -180,13 +182,69 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discip
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
+		ret["version"] = row[2];
 		ret["grib2_discipline"] = lexical_cast<string> (discipline);
 		ret["grib2_category"] = lexical_cast<string> (category);
 		ret["grib2_number"] = lexical_cast<string> (paramId);
-		ret["interpolationMethod"] = row[5];
-		ret["level_id"] = row[6];
+		ret["interpolation_method"] = row[4];
+		ret["level_id"] = row[5];
+		ret["level_value"] = row[6];
 
 		paramgrib2info[key] = ret;
+	}
+
+	return ret;
+}
+
+map<string, string> NFmiNeon2DB::ParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
+{
+	using boost::lexical_cast;
+
+	string key = lexical_cast<string> (producerId) + "_" + paramName + "_" + lexical_cast<string> (levelId) + "_" + lexical_cast<string> (levelValue) ;
+
+	if (paramnetcdfinfo.find(key) != paramnetcdfinfo.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: ParameterFromNetCDF() cache hit!" << endl;
+#endif
+		return paramnetcdfinfo[key];
+	}
+
+	stringstream query;
+
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id, g.level_value "
+			<< "FROM param_netcdf g, param p, param_unit u, interpolation_method i, fmi_producer f "
+			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
+			<< " AND f.id = " << producerId
+			<< " AND g.netcdf_name = '" << paramName << "'"
+			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
+			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
+		;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	map<string,string> ret;
+
+	if (row.empty())
+	{
+#ifdef DEBUG
+		cout << "DEBUG Parameter not found\n";
+#endif
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+		ret["version"] = row[2];
+		ret["netcdf_name"] = lexical_cast<string> (paramName);
+		ret["interpolation_method"] = row[4];
+		ret["level_id"] = row[5];
+		ret["level_value"] = row[6];
+
+		paramnetcdfinfo[key] = ret;
 	}
 
 	return ret;
@@ -209,7 +267,7 @@ map<string, string> NFmiNeon2DB::LevelFromGrib(long producerId, long levelNumber
 	stringstream query;
 
 	query << "SELECT id, name "
-			<< "FROM level l, " << (edition == 1 ? "level_grib1 g " : "level_grib2 g")
+			<< "FROM level l, " << (edition == 2 ? "level_grib2 g " : "level_grib1 g")
 			<< " WHERE l.id = g.level_id "
 			<< " AND g.producer_id = " << producerId
 			<< " AND g.grib_level_id = " << levelNumber
