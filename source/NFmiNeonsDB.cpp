@@ -463,9 +463,11 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
 
   string parm_name = row[0];
 
-  query = "SELECT category,param FROM grid_param_grib2 WHERE parm_name = '" + parm_name + "' AND "
-		  "(producer = 9999 OR producer = (SELECT ident_id FROM grid_num_model_grib WHERE model_id = " + boost::lexical_cast<string> (producerId) +
-		  ")) ORDER BY producer";
+  query = "SELECT category, param FROM grid_param_grib2 WHERE parm_name = '" + parm_name
+		  + "' AND (producer = 9999 OR producer = "
+		  "(SELECT ident_id FROM grid_num_model_grib g, fmi_producers f, grid_model m "
+		  "WHERE f.producer_id = " + boost::lexical_cast<string> (producerId) +
+		  "AND f.ref_prod = m.model_type AND m.model_name = g.model_name)) ORDER BY producer";
 
   Query(query);
 
