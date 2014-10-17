@@ -1,22 +1,22 @@
-#include <NFmiNeon2DB.h>
+#include <NFmiRadonDB.h>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <algorithm>
 
 using namespace std;
 
-NFmiNeon2DB& NFmiNeon2DB::Instance() {
-  static NFmiNeon2DB instance_;
+NFmiRadonDB& NFmiRadonDB::Instance() {
+  static NFmiRadonDB instance_;
   return instance_; 
 }
 
-NFmiNeon2DB::NFmiNeon2DB(short theId) : NFmiODBC("neons_client", "kikka8si", "neon2"), itsId(theId) {}
+NFmiRadonDB::NFmiRadonDB(short theId) : NFmiODBC("neons_client", "kikka8si", "radon"), itsId(theId) {}
 
-NFmiNeon2DB::~NFmiNeon2DB() {
+NFmiRadonDB::~NFmiRadonDB() {
   Disconnect();              
 }
 
-/*void NFmiNeon2DB::Connect(const int threadedMode) {
+/*void NFmiRadonDB::Connect(const int threadedMode) {
   NFmiOracle::Connect(threadedMode);
   DateFormat("YYYYMMDDHH24MISS");
   Verbose(true);
@@ -29,7 +29,7 @@ void NFmiNeonsDB::Connect(const std::string & user, const std::string & password
 }*/
 
 
-map<string, string> NFmiNeon2DB::ProducerFromGrib(long centre, long process)
+map<string, string> NFmiRadonDB::ProducerFromGrib(long centre, long process)
 {
 	using boost::lexical_cast;
 
@@ -77,7 +77,7 @@ map<string, string> NFmiNeon2DB::ProducerFromGrib(long centre, long process)
 
 	return ret;
 }
-map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
 {
 
 	using boost::lexical_cast;
@@ -137,7 +137,7 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib1(long producerId, long tableV
 	return ret;
 }
 
-map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
@@ -196,7 +196,7 @@ map<string, string> NFmiNeon2DB::ParameterFromGrib2(long producerId, long discip
 	return ret;
 }
 
-map<string, string> NFmiNeon2DB::ParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::ParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
@@ -250,7 +250,7 @@ map<string, string> NFmiNeon2DB::ParameterFromNetCDF(long producerId, const stri
 	return ret;
 }
 
-map<string, string> NFmiNeon2DB::LevelFromGrib(long producerId, long levelNumber, long edition)
+map<string, string> NFmiRadonDB::LevelFromGrib(long producerId, long levelNumber, long edition)
 {
 	using boost::lexical_cast;
 

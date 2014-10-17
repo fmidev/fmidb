@@ -1,5 +1,5 @@
-#ifndef NEON2DB_H
-#define NEON2DB_H
+#ifndef RADONDB_H
+#define RADONDB_H
 
 #include <string>
 #include <vector>
@@ -9,16 +9,16 @@
 
 #define kFloatMissing 32700.f
 
-class NFmiNeon2DBPool;
+class NFmiRadonDBPool;
 
-class NFmiNeon2DB : public NFmiODBC {
+class NFmiRadonDB : public NFmiODBC {
 
 public:
 
-  friend class NFmiNeon2DBPool;
+  friend class NFmiRadonDBPool;
 
-  NFmiNeon2DB(short theId = 0);
-  ~NFmiNeon2DB();
+  NFmiRadonDB(short theId = 0);
+  ~NFmiRadonDB();
 /*
   void Connect(const int threadedMode = 0);
 
@@ -27,7 +27,7 @@ public:
                 const std::string & database,
                 const int threadedMode = 0);*/
 
-  static NFmiNeon2DB & Instance();
+  static NFmiRadonDB & Instance();
 
   std::map<std::string, std::string> ProducerFromGrib(long centre, long process);
   std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
@@ -53,16 +53,16 @@ private:
 
 };
 
-class NFmiNeon2DBPool {
+class NFmiRadonDBPool {
 	
 	public:
 	
-	  static NFmiNeon2DBPool* Instance();
+	  static NFmiRadonDBPool* Instance();
 
-	  ~NFmiNeon2DBPool();
+	  ~NFmiRadonDBPool();
 
-	  NFmiNeon2DB * GetConnection();
-	  void Release(NFmiNeon2DB *theWorker);
+	  NFmiRadonDB * GetConnection();
+	  void Release(NFmiRadonDB *theWorker);
 	  void MaxWorkers(int theMaxWorkers);
 	  int MaxWorkers() const { return itsMaxWorkers; }
 
@@ -77,13 +77,13 @@ class NFmiNeon2DBPool {
 
 	  // Default to two workers
 
-	  NFmiNeon2DBPool();
+	  NFmiRadonDBPool();
 
-	  static NFmiNeon2DBPool* itsInstance;
+	  static NFmiRadonDBPool* itsInstance;
 
 	  int itsMaxWorkers;
 	  std::vector<int> itsWorkingList;
-	  std::vector<NFmiNeon2DB *> itsWorkerList;
+	  std::vector<NFmiRadonDB *> itsWorkerList;
 
 	  std::mutex itsGetMutex;
 	  std::mutex itsReleaseMutex;
