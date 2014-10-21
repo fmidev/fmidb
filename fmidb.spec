@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 14.8.22
+Version: 14.9.20
 Release: 1.fmi
 License: FMI
 Group: Development/Tools
@@ -58,6 +58,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Oct 20 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.9.20-1.fmi
+- neon2 --> radon
+* Thu Sep  4 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.9.4-1.fmi
+- Fix grib2 parameter metadata fetching
+* Mon Sep  1 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.9.1-1.fmi
+- Adding functions to NFmiNeon2DB
 * Fri Aug 22 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.8.22-1.fmi
 - Adding functions to NFmiNeon2DB
 * Tue Aug 19 2014 Andreas Tack <andreas.tack@fmi.fi> - 14.8.19-2.fmi
