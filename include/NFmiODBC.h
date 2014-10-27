@@ -15,11 +15,12 @@ public:
         
   static NFmiODBC & Instance();
 
-  virtual void Connect(void);
+  virtual void Connect(const int threadedMode);
 
   virtual void Connect( const std::string & user,
                 const std::string & password,
-                const std::string & database);
+                const std::string & database,
+                const int threadedMode = 0);
         
   virtual void Disconnect (void);
         

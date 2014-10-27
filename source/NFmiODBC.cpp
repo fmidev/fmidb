@@ -35,7 +35,8 @@ NFmiODBC::NFmiODBC(const std::string& user, const std::string& password, const s
 
 void NFmiODBC::Connect(const string & user,
                    const string & password,
-                   const string & database) {
+                   const string & database,
+                   const int threadedMode) {
 
   if (connected_)
     return;
@@ -60,7 +61,7 @@ cout << "DEBUG: connected to ODBC " << database << endl;
 
 }
 
-void NFmiODBC::Connect() {
+void NFmiODBC::Connect(const int threadedMode) {
 
   if (connected_)
     return;

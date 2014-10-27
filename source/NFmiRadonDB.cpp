@@ -1,4 +1,5 @@
 #include <NFmiRadonDB.h>
+#include <NFmiODBC.h>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <algorithm>
@@ -16,17 +17,17 @@ NFmiRadonDB::~NFmiRadonDB() {
   Disconnect();              
 }
 
-/*void NFmiRadonDB::Connect(const int threadedMode) {
-  NFmiOracle::Connect(threadedMode);
-  DateFormat("YYYYMMDDHH24MISS");
-  Verbose(true);
-}
+void NFmiRadonDB::Connect(const int threadedMode) {
+  NFmiODBC::Connect(threadedMode);
+//  DateFormat("YYYYMMDDHH24MISS");
+//  Verbose(true);
+} 
 
-void NFmiNeonsDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
-  NFmiOracle::Connect(user,password,database,threadedMode);
-  DateFormat("YYYYMMDDHH24MISS");
-  Verbose(true);
-}*/
+void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
+  NFmiODBC::Connect(user,password,database,threadedMode);
+ // DateFormat("YYYYMMDDHH24MISS");
+ // Verbose(true);
+}
 
 
 map<string, string> NFmiRadonDB::ProducerFromGrib(long centre, long process)
@@ -77,6 +78,68 @@ map<string, string> NFmiRadonDB::ProducerFromGrib(long centre, long process)
 
 	return ret;
 }
+
+map<string, string> NFmiRadonDB::GetNewbaseParameterDefinition(unsigned long producer_id, unsigned long universal_id) {
+/*
+  if (parameterinfo.find(producer_id) != parameterinfo.end()) {
+    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end()) {
+#ifdef DEBUG
+    cout << "DEBUG: GetParameterDefinition() cache hit!" << endl;
+#endif
+      return parameterinfo[producer_id][universal_id];
+    }
+  }
+  
+  */
+  
+  map <string, string> ret;
+  
+  string prod_id = boost::lexical_cast<string> (producer_id);
+  string univ_id = boost::lexical_cast<string> (universal_id);
+  
+  map <string, string> producer_info = GetProducerDefinition(producer_id);
+
+  if (producer_info.empty())
+	  return ret;
+
+  string no_vers = producer_info["no_vers"];
+
+  stringstream query;
+  
+        query << "SELECT "
+                <<"x.parm_name, "
+                << "base, "
+                << "scale, "
+                << "u.unit_name, "
+                << "univ_id "
+                << "FROM param_newbase g, grid_unit u, grid_param_xref x "
+                << "WHERE u.unit_id = g.unit_id AND x.parm_name = g.parm_name"
+                << " AND univ_id = " << univ_id
+                << " AND x.no_vers = " << no_vers;
+
+  Query(query.str());
+   
+  vector<string> row = FetchRow();
+  
+  if (row.empty())
+    return ret;
+    
+  ret["parm_name"] = row[0];
+  ret["base"] = row[1];
+  ret["scale"] = row[2];
+  ret["unit_name"] = row[3];
+  ret["parm_desc"] = row[4];
+  ret["unit_desc"] = row[5];
+  ret["col_name"] = row[6];
+  ret["univ_id"] = row[7]; // Fetch univ_id in cased called from GetParameterDefinition(ulong, string)
+
+  newbaseinfo[producer_id][universal_id] = ret;
+  
+  return ret;
+  
+}
+
+
 map<string, string> NFmiRadonDB::ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
 {
 
@@ -302,21 +365,224 @@ map<string, string> NFmiRadonDB::LevelFromGrib(long producerId, long levelNumber
 
 }
 
-#if 0
+vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime, const string& geom_name) {
 
-NFmiNeonsDBPool* NFmiNeonsDBPool::itsInstance = NULL;
+  string key = ref_prod + "_" + analtime + "_" + geom_name;
+  if (gridgeoms.count(key) > 0) {
+#ifdef DEBUG
+  cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
+#endif
+    return gridgeoms[key];
+  }
+  
+  stringstream query;
+  
+        query << "SELECT geometry_id, table_name, id "
+	        <<  "FROM as_grid "
+	        <<  "WHERE record_count > 0"
+	        <<  " AND model_type like " << ref_prod
+	        <<  " AND last_updated = " << analtime;
 
-NFmiNeonsDBPool* NFmiNeonsDBPool::Instance()
+  if (!geom_name.empty())
+  {
+	  query << " AND geometry_id = " << geom_name;
+  }
+
+  Query(query.str());
+
+  vector<vector<string> > ret;
+
+  while (true) {
+	vector<string> values = FetchRow();
+
+	if (values.empty()) {
+	  break;
+	}
+
+	ret.push_back(values);
+  }
+
+  gridgeoms[key] = ret;
+
+  return ret;
+}
+
+map<string, string> NFmiRadonDB::GetGeometryDefinition(unsigned long geometry_id) {
+/*
+    
+  if (geometryinfo.find(geometry_id) != geometryinfo.end())
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
+#endif
+
+    return geometryinfo[geometry_name];
+  }
+  
+  */
+  // find geom name corresponding id
+
+  stringstream query;
+  string geom_name;
+  
+  query << "SELECT name from geom where id = " << geometry_id;
+  
+  Query(query.str());
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    geom_name = row[0];
+  }
+  else {
+    geom_name = "";
+  }
+  
+  query.str("");
+   
+        query << "SELECT"
+              <<   " name,"
+              <<   " ni,"
+              <<   " nj,"
+              <<   " lat_orig,"
+              <<   " long_orig,"
+              <<   " orig_row_num,"
+              <<   " orig_col_num,"
+              <<   " di,"
+              <<   " dj,"
+              <<   "FROM geom "
+              <<   "WHERE name = " << geom_name;
+
+  map <string, string> ret;
+
+  Query(query.str());
+
+  row = FetchRow();
+
+  if (!row.empty()) {
+    ret["prjn_name"] = row[0];
+    ret["row_cnt"] = row[1];
+    ret["col_cnt"] = row[2];
+    ret["lat_orig"] = row[3];
+    ret["long_orig"] = row[4];
+    ret["orig_row_num"] = row[5];
+    ret["orig_col_num"] = row[6];
+    ret["pas_longitude"] = row[7];
+    ret["pas_latitude"] = row[8];
+    ret["geom_parm_1"] = row[9];
+    ret["geom_parm_2"] = row[10];
+    ret["geom_parm_3"] = row[11];
+    ret["stor_desc"] = row[12];
+
+    geometryinfo[geom_name] = ret;
+  }
+
+  return ret;
+
+}
+
+map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id) {
+/*
+  if (producerinfo.count(producer_id) > 0)
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
+#endif
+    return producerinfo[producer_id];
+  }  */
+  using boost::lexical_cast;
+
+  string id = lexical_cast<string> (producer_id);
+  stringstream query;
+  
+        query << "SELECT id,name,class_id,last_updated "
+              <<   "FROM fmi_producer"
+              <<   " WHERE id = " << producer_id; 
+
+  map <string, string> ret;
+  
+  Query(query.str());
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    ret["producer_id"] = row[0];
+    ret["ref_prod"] = row[1];
+    ret["producer_class"] = row[2];
+    ret["hours_for_latest"] = row[3];
+  
+    producerinfo[id] = ret;
+  }
+  
+  return ret;
+  
+}
+
+/*
+ * GetProducerDefinition(string)
+ * 
+ * Retrieves producer definition from radon meta-tables.
+ * 
+ *
+ */
+
+map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_name) {
+
+  stringstream query;
+  
+        query << "SELECT id "
+              << "FROM fmi_producers"
+              << " WHERE name = " << producer_name;
+
+  Query(query.str());
+  
+  vector<string> row = FetchRow();
+  
+ // unsigned long int producer_id = boost::lexical_cast<unsigned long> (row[0]);
+  string producer_id = row[0];
+  
+  if (producerinfo.find(producer_id) != producerinfo.end())
+    return producerinfo[producer_id];
+  
+  return GetProducerDefinition(producer_id);
+    
+}
+
+string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name) {
+
+  stringstream query;
+  
+  query <<  "SELECT analysis_time "
+ 	<<  "FROM as_grid"
+	<<  " WHERE name = " << ref_prod
+        <<  " AND geometry_id " << geom_name
+	<<  " AND record_count > 0 ";
+  
+  Query(query.str());
+
+  vector<string> row = FetchRow();
+
+  if (row.size() == 0)
+  {
+    return "";
+  }
+
+  return row[0];
+}
+
+
+NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
+
+NFmiRadonDBPool* NFmiRadonDBPool::Instance()
 {
     if (!itsInstance)
     {
-        itsInstance = new NFmiNeonsDBPool();
+        itsInstance = new NFmiRadonDBPool();
     }
 
     return itsInstance;
 }
 
-NFmiNeonsDBPool::NFmiNeonsDBPool()
+NFmiRadonDBPool::NFmiRadonDBPool()
   : itsMaxWorkers(2)
   , itsWorkingList(itsMaxWorkers, -1)
   , itsWorkerList(itsMaxWorkers, NULL)
@@ -327,10 +593,10 @@ NFmiNeonsDBPool::NFmiNeonsDBPool()
   , itsDatabase("")
 {}
 
-NFmiNeonsDBPool::~NFmiNeonsDBPool()
+NFmiRadonDBPool::~NFmiRadonDBPool()
 {
   for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
-	  itsWorkerList[i]->Detach();
+//	  itsWorkerList[i]->Detach();
     delete itsWorkerList[i];
   }
   itsWorkerList.clear(); itsWorkingList.clear();
@@ -346,7 +612,7 @@ NFmiNeonsDBPool::~NFmiNeonsDBPool()
  * 
  */
 
-NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
+NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
  
   /*
    *  1 --> active
@@ -369,7 +635,7 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
 
-        itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
+//        itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
 
 #ifdef DEBUG
 		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
@@ -379,8 +645,8 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       } else if (itsWorkingList[i] == -1) {
         // Create new connection
     	try {
-          itsWorkerList[i] = new NFmiNeonsDB(i);
-		  itsWorkerList[i]->PooledConnection(true);
+          itsWorkerList[i] = new NFmiRadonDB(i);
+//		  itsWorkerList[i]->PooledConnection(true); // EI ODBC-luokassa
 
           if (itsExternalAuthentication)
           {
@@ -398,9 +664,9 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
         	  itsWorkerList[i]->database_ = itsDatabase;
           }
 
-          itsWorkerList[i]->Verbose(true);
-          itsWorkerList[i]->Attach();
-          itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
+   //       itsWorkerList[i]->Verbose(true);  // EI ODBC-luokassa
+   //       itsWorkerList[i]->Attach();  // EI ODBC-luokassa
+//          itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS"); // EI ODBC-luokassa
 
           itsWorkingList[i] = 1;
 
@@ -438,12 +704,12 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
  * to pool.
  */
 
-void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
+void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker) {
   
   lock_guard<mutex> lock(itsReleaseMutex);
 
   theWorker->Rollback();
-  theWorker->EndSession();
+//  theWorker->EndSession(); // EI ODBC-luokassa
   itsWorkingList[theWorker->Id()] = 0;
 
 #ifdef DEBUG
@@ -452,7 +718,7 @@ void NFmiNeonsDBPool::Release(NFmiNeonsDB *theWorker) {
 
 }
 
-void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
+void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers) {
   
   if (theMaxWorkers == itsMaxWorkers)
     return;
@@ -460,7 +726,7 @@ void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
   // Making pool smaller is not supported
   
   if (theMaxWorkers < itsMaxWorkers)
-    throw runtime_error("Making NeonsDB pool size smaller is not supported (" + boost::lexical_cast<string> (itsMaxWorkers) + " to " + boost::lexical_cast<string> (theMaxWorkers) + ")");
+    throw runtime_error("Making RadonDB pool size smaller is not supported (" + boost::lexical_cast<string> (itsMaxWorkers) + " to " + boost::lexical_cast<string> (theMaxWorkers) + ")");
   
   itsMaxWorkers = theMaxWorkers;
 
@@ -468,4 +734,4 @@ void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers) {
   itsWorkerList.resize(itsMaxWorkers, NULL);
 
 }
-#endif
+
