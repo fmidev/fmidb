@@ -299,7 +299,7 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     return gridparameterinfo[key];
 
   string query = "SELECT parm_name "
-                 "FROM grid_param_grib_level_test "
+                 "FROM grid_param_grib "
                  "WHERE parm_id = " + parm_id + " "
                  "AND no_vers = " + no_vers + " "
                  "AND timerange_ind = " + trInd + " ";
