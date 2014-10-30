@@ -30,7 +30,7 @@ public:
   std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer); // GRIB 1
   std::string GetGridLevelName(long InLvlId, long InProducerId); // GRIB 2
-  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0); // GRIB 1
+  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1
   std::string GetGridParameterNameForGrib2(long InParmId,long InCategory,long InDiscipline, long InProducerId); // GRIB 2
   std::string GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &param);
 
@@ -51,7 +51,7 @@ public:
   long GetGridParameterId(long no_vers, const std::string& name);
 
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
-
+  
   short Id() { return itsId; }
   void SQLDateMask(const std::string& theDateMask);
   
@@ -68,7 +68,7 @@ private:
   std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
   std::map<std::string, long> gridparamid;
   std::map<unsigned long, std::map<std::string, std::string> > gridmodeldefinition;
-
+  
   short itsId; // Only for connection pooling
 
 };

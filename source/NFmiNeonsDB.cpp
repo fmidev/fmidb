@@ -281,7 +281,7 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
  *
  */
 
-string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator) {
+string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator, long levelType) {
 
   string parm_name;
   string univ_id;
@@ -289,19 +289,22 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
   string no_vers = boost::lexical_cast<string>(InCodeTableVer);
   string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
   string trInd = boost::lexical_cast<string>(timeRangeIndicator);
+  string levType = boost::lexical_cast<string> (levelType);
 
   // Implement some sort of caching: this function is quite expensive
 
-  string key = parm_id + "_" + no_vers + "_" + no_vers2 + "_" + trInd;
+  string key = parm_id + "_" + no_vers + "_" + no_vers2 + "_" + trInd + "_" + levType;
 
   if (gridparameterinfo.find(key) != gridparameterinfo.end())
     return gridparameterinfo[key];
 
   string query = "SELECT parm_name "
-                 "FROM grid_param_grib "
+                 "FROM grid_param_grib_level_test "
                  "WHERE parm_id = " + parm_id + " "
                  "AND no_vers = " + no_vers + " "
-                 "AND timerange_ind = " + trInd;
+                 "AND timerange_ind = " + trInd + " ";
+                 "AND (lvl_type IS NULL OR lvl_type = " + levType + ") "
+                 "ORDER BY lvl_type NULLS LAST";
 
   Query(query);
   vector<string> row = FetchRow();
