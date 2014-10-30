@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 14.9.20
+Version: 14.10.30
 Release: 1.fmi
 License: FMI
 Group: Development/Tools
@@ -58,7 +58,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Mon Oct 20 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.9.20-1.fmi
+* Tue Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-1.fmi
+- Level support for grib1 parameter definition
+* Tue Oct 28 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.28-1.fmi
+- Changes wrt radon
+* Mon Oct 20 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.20-1.fmi
 - neon2 --> radon
 * Thu Sep  4 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.9.4-1.fmi
 - Fix grib2 parameter metadata fetching
