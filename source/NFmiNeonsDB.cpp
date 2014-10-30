@@ -302,7 +302,7 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
                  "FROM grid_param_grib "
                  "WHERE parm_id = " + parm_id + " "
                  "AND no_vers = " + no_vers + " "
-                 "AND timerange_ind = " + trInd + " ";
+                 "AND timerange_ind = " + trInd + " "
                  "AND (lvl_type IS NULL OR lvl_type = " + levType + ") "
                  "ORDER BY lvl_type NULLS LAST";
 
