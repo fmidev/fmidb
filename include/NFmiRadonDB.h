@@ -31,6 +31,7 @@ public:
 
   std::map<std::string, std::string> ProducerFromGrib(long centre, long process);
   std::map<std::string, std::string> GetNewbaseParameterDefinition(unsigned long producer_id, unsigned long universal_id);
+  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1  
   std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
   std::map<std::string, std::string> ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
   std::map<std::string, std::string> ParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
@@ -39,7 +40,7 @@ public:
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
   std::map<std::string, std::string> LevelFromGrib(long producerId, long levelId, long edition);
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
-  std::map<std::string, std::string> GetGeometryDefinition(unsigned long geometry_id);
+  std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
   
   short Id() { return itsId; }
@@ -52,7 +53,8 @@ private:
   //std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<std::string, std::map<std::string, std::string > > producerinfo;
   std::map<std::string, std::map<std::string, std::string> > levelinfo;
-  std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > newbaseinfo;
+  std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string> > > newbaseinfo;
+  std::map<std::string, std::string> gridparameterinfo;
   std::map<std::string, std::map<std::string, std::string> > paramgrib1info;
   std::map<std::string, std::map<std::string, std::string> > paramgrib2info;
   std::map<std::string, std::map<std::string, std::string> > paramnetcdfinfo;
