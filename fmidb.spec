@@ -3,7 +3,7 @@
 Summary: fmidb library
 Name: lib%{LIBNAME}
 Version: 14.10.30
-Release: 1.fmi
+Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
