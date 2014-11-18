@@ -115,6 +115,7 @@ map<string, string> NFmiRadonDB::GetNewbaseParameterDefinition(unsigned long pro
                 << "FROM param_newbase g, producer_param_v x "
                 << "WHERE x.producer_id = g.producer_id"
                 << " AND g.univ_id = " << univ_id
+                << " AND x.newbase_id = " << univ_id 
                 << " AND x.grib1_table_version = " << no_vers;
 
   Query(query.str());
@@ -159,13 +160,14 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 
   stringstream query;
   
-        query << "SELECT parm_name "
-               <<  "FROM param_grib1_v "
-               <<  "WHERE param_id = " << parm_id 
-               <<  "AND table_version = " << no_vers
-               <<  "AND timerange_indicator = " << trInd 
-               <<  "AND (level_type IS NULL OR level_type = " << levType
-               <<  "ORDER BY level_type NULLS LAST";
+        query << "SELECT x.param_name "
+               <<  "FROM param_grib1_v x, param_newbase y"
+               <<  " WHERE y.univ_id = " << parm_id 
+               <<  " AND x.param_id = y.param_id"
+               <<  " AND x.table_version = " << no_vers2
+               <<  " AND x.timerange_indicator = " << trInd 
+               <<  " AND x.level_id IS NULL OR x.level_id = " << levType
+               <<  " ORDER BY x.level_id NULLS LAST";
 
   Query(query.str());
   vector<string> row = FetchRow();
@@ -175,14 +177,14 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 
   else
     return "";
-
+/*
   if (InCodeTableVer == OutCodeTableVer) {
     gridparameterinfo[key] = parm_name;
     return gridparameterinfo[key];
   }
   else 
   {
-    /* We do some further digging */
+  
     query << "SELECT univ_id "
           <<  "FROM param_grib1_v "
           <<  "WHERE parm_name like '" << parm_name 
@@ -195,8 +197,9 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     {
       univ_id = id[0];
     }
-
+*/
     /* Finally dig out the parm_name on OutCodeTableVer */
+    /*
     query <<  "SELECT parm_name "
           <<  "FROM param_grib1_v "
           <<  "WHERE univ_id = " << univ_id 
@@ -209,7 +212,7 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     {
       parm_name = param[0];
     }
-
+*/
  /*   query = "SELECT max(producer_class) "
             "FROM fmi_producers "
             "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
@@ -226,8 +229,8 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
       }
     
  
-    } */
-  }
+    } 
+  }*/
 
   gridparameterinfo[key] = parm_name;
   return gridparameterinfo[key];
@@ -537,17 +540,15 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
   query.str("");
    
         query << "SELECT"
-              <<   " name,"
+              <<   " geom_name,"
               <<   " ni,"
               <<   " nj,"
-              <<   " lat_orig,"
-              <<   " long_orig,"
-              <<   " orig_row_num,"
-              <<   " orig_col_num,"
+              <<   " first_lat,"
+              <<   " first_lon,"
               <<   " di,"
-              <<   " dj,"
-              <<   "FROM geom "
-              <<   "WHERE name = " << geom_name;
+              <<   " dj "
+              <<   "FROM geom_v "
+              <<   "WHERE geom_name = '" << geom_name << "'";
 
   map <string, string> ret;
 
@@ -561,14 +562,17 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
     ret["col_cnt"] = row[2];
     ret["lat_orig"] = row[3];
     ret["long_orig"] = row[4];
-    ret["orig_row_num"] = row[5];
-    ret["orig_col_num"] = row[6];
-    ret["pas_longitude"] = row[7];
+    ret["pas_longitude"] = row[5];
+    ret["pas_latitude"] = row[6];
+ //   ret["orig_row_num"] = row[5];
+  //  ret["orig_col_num"] = row[6];
+ /*   ret["pas_longitude"] = row[7];
     ret["pas_latitude"] = row[8];
     ret["geom_parm_1"] = row[9];
     ret["geom_parm_2"] = row[10];
     ret["geom_parm_3"] = row[11];
     ret["stor_desc"] = row[12];
+   */ 
 
     geometryinfo[geom_name] = ret;
   }
@@ -700,7 +704,7 @@ NFmiRadonDBPool::NFmiRadonDBPool()
 NFmiRadonDBPool::~NFmiRadonDBPool()
 {
   for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
-//	  itsWorkerList[i]->Detach();
+        itsWorkerList[i]->Disconnect();
     delete itsWorkerList[i];
   }
   itsWorkerList.clear(); itsWorkingList.clear();
@@ -709,7 +713,7 @@ NFmiRadonDBPool::~NFmiRadonDBPool()
 /*
  * GetConnection()
  * 
- * Returns a read-only connection to Neons. When calling program has
+ * Returns a read-only connection to radon. When calling program has
  * finished, it should return the connection to the pool.
  * 
  * TODO: smart pointers ?
@@ -739,7 +743,6 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
 
-//        itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
 
 #ifdef DEBUG
 		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
@@ -750,7 +753,6 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
         // Create new connection
     	try {
           itsWorkerList[i] = new NFmiRadonDB(i);
-//		  itsWorkerList[i]->PooledConnection(true); // EI ODBC-luokassa
 
           if (itsExternalAuthentication)
           {
@@ -768,9 +770,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
         	  itsWorkerList[i]->database_ = itsDatabase;
           }
 
-   //       itsWorkerList[i]->Verbose(true);  // EI ODBC-luokassa
-   //       itsWorkerList[i]->Attach();  // EI ODBC-luokassa
-//          itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS"); // EI ODBC-luokassa
+          itsWorkerList[i]->Connect();  
 
           itsWorkingList[i] = 1;
 
@@ -797,7 +797,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
 
   }
 
-  throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
+  throw runtime_error("Impossible error at NFmiRadonDBPool::GetConnection()");
    
 }
 
@@ -813,7 +813,6 @@ void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker) {
   lock_guard<mutex> lock(itsReleaseMutex);
 
   theWorker->Rollback();
-//  theWorker->EndSession(); // EI ODBC-luokassa
   itsWorkingList[theWorker->Id()] = 0;
 
 #ifdef DEBUG
