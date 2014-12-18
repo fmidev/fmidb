@@ -41,7 +41,7 @@ void NFmiODBC::Connect(const string & user,
   if (connected_)
     return;
     
-  odbc::otl_connect::otl_initialize(); // initialize OCI environment
+  odbc::otl_connect::otl_initialize(threadedMode); // initialize OCI environment
 
   connection_string_ = user+"/"+password+"@"+database;
 
@@ -66,7 +66,7 @@ void NFmiODBC::Connect(const int threadedMode) {
   if (connected_)
     return;
 
-  odbc::otl_connect::otl_initialize(); // initialize NFmiODBC environment
+  odbc::otl_connect::otl_initialize(threadedMode); // initialize NFmiODBC environment
 
   connection_string_ = user_+"/"+password_+"@"+database_;
 
