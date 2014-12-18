@@ -19,13 +19,11 @@ NFmiRadonDB::~NFmiRadonDB() {
 
 void NFmiRadonDB::Connect(const int threadedMode) {
   NFmiODBC::Connect(threadedMode);
-//  DateFormat("YYYYMMDDHH24MISS");
 //  Verbose(true);
 } 
 
 void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
   NFmiODBC::Connect(user,password,database,threadedMode);
- // DateFormat("YYYYMMDDHH24MISS");
  // Verbose(true);
 }
 
@@ -694,8 +692,6 @@ NFmiRadonDBPool::NFmiRadonDBPool()
   : itsMaxWorkers(2)
   , itsWorkingList(itsMaxWorkers, -1)
   , itsWorkerList(itsMaxWorkers, NULL)
-  , itsExternalAuthentication(false)
-  , itsReadWriteTransaction(false)
   , itsUsername("")
   , itsPassword("")
   , itsDatabase("")
@@ -704,10 +700,10 @@ NFmiRadonDBPool::NFmiRadonDBPool()
 NFmiRadonDBPool::~NFmiRadonDBPool()
 {
   for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
-        itsWorkerList[i]->Disconnect();
+    itsWorkerList[i]->Disconnect();
     delete itsWorkerList[i];
   }
-  itsWorkerList.clear(); itsWorkingList.clear();
+
   delete itsInstance;
 }
 /*
@@ -745,7 +741,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
 
 
 #ifdef DEBUG
-		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
+		  cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
         return itsWorkerList[i];
       
@@ -754,12 +750,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
     	try {
           itsWorkerList[i] = new NFmiRadonDB(i);
 
-          if (itsExternalAuthentication)
-          {
-        	  itsWorkerList[i]->user_ = "";
-        	  itsWorkerList[i]->password_ = "";
-          }
-          else if (itsUsername != "" && itsPassword != "")
+          if (itsUsername != "" && itsPassword != "")
           {
         	  itsWorkerList[i]->user_ = itsUsername;
         	  itsWorkerList[i]->password_ = itsPassword;
@@ -775,7 +766,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
           itsWorkingList[i] = 1;
 
 #ifdef DEBUG
-		  cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
+		  cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
           return itsWorkerList[i];
     	} catch (int e) {
@@ -789,16 +780,9 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
     cout << "DEBUG: Waiting for worker release" << endl;
 #endif
 
-#ifdef _MSC_VER
-    Sleep(100); // 100 ms
-#else
     usleep(100000); // 100 ms  
-#endif
 
-  }
-
-  throw runtime_error("Impossible error at NFmiRadonDBPool::GetConnection()");
-   
+  }   
 }
 
 /*
@@ -810,8 +794,6 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
 
 void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker) {
   
-  lock_guard<mutex> lock(itsReleaseMutex);
-
   theWorker->Rollback();
   itsWorkingList[theWorker->Id()] = 0;
 

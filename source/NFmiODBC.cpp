@@ -251,8 +251,10 @@ NFmiODBC::~NFmiODBC() {
 
 
 void NFmiODBC::Disconnect() {
-  db_.logoff();
-  connected_ = false;        
+  if (connected_) {
+    db_.logoff();
+    connected_ = false;
+  }
 }
 
 void NFmiODBC::Commit() throw (int) {

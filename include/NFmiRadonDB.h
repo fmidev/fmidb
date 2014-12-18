@@ -78,9 +78,6 @@ class NFmiRadonDBPool {
 	  void MaxWorkers(int theMaxWorkers);
 	  int MaxWorkers() const { return itsMaxWorkers; }
 
-	  void ReadWriteTransaction(bool theReadWriteTransaction) { itsReadWriteTransaction = theReadWriteTransaction; }
-	  bool ReadWriteTransaction() const { return itsReadWriteTransaction; }
-
 	  void Username(const std::string& theUsername) { itsUsername = theUsername; }
 	  void Password(const std::string& thePassword) { itsPassword = thePassword; }
 	  void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
@@ -98,12 +95,8 @@ class NFmiRadonDBPool {
 	  std::vector<NFmiRadonDB *> itsWorkerList;
 
 	  std::mutex itsGetMutex;
-	  std::mutex itsReleaseMutex;
-
-	  bool itsExternalAuthentication;
-	  bool itsReadWriteTransaction;
           
-          std::string itsUsername;
+      std::string itsUsername;
 	  std::string itsPassword;
 	  std::string itsDatabase;
 };
