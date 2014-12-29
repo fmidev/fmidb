@@ -474,15 +474,17 @@ vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const 
   
   stringstream query;
   
-        query << "SELECT geometry_id, table_name, id "
-	        <<  "FROM as_grid "
-	        <<  "WHERE record_count > 0"
-	        <<  " AND model_type like " << ref_prod
-	        <<  " AND last_updated = " << analtime;
+        query << "SELECT as_grid.geometry_id, as_grid.table_name, as_grid.id"
+	        <<  " FROM as_grid, fmi_producer, geom_v"
+	        <<  " WHERE as_grid.record_count > 0"
+	        <<  " AND fmi_producer.name like '" << ref_prod << "'"
+			<<  " AND as_grid.producer_id = fmi_producer.id"
+	        <<  " AND as_grid.analysis_time = '" << analtime << "'";
 
   if (!geom_name.empty())
   {
-	  query << " AND geometry_id = " << geom_name;
+	  query << " AND geom_v.geom_name = '" << geom_name << "'"
+	  		<< " AND as_grid.geometry_id = geom_v.geom_id";
   }
 
   Query(query.str());
