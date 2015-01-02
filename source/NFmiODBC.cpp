@@ -109,7 +109,7 @@ cout << "DEBUG: " << sql << endl;
     
   } catch (odbc::otl_exception& p) {
   	cerr << p.msg;
-    cerr << "Query: " << p.stm_text << endl;
+    cerr << endl << "Query: " << p.stm_text << endl;
     throw p.code;
   }
 }

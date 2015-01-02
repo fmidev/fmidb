@@ -6,6 +6,8 @@
 
 using namespace std;
 
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+
 NFmiRadonDB& NFmiRadonDB::Instance() {
   static NFmiRadonDB instance_;
   return instance_; 
@@ -18,28 +20,47 @@ NFmiRadonDB::~NFmiRadonDB() {
 }
 
 void NFmiRadonDB::Connect(const int threadedMode) {
+  putenv("TZ=utc"); // for sqllite
   NFmiODBC::Connect(threadedMode);
-//  Verbose(true);
+
+  /*
+  try
+  {
+	Execute("SELECT load_extension('libspatialite.so.5')");
+  }
+  catch (...)
+  {}
+*/
 } 
 
 void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
+  putenv("TZ=utc"); // for sqllite
   NFmiODBC::Connect(user,password,database,threadedMode);
- // Verbose(true);
+
+    /*
+  try
+  {
+	Execute("SELECT load_extension('libspatialite.so.5')");
+  }
+  catch (...)
+  {}
+*/
+
 }
 
 
-map<string, string> NFmiRadonDB::ProducerFromGrib(long centre, long process)
+map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
 {
 	using boost::lexical_cast;
 
 	string key = lexical_cast<string> (centre) + "_" + lexical_cast<string> (process);
 
-	if (producerinfo.find(key) != producerinfo.end())
+	if (gribproducerinfo.find(key) != gribproducerinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: ProducerFromGrib() cache hit!" << endl;
+	   cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl;
 #endif
-		return producerinfo[key];
+		return gribproducerinfo[key];
 	}
 
 	stringstream query;
@@ -70,26 +91,23 @@ map<string, string> NFmiRadonDB::ProducerFromGrib(long centre, long process)
 		ret["centre"] = lexical_cast<string> (centre);
 		ret["ident"] = lexical_cast<string> (process);
 
-		producerinfo[key] = ret;
+		gribproducerinfo[key] = ret;
 
 	}
 
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetNewbaseParameterDefinition(unsigned long producer_id, unsigned long universal_id)
+map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id)
 {
-/*
-  if (parameterinfo.find(producer_id) != parameterinfo.end()) {
-    if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end()) {
+  string key = boost::lexical_cast<string> (producer_id) + "_" + boost::lexical_cast<string> (universal_id);
+
+  if (paramnewbaseinfo.find(key) != paramnewbaseinfo.end()) {
 #ifdef DEBUG
-    cout << "DEBUG: GetParameterDefinition() cache hit!" << endl;
+    cout << "DEBUG: GetParameterFromNewbaseId() cache hit!" << endl;
 #endif
-      return parameterinfo[producer_id][universal_id];
-    }
+    return paramnewbaseinfo[key];
   }
-  
-  */
   
   map <string, string> ret;
   
@@ -101,20 +119,19 @@ map<string, string> NFmiRadonDB::GetNewbaseParameterDefinition(unsigned long pro
   if (producer_info.empty())
 	  return ret;
 
-  string no_vers = producer_info["no_vers"];
 
   stringstream query;
   
-        query << "SELECT "
-                <<"x.param_name, "
-                << "g.base, "
-                << "g.scale, "
-                << "g.univ_id "
-                << "FROM param_newbase g, producer_param_v x "
-                << "WHERE x.producer_id = g.producer_id"
-                << " AND g.univ_id = " << univ_id
-                << " AND x.newbase_id = " << univ_id 
-                << " AND x.grib1_table_version = " << no_vers;
+  query << "SELECT "
+		<<"p.name, "
+		<< "g.base, "
+		<< "g.scale, "
+		<< "g.univ_id "
+		<< "FROM param_newbase g, param p "
+		<< "WHERE x.producer_id = f.producer_id"
+		<< " AND p.id = g.param_id "
+		<< " AND g.univ_id = " << univ_id
+		<< " AND g.producer_id = " << producer_id;
 
   Query(query.str());
    
@@ -130,14 +147,46 @@ map<string, string> NFmiRadonDB::GetNewbaseParameterDefinition(unsigned long pro
  // ret["parm_desc"] = row[4];
  // ret["unit_desc"] = row[5];
  // ret["col_name"] = row[6];
- // ret["univ_id"] = row[7]; // Fetch univ_id in cased called from GetParameterDefinition(ulong, string)
 
-  newbaseinfo[producer_id][universal_id] = ret;
+  paramnewbaseinfo[key] = ret;
   
   return ret;
   
 }
 
+map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string& parameterName)
+{
+	string key = boost::lexical_cast<string> (producerId) + "_" + parameterName;
+	
+	if (paramdbinfo.find(key) != paramdbinfo.end()) {
+#ifdef DEBUG
+	   cout << "DEBUG: GetParameterFromDatabaseName() cache hit!" << endl;
+	   return paramdbinfo[key];
+#endif
+	}
+	
+	stringstream query;
+	
+	map<string,string> ret;
+	
+	query << "SELECT param_name,grib1_table_version,grib1_number FROM producer_param_v WHERE producer_id = " << producerId
+			<< " AND param_name = '" << parameterName << "'";
+	
+	Query(query.str());
+	
+	auto row = FetchRow();
+	
+	if (row.empty()) return ret;
+	
+	ret["param_name"] = row[0];
+	ret["grib1_table_version"] = row[1];
+	ret["grib1_number"] = row[2];
+	
+	paramdbinfo[key] = ret;
+	return ret;
+	
+}
+/*
 string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator, long levelType)
 {
 
@@ -175,68 +224,14 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 
   else
     return "";
-/*
-  if (InCodeTableVer == OutCodeTableVer) {
-    gridparameterinfo[key] = parm_name;
-    return gridparameterinfo[key];
-  }
-  else 
-  {
-  
-    query << "SELECT univ_id "
-          <<  "FROM param_grib1_v "
-          <<  "WHERE parm_name like '" << parm_name 
-          <<  " AND table_version = " << no_vers;
-
-    Query(query.str());
-    vector<string> id = FetchRow();
-
-    if (!id.empty()) 
-    {
-      univ_id = id[0];
-    }
-*/
-    /* Finally dig out the parm_name on OutCodeTableVer */
-    /*
-    query <<  "SELECT parm_name "
-          <<  "FROM param_grib1_v "
-          <<  "WHERE univ_id = " << univ_id 
-          <<  "AND table_version = " << boost::lexical_cast<string>(OutCodeTableVer);
-
-    Query(query.str());
-    vector<string> param = FetchRow();
-
-    if (!param.empty()) 
-    {
-      parm_name = param[0];
-    }
-*/
- /*   query = "SELECT max(producer_class) "
-            "FROM fmi_producers "
-            "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
-
-    Query(query);
-    vector<string> prod_class = FetchRow();
-    string pclass;
-
-    if (!prod_class.empty()) {
-      pclass = prod_class[0];
-      // Switch the -'s to _'s for point producers 
-      if( (pclass == "2") | (pclass == "3") ) {
-        parm_name.replace(parm_name.find("-"), 1, "_");
-      }
-    
- 
-    } 
-  }*/
 
   gridparameterinfo[key] = parm_name;
   return gridparameterinfo[key];
 }
+*/
 
 
-
-map<string, string> NFmiRadonDB::ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
 {
 
 	using boost::lexical_cast;
@@ -296,7 +291,7 @@ map<string, string> NFmiRadonDB::ParameterFromGrib1(long producerId, long tableV
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
@@ -308,7 +303,7 @@ map<string, string> NFmiRadonDB::ParameterFromGrib2(long producerId, long discip
 #ifdef DEBUG
 	   cout << "DEBUG: ParameterFromGrib2() cache hit!" << endl;
 #endif
-		return paramgrib2info[key];
+           return paramgrib2info[key];
 	}
 
 	stringstream query;
@@ -355,7 +350,7 @@ map<string, string> NFmiRadonDB::ParameterFromGrib2(long producerId, long discip
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::ParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
@@ -364,7 +359,7 @@ map<string, string> NFmiRadonDB::ParameterFromNetCDF(long producerId, const stri
 	if (paramnetcdfinfo.find(key) != paramnetcdfinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: ParameterFromNetCDF() cache hit!" << endl;
+	   cout << "DEBUG: GetParameterFromNetCDF() cache hit!" << endl;
 #endif
 		return paramnetcdfinfo[key];
 	}
@@ -409,7 +404,7 @@ map<string, string> NFmiRadonDB::ParameterFromNetCDF(long producerId, const stri
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::LevelFromGrib(long producerId, long levelNumber, long edition)
+map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNumber, long edition)
 {
 	using boost::lexical_cast;
 
@@ -418,7 +413,7 @@ map<string, string> NFmiRadonDB::LevelFromGrib(long producerId, long levelNumber
 	if (levelinfo.find(key) != levelinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: LevelFromGrib() cache hit!" << endl;
+	   cout << "DEBUG: GetLevelFromGrib() cache hit!" << endl;
 #endif
 		return levelinfo[key];
 	}
@@ -479,12 +474,12 @@ vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const 
 	        <<  " WHERE as_grid.record_count > 0"
 	        <<  " AND fmi_producer.name like '" << ref_prod << "'"
 			<<  " AND as_grid.producer_id = fmi_producer.id"
-	        <<  " AND as_grid.analysis_time = '" << analtime << "'";
+	        <<  " AND as_grid.analysis_time = '" << analtime << "'"
+			<<  " AND as_grid.geometry_id = geom_v.geom_id";
 
   if (!geom_name.empty())
   {
-	  query << " AND geom_v.geom_name = '" << geom_name << "'"
-	  		<< " AND as_grid.geometry_id = geom_v.geom_id";
+	  query << " AND geom_v.geom_name = '" << geom_name << "'";
   }
 
   Query(query.str());
@@ -508,47 +503,36 @@ vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const 
 
 map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 {
-/*
     
-  if (geometryinfo.find(geometry_id) != geometryinfo.end())
+  if (geometryinfo.find(geom_name) != geometryinfo.end())
   {
 #ifdef DEBUG
     cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
 #endif
 
-    return geometryinfo[geometry_name];
+    return geometryinfo[geom_name];
   }
-  
-  */
+
   // find geom name corresponding id
 
   stringstream query;
- /* string geom_name;
-  
-  query << "SELECT name from geom where id = " << geometry_id;
-  
-  Query(query.str());
-  vector<string> row = FetchRow();
 
-  if (!row.empty()) {
-    geom_name = row[0];
-  }
-  else {
-    geom_name = "";
-  }  */
-  
   query.str("");
    
-        query << "SELECT"
-              <<   " geom_name,"
-              <<   " ni,"
-              <<   " nj,"
-              <<   " first_lat,"
-              <<   " first_lon,"
-              <<   " di,"
-              <<   " dj "
-              <<   "FROM geom_v "
-              <<   "WHERE geom_name = '" << geom_name << "'";
+  query << "SELECT"
+	  <<   " projection_name,"
+	  <<   " ni,"
+	  <<   " nj,"
+	  <<   " first_lat,"
+	  <<   " first_lon,"
+	  <<   " di/1e5,"
+	  <<   " dj/1e5, "
+	  <<   " geom_parm_1,"
+	  <<   " geom_parm_2,"
+	  <<   " geom_parm_3,"
+	  <<   " scanning_mode "
+	  <<   "FROM geom_v "
+	  <<   "WHERE geom_name = '" << geom_name << "'";
 
   map <string, string> ret;
 
@@ -557,23 +541,19 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
   vector<string> row = FetchRow();
 
   if (!row.empty()) {
+    ret["geom_name"] = geom_name;
     ret["prjn_name"] = row[0];
-    ret["row_cnt"] = row[1];
-    ret["col_cnt"] = row[2];
+    ret["row_cnt"] = row[2];
+    ret["col_cnt"] = row[1];
     ret["lat_orig"] = row[3];
     ret["long_orig"] = row[4];
     ret["pas_longitude"] = row[5];
     ret["pas_latitude"] = row[6];
- //   ret["orig_row_num"] = row[5];
-  //  ret["orig_col_num"] = row[6];
- /*   ret["pas_longitude"] = row[7];
-    ret["pas_latitude"] = row[8];
-    ret["geom_parm_1"] = row[9];
-    ret["geom_parm_2"] = row[10];
-    ret["geom_parm_3"] = row[11];
-    ret["stor_desc"] = row[12];
-   */ 
-
+	ret["geom_parm_1"] = row[7];
+    ret["geom_parm_2"] = row[8];
+    ret["geom_parm_3"] = row[9];
+	ret["stor_desc"] = row[10];
+	
     geometryinfo[geom_name] = ret;
   }
 
@@ -584,23 +564,21 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id) 
 {
-/*
+
   if (producerinfo.count(producer_id) > 0)
   {
 #ifdef DEBUG
     cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
 #endif
     return producerinfo[producer_id];
-  }  */
-  using boost::lexical_cast;
-
-  string id = lexical_cast<string> (producer_id);
+  }
+  
   stringstream query;
   
-        query << "SELECT f.id,f.name,f.class_id,f.last_updated,x.grib1_table_version, x.producer_name "
-              <<   "FROM fmi_producer f, producer_param_v x"
-              <<   " WHERE f.id = " << producer_id
-              <<   " AND x.producer_id = " << producer_id;  
+  query << "SELECT f.id, f.name, f.class_id, g.centre, g.ident "
+        << "FROM fmi_producer f, producer_grib g "
+        << "WHERE f.id = " << producer_id
+        << " AND f.id = g.producer_id";
 
   map <string, string> ret;
   
@@ -612,11 +590,10 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id
     ret["producer_id"] = row[0];
     ret["ref_prod"] = row[1];
     ret["producer_class"] = row[2];
-    ret["hours_for_latest"] = row[3];
-    ret["no_vers"] = row[4];
-    ret["seq_type_prfx"] = row[5];
+	ret["model_id"] = row[4];
+	ret["ident_id"] = row[3];
   
-    producerinfo[id] = ret;
+    producerinfo[producer_id] = ret;
   }
   
   return ret;
@@ -636,21 +613,20 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
 
   stringstream query;
   
-        query << "SELECT id "
-              << "FROM fmi_producers"
-              << " WHERE name = " << producer_name;
+  query << "SELECT id "
+        << "FROM fmi_producers"
+        << " WHERE name = '" << producer_name << "'";
 
   Query(query.str());
   
   vector<string> row = FetchRow();
   
- // unsigned long int producer_id = boost::lexical_cast<unsigned long> (row[0]);
-  string producer_id = row[0];
+  unsigned long int producer_id = boost::lexical_cast<unsigned long> (row[0]);
   
   if (producerinfo.find(producer_id) != producerinfo.end())
     return producerinfo[producer_id];
-  
-  return GetProducerDefinition(producer_id);
+ 
+  return GetProducerDefinition(row[0]);
     
 }
 
@@ -659,11 +635,15 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
 
   stringstream query;
   
-  query <<  "SELECT analysis_time "
+  query <<  "SELECT max(analysis_time) "
  	<<  "FROM as_grid_v"
 	<<  " WHERE producer_name = '" << ref_prod
-   //     <<  " AND geometry_name = " << geom_name
 	<<  "' AND record_count > 0 ";
+
+  if (!geom_name.empty())
+  {
+    query << " AND geometry_name = '" << geom_name << "'";
+  }
   
   Query(query.str());
 

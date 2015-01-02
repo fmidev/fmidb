@@ -29,37 +29,37 @@ public:
 
   static NFmiRadonDB & Instance();
 
-  std::map<std::string, std::string> ProducerFromGrib(long centre, long process);
-  std::map<std::string, std::string> GetNewbaseParameterDefinition(unsigned long producer_id, unsigned long universal_id);
-  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1  
-  std::map<std::string, std::string> ParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
-  std::map<std::string, std::string> ParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
-  std::map<std::string, std::string> ParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
-
+  std::map<std::string, std::string> GetProducerFromGrib(long centre, long process);
+  std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
+  //std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1  
+  std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
+  std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
+  std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
+  std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName);
+  
   std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
-  std::map<std::string, std::string> LevelFromGrib(long producerId, long levelId, long edition);
+  std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
   std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
   
   short Id() { return itsId; }
-  // void SQLDateMask(const std::string& theDateMask);
   
 private:
 
   // These maps are used for caching
 
-  //std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
-  std::map<std::string, std::map<std::string, std::string > > producerinfo;
+  std::map<std::string, std::map<std::string, std::string > > gribproducerinfo;
+  std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<std::string, std::map<std::string, std::string> > levelinfo;
-  std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string> > > newbaseinfo;
-  std::map<std::string, std::string> gridparameterinfo;
-  std::map<std::string, std::map<std::string, std::string> > paramgrib1info;
-  std::map<std::string, std::map<std::string, std::string> > paramgrib2info;
-  std::map<std::string, std::map<std::string, std::string> > paramnetcdfinfo;
-  std::map<std::string, std::map<std::string, std::string > > geometryinfo;
-  std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
+  std::map<std::string, std::map<std::string, std::string>> paramdbinfo;
+  std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
+  std::map<std::string, std::map<std::string, std::string>> paramgrib2info;
+  std::map<std::string, std::map<std::string, std::string>> paramnetcdfinfo;
+  std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
+  std::map<std::string, std::map<std::string, std::string>> geometryinfo;
+  std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
 
   short itsId; // Only for connection pooling
 
