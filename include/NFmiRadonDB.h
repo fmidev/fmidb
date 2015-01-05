@@ -7,7 +7,17 @@
 #include "NFmiODBC.h"
 #include <mutex>
 
-// #define kFloatMissing 32700.f
+
+// from radon table 'network'
+enum FmiRadonStationNetwork
+{
+	kUnknownNetwork = 0,
+	kWMO,
+	kICAO,
+	kLPNN,
+	kRoadWeather,
+	kFmiSID
+};
 
 class NFmiRadonDBPool;
 
@@ -43,6 +53,8 @@ public:
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
   std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "");
+  std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache = false);
+  std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, const std::string& stationId, bool aggressive_cache = false); // overload for icao
   
   short Id() { return itsId; }
   
@@ -60,6 +72,7 @@ private:
   std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
   std::map<std::string, std::map<std::string, std::string>> geometryinfo;
   std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
+  std::map<std::string, std::map<std::string, std::string>> stationinfo;
 
   short itsId; // Only for connection pooling
 

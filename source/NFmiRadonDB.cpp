@@ -520,6 +520,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
   query.str("");
    
   query << "SELECT"
+	  <<   " projection_id,"
 	  <<   " projection_name,"
 	  <<   " ni,"
 	  <<   " nj,"
@@ -531,7 +532,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 	  <<   " geom_parm_2,"
 	  <<   " geom_parm_3,"
 	  <<   " scanning_mode "
-	  <<   "FROM geom_v "
+	  <<   "FROM geom_v, projection p "
 	  <<   "WHERE geom_name = '" << geom_name << "'";
 
   map <string, string> ret;
@@ -541,18 +542,18 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
   vector<string> row = FetchRow();
 
   if (!row.empty()) {
-    ret["geom_name"] = geom_name;
-    ret["prjn_name"] = row[0];
-    ret["row_cnt"] = row[2];
-    ret["col_cnt"] = row[1];
-    ret["lat_orig"] = row[3];
-    ret["long_orig"] = row[4];
-    ret["pas_longitude"] = row[5];
-    ret["pas_latitude"] = row[6];
-	ret["geom_parm_1"] = row[7];
-    ret["geom_parm_2"] = row[8];
-    ret["geom_parm_3"] = row[9];
-	ret["stor_desc"] = row[10];
+    ret["prjn_id"] = row[0];
+    ret["prjn_name"] = row[1];
+    ret["row_cnt"] = row[3];
+    ret["col_cnt"] = row[2];
+    ret["lat_orig"] = row[4];
+    ret["long_orig"] = row[5];
+    ret["pas_longitude"] = row[6];
+    ret["pas_latitude"] = row[7];
+	ret["geom_parm_1"] = row[8];
+    ret["geom_parm_2"] = row[9];
+    ret["geom_parm_3"] = row[10];
+	ret["stor_desc"] = row[11];
 	
     geometryinfo[geom_name] = ret;
   }
@@ -657,7 +658,77 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
   return row[0];
 }
 
+map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache)
+{
 
+  assert(!aggressive_cache); // not supported yet
+  
+  string key = boost::lexical_cast<string> (networkType) + "_" + boost::lexical_cast<string> (stationId);
+  
+  if (stationinfo.find(key) != stationinfo.end())
+    return stationinfo[key];
+
+  stringstream query;
+  
+  map<string,string> ret;
+  
+  query << "SELECT s.id,"
+		  << " s.name,"
+		  << " st_x(s.position) as longitude,"
+		  << " st_y(s.position) as latitude,"
+		  << " s.elevation,"
+		  << " wmo.local_station_id as wmoid,"
+		  << " icao.local_station_id as icaoid,"
+		  << " lpnn.local_station_id as lpnn,"
+		  << " rw.local_station_id as road_weather_id, "
+		  << " fs.local_station_id as fmisid "
+		  << "FROM station s "
+		  << "LEFT OUTER JOIN station_network_mapping wmo ON (s.id = wmo.station_id AND wmo.network_id = 1) "
+		  << "LEFT OUTER JOIN station_network_mapping icao ON (s.id = icao.station_id AND icao.network_id = 2) "
+		  << "LEFT OUTER JOIN station_network_mapping lpnn ON (s.id = lpnn.station_id AND lpnn.network_id = 3) "
+		  << "LEFT OUTER JOIN station_network_mapping rw ON (s.id = rw.station_id AND rw.network_id = 4) "
+		  << "LEFT OUTER JOIN station_network_mapping fs ON (s.id = fs.station_id AND fs.network_id = 5) ";
+  
+  switch (networkType)
+  {
+	  case kWMO:
+	  case kICAO:
+	  case kLPNN:
+	  case kRoadWeather:
+	  default:
+		  throw runtime_error("Unsupported station network type: " + boost::lexical_cast<string> (networkType));
+		  break;
+	  case kFmiSID:
+		  query << "JOIN station_network_mapping m ON (s.id = m.station_id AND m.network_id = 5 AND m.local_station_id = '" << stationId << "')";
+		  break;
+  }
+		  
+  Query(query.str());
+  cout << query.str() << endl;
+  auto row = FetchRow();
+  
+  if (row.empty())
+  {
+	return ret;  
+  }
+  
+  ret["id"] = row[0];
+  ret["station_name"] = row[1];
+  ret["longitude"] = row[2];
+  ret["latitude"] = row[3];
+  ret["altitude"] = row[4];
+  ret["wmoid"] = row[5];
+  ret["icaoid"] = row[6];
+  ret["lpnn"] = row[7];
+  ret["rwid"] = row[8];
+  ret["fmisid"] = row[9];
+  
+  stationinfo[key] = ret;
+  
+  return ret;
+}
+  
+  
 NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
 
 NFmiRadonDBPool* NFmiRadonDBPool::Instance()
