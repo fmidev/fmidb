@@ -691,14 +691,14 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
   
   switch (networkType)
   {
-	  case kWMO:
-	  case kICAO:
-	  case kLPNN:
-	  case kRoadWeather:
+	  case kWMONetwork:
+	  case kICAONetwork:
+	  case kLPNNNetwork:
+	  case kRoadWeatherNetwork:
 	  default:
 		  throw runtime_error("Unsupported station network type: " + boost::lexical_cast<string> (networkType));
 		  break;
-	  case kFmiSID:
+	  case kFmiSIDNetwork:
 		  query << "JOIN station_network_mapping m ON (s.id = m.station_id AND m.network_id = 5 AND m.local_station_id = '" << stationId << "')";
 		  break;
   }

@@ -12,11 +12,11 @@
 enum FmiRadonStationNetwork
 {
 	kUnknownNetwork = 0,
-	kWMO,
-	kICAO,
-	kLPNN,
-	kRoadWeather,
-	kFmiSID
+	kWMONetwork,
+	kICAONetwork,
+	kLPNNNetwork,
+	kRoadWeatherNetwork,
+	kFmiSIDNetwork
 };
 
 class NFmiRadonDBPool;
