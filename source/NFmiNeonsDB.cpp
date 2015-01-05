@@ -946,6 +946,7 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string &geometry_na
     ret["geom_parm_2"] = row[10];
     ret["geom_parm_3"] = row[11];
     ret["stor_desc"] = row[12];
+    ret["prjn_id"] = ""; // compatibility with radon
 
     geometryinfo[geometry_name] = ret;
   }
