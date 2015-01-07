@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 14.12.17
+Version: 15.1.7
 Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
@@ -58,6 +58,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jan  7 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.1.7-1.fmi
+- Lots of radon changes
+* Mon Dec 29 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.29-1.fmi
+- New release
+* Wed Dec 18 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.18-1.fmi
+- Removing oracle-specific stuff from NFmiODBC
 * Wed Dec 17 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.17-1.fmi
 - Radon additions
 * Tue Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-2.fmi
