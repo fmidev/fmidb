@@ -26,7 +26,8 @@ void NFmiRadonDB::Connect(const int threadedMode) {
   /*
   try
   {
-	Execute("SELECT load_extension('libspatialite.so.5')");
+    Execute("SELECT load_extension('libspatialite.so.5')");
+    Execute("SELECT load_extension('libsqlitefunctions')");
   }
   catch (...)
   {}
@@ -40,7 +41,8 @@ void NFmiRadonDB::Connect(const std::string & user, const std::string & password
     /*
   try
   {
-	Execute("SELECT load_extension('libspatialite.so.5')");
+    Execute("SELECT load_extension('libspatialite.so.5')");
+    Execute("SELECT load_extension('libsqlitefunctions')");
   }
   catch (...)
   {}
