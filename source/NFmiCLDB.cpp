@@ -1,5 +1,6 @@
 #include <NFmiCLDB.h>
 #include <boost/lexical_cast.hpp>
+#include <iomanip>
 
 using namespace std;
 
@@ -58,6 +59,10 @@ map<string, string> NFmiCLDB::GetStationInfo(unsigned long producer_id, unsigned
 
   switch (producer_id) {
       
+    case 20011:
+	  ret = GetExtSynopStationInfo(station_id, aggressive_cache);
+	  break;
+
     case 20013:
       ret = GetRoadStationInfo(station_id, aggressive_cache);
       break;
@@ -215,6 +220,64 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
     // If station does not exist, place empty map as a placeholder
     swedish_road_weather_stations[station_id] = ret;
     
+  return ret;
+}
+
+
+
+map<string, string> NFmiCLDB::GetExtSynopStationInfo(unsigned long station_id, bool aggressive_cache) {
+
+  if (extsynop_stations.find(station_id) != extsynop_stations.end())
+    return extsynop_stations[station_id];
+
+  stringstream query;
+
+  query << "SELECT "
+        << "r.wmon as station_id, "
+        << "r.lat as latitude, "
+        << "r.lon as longitude, "
+        << "r.station_name, "
+        << "r.fmisid, "
+        << "r.h as elevation "
+        << "FROM "
+        << "wmostations r "
+        << "WHERE "
+        << "membership_end = to_date('9999-12-31', 'yyyy-mm-dd') AND loc_end = to_date('9999-12-31', 'yyyy-mm-dd')";
+
+  if (!aggressive_cache || (aggressive_cache && extsynop_stations.size() > 0))
+    query << " AND r.wmon = '" << setw(5) << setfill('0') << station_id << "'";
+
+  Query(query.str());
+
+  while (true) {
+    vector <string> values = FetchRow();
+
+    map <string, string> station;
+
+    if (values.empty())
+      break;
+
+    int sid = boost::lexical_cast<int> (values[0]);
+
+    station["station_id"] = sid;
+    station["latitude"] = values[1];
+    station["longitude"] = values[2];
+    station["station_name"] = values[3];
+    station["fmisid"] = values[4];
+    station["elevation"] = values[5];
+
+    extsynop_stations[sid] = station;
+
+  }
+
+  map <string, string> ret;
+
+  if (extsynop_stations.find(station_id) != extsynop_stations.end())
+    ret = extsynop_stations[station_id];
+  else
+    // If station does not exist, place empty map as a placeholder
+	  extsynop_stations[station_id] = ret;
+
   return ret;
 }
 
