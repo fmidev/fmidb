@@ -38,20 +38,29 @@ void NFmiNeonsDB::Connect(const std::string & user, const std::string & password
   Verbose(true);
 }
 
-string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name) {
+string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset) {
 
-  string query = "SELECT to_char(max(base_date),'YYYYMMDDHH24MI') "
- 		"FROM as_grid "
-		"WHERE model_type = '" +ref_prod + "' "
-		//		"AND base_date > TO_DATE(SYSDATE - " +hours_in_interest +"/24 - " +offset + "/24) "
-		"AND rec_cnt_dset > 0 ";
+  // offset 0 suggests that we take the first (there is no offset); that does not 
+  // work in Oracle SQL though, there the first result is picked up with offset 1
+
+  offset++;
+  stringstream query;
+  
+  query << "SELECT rank, base_date "
+		<< "FROM ("
+		<< "SELECT to_char(base_date,'YYYYMMDDHH24MI') AS base_date, row_number() OVER (ORDER BY base_date DESC) AS rank "
+ 		<< "FROM as_grid "
+		<< "WHERE model_type = '" << ref_prod << "' "
+		<< "AND rec_cnt_dset > 0";
 
   if (!geom_name.empty())
   {
-     //query += "AND geom_name = '" + geom_name + "'";
+     query << " AND geom_name = '" << geom_name << "'";
   }
 
-  Query(query);
+  query << " GROUP BY base_date) WHERE rank BETWEEN " << offset << " AND " << offset;
+  
+  Query(query.str());
 
   vector<string> row = FetchRow();
 
@@ -60,7 +69,9 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
     return "";
   }
 
-  return row[0];
+  assert(boost::lexical_cast<int> (row[0]) == offset);
+  
+  return row[1];
 }
 
 

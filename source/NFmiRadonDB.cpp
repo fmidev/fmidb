@@ -633,12 +633,12 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
     
 }
 
-string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name)
+string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
 
   stringstream query;
   
-  query <<  "SELECT max(analysis_time) "
+  query <<  "SELECT analysis_time "
  	<<  "FROM as_grid_v"
 	<<  " WHERE producer_name = '" << ref_prod
 	<<  "' AND record_count > 0 ";
@@ -647,6 +647,8 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
   {
     query << " AND geometry_name = '" << geom_name << "'";
   }
+  
+  query << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
   
   Query(query.str());
 
