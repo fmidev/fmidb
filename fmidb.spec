@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.1.22
+Version: 15.2.6
 Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
@@ -58,6 +58,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Feb  6 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.2.6-1.fmi
+- latest time modifications
 * Thu Jan 22 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.1.22-1.fmi
 - Radon changes
 * Wed Jan  7 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.1.7-1.fmi
