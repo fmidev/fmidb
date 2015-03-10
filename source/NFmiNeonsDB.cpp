@@ -896,6 +896,79 @@ vector<string> NFmiNeonsDB::GetNeonsTables(const string &start_time, const strin
   return ret;  
 }
 
+
+map<string, string> NFmiNeonsDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj) {
+
+	string key = boost::lexical_cast<string> (ni) + "_" +
+			boost::lexical_cast<string> (nj) + "_" +
+			boost::lexical_cast<string> (lat) + "_" +
+			boost::lexical_cast<string> (lon) + "_" +
+			boost::lexical_cast<string> (di) + "_" +
+			boost::lexical_cast<string> (dj);
+			
+  if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
+#endif
+
+    return geometryinfo_fromarea[key];
+  }
+
+  string query = "SELECT "
+		         " prjn_name,"
+                 " row_cnt,"
+                 " col_cnt,"
+                 " lat_orig,"
+                 " long_orig,"
+                 " orig_row_num,"
+                 " orig_col_num,"
+                 " pas_longitude,"
+                 " pas_latitude,"
+                 " geom_parm_1,"
+                 " geom_parm_2,"
+                 " geom_parm_3,"
+               	 " stor_desc, "
+				 " gr.geom_name "
+                 "FROM grid_reg_geom gr, grid_geom gm "
+                 "WHERE row_cnt = " + boost::lexical_cast<string> (nj) +
+                 " AND col_cnt = " + boost::lexical_cast<string> (ni) +
+		         " AND lat_orig = " + boost::lexical_cast<string> (lat) +
+		         " AND long_orig = " + boost::lexical_cast<string> (lon) +
+                 " AND pas_latitude = " + boost::lexical_cast<string> (dj) +
+                 " AND pas_longitude = " + boost::lexical_cast<string> (di) +
+                 " AND gr.geom_name = gm.geom_name";
+
+  map <string, string> ret;
+
+  Query(query);
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    ret["prjn_name"] = row[0];
+    ret["row_cnt"] = row[1];
+    ret["col_cnt"] = row[2];
+    ret["lat_orig"] = row[3];
+    ret["long_orig"] = row[4];
+    ret["orig_row_num"] = row[5];
+    ret["orig_col_num"] = row[6];
+    ret["pas_longitude"] = row[7];
+    ret["pas_latitude"] = row[8];
+    ret["geom_parm_1"] = row[9];
+    ret["geom_parm_2"] = row[10];
+    ret["geom_parm_3"] = row[11];
+    ret["stor_desc"] = row[12];
+    ret["prjn_id"] = ""; // compatibility with radon
+	ret["geom_name"] = row[13];
+	
+    geometryinfo_fromarea[key] = ret;
+  }
+
+  return ret;
+
+}
+
 /*
  * GetGeometryDefinition(string)
  *
@@ -1254,7 +1327,8 @@ NFmiNeonsDB * NFmiNeonsDBPool::GetConnection() {
       // Return connection that has been initialized but is idle
       if (itsWorkingList[i] == 0) {
         itsWorkingList[i] = 1;
-
+		assert(itsWorkingList[i]);
+		
         itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
 
 #ifdef DEBUG

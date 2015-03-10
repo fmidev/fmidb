@@ -39,6 +39,8 @@ public:
   std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
   std::map<std::string, std::string> GetGeometryDefinition(const std::string &geometry_name);
+  std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj);
+
   std::map<std::string, std::string> GetGridModelDefinition(unsigned long producer_id);
   std::pair<int, int> GetGrib2Parameter(unsigned long producerId, unsigned long parameterId);
 
@@ -62,6 +64,7 @@ private:
   std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > parameterinfo;
   std::map<std::string, std::map<std::string, std::string > > geometryinfo;
+  std::map<std::string, std::map<std::string, std::string > > geometryinfo_fromarea;
   std::map<unsigned long, std::map<std::string, std::string> > stationinfo;  
   std::map<std::string, std::string> levelinfo;
   std::map<std::string, std::string> gridparameterinfo;
