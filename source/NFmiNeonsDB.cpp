@@ -75,6 +75,51 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
 }
 
 
+map<string,string> NFmiNeonsDB::GetGridDatasetInfo(long centre, long process, const string& geomName, const string& baseDate) {
+	
+	string key = boost::lexical_cast<string> (centre) + "_" + boost::lexical_cast<string> (process) + "_" + geomName + "_" + baseDate;
+	
+	if (datasetinfo.find(key) != datasetinfo.end())
+		return datasetinfo[key];
+	
+	stringstream query;
+		
+	query << "SELECT "
+		  << "dset_id, "
+		  << "table_name "
+		  << "FROM as_grid a, "
+		  << "grid_num_model_grib nu, "
+		  << "grid_model m, "
+		  << "grid_model_name na "
+		  << "WHERE nu.model_id = " << process
+		  << " AND nu.ident_id = " << centre
+		  << " AND m.flag_mod = 0 "
+		  << " AND nu.model_name = na.model_name "
+		  << " AND m.model_name = na.model_name "
+		  << " AND m.model_type = a.model_type "
+		  << " AND geom_name = '" << geomName << "'"
+		  << " AND dset_name = 'AF'" 
+		  << " AND base_date = '" << baseDate << "'";
+	 
+	 Query(query.str());
+	 
+	 auto row = FetchRow();
+	 
+	 map<string, string> ret;
+	 
+	 if (row.empty())
+	 {
+		 return ret;
+	 }
+	 
+	 ret["dset_id"] = row[0];
+	 ret["table_name"] = row[1];
+	 
+	 datasetinfo[key] = ret;
+	 
+	 return ret;
+}
+
 /*
  * GetGridLevelName(string, long, long, long)
  *

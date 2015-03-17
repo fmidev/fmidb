@@ -27,6 +27,8 @@ public:
 
   static NFmiNeonsDB & Instance();
 
+  std::map<std::string,std::string> GetGridDatasetInfo(long centre, long process, const std::string& geomName, const std::string& baseDate);
+
   std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
   std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer); // GRIB 1
   std::string GetGridLevelName(long InLvlId, long InProducerId); // GRIB 2
@@ -61,6 +63,7 @@ private:
 
   // These maps are used for caching
 
+  std::map<std::string, std::map<std::string, std::string>> datasetinfo;
   std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > parameterinfo;
   std::map<std::string, std::map<std::string, std::string > > geometryinfo;
