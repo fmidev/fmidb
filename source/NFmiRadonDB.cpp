@@ -20,12 +20,11 @@ NFmiRadonDB::~NFmiRadonDB() {
 }
 
 void NFmiRadonDB::Connect(const int threadedMode) {
-  putenv("TZ=utc"); // for sqllite
   NFmiODBC::Connect(threadedMode);
 
-  /*
-  try
+/*  try
   {
+    putenv("TZ=utc"); // for sqllite
     Execute("SELECT load_extension('libspatialite.so.5')");
     Execute("SELECT load_extension('libsqlitefunctions')");
   }
@@ -35,19 +34,17 @@ void NFmiRadonDB::Connect(const int threadedMode) {
 } 
 
 void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
-  putenv("TZ=utc"); // for sqllite
   NFmiODBC::Connect(user,password,database,threadedMode);
-
-    /*
+/*
   try
   {
+    putenv("TZ=utc"); // for sqllite
     Execute("SELECT load_extension('libspatialite.so.5')");
     Execute("SELECT load_extension('libsqlitefunctions')");
   }
   catch (...)
   {}
 */
-
 }
 
 
@@ -60,7 +57,7 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
 	if (gribproducerinfo.find(key) != gribproducerinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl;
+		cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl;
 #endif
 		return gribproducerinfo[key];
 	}
@@ -171,7 +168,7 @@ map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, co
 	
 	map<string,string> ret;
 	
-	query << "SELECT param_name,grib1_table_version,grib1_number FROM producer_param_v WHERE producer_id = " << producerId
+	query << "SELECT param_id,param_name,param_version,grib1_table_version,grib1_number,grib2_discipline,grib2_category,grib2_number FROM producer_param_v WHERE producer_id = " << producerId
 			<< " AND param_name = '" << parameterName << "'";
 	
 	Query(query.str());
@@ -180,9 +177,14 @@ map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, co
 	
 	if (row.empty()) return ret;
 	
-	ret["param_name"] = row[0];
-	ret["grib1_table_version"] = row[1];
-	ret["grib1_number"] = row[2];
+	ret["id"] = row[0];
+	ret["name"] = row[1];
+	ret["version"] = row[2];
+	ret["grib1_table_version"] = row[3];
+	ret["grib1_number"] = row[4];
+	ret["grib2_discipline"] = row[5];
+	ret["grib2_category"] = row[6];
+	ret["grib2_number"] = row[7];
 	
 	paramdbinfo[key] = ret;
 	return ret;
@@ -564,6 +566,55 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 }
 
+map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj, int gribedition, int gridtype) {
+
+	string key = boost::lexical_cast<string> (ni) + "_" +
+			boost::lexical_cast<string> (nj) + "_" +
+			boost::lexical_cast<string> (lat) + "_" +
+			boost::lexical_cast<string> (lon) + "_" +
+			boost::lexical_cast<string> (di) + "_" +
+			boost::lexical_cast<string> (dj) + "_" +
+			boost::lexical_cast<string> (gribedition) + "_" +
+			boost::lexical_cast<string> (gridtype);
+			
+  if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
+#endif
+
+    return geometryinfo_fromarea[key];
+  }
+
+  stringstream query;
+	
+  query << "SELECT g.id,g.name FROM geom g, projection p "
+            << "WHERE g.projection_id = p.id"
+            << " AND nj = " << nj
+            << " AND ni = " << ni
+            << " AND 1000 * st_x(first_point) = " << lon
+            << " AND 1000 * st_y(first_point) = " << lat
+            << " AND 1000 * di = " << di
+            << " AND 1000 * dj = " << dj
+            << " AND p.grib" << gribedition << "_number = " << gridtype;
+
+  map <string, string> ret;
+
+  Query(query.str());
+
+  vector<string> row = FetchRow();
+
+  if (!row.empty()) {
+    ret["id"] = row[0];
+    ret["name"] = row[1];
+ 	
+    geometryinfo_fromarea[key] = ret;
+  }
+
+  return ret;
+
+}
+
 
 map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id) 
 {
@@ -757,8 +808,10 @@ NFmiRadonDBPool::NFmiRadonDBPool()
 NFmiRadonDBPool::~NFmiRadonDBPool()
 {
   for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
-    itsWorkerList[i]->Disconnect();
-    delete itsWorkerList[i];
+    if (itsWorkerList[i]) {   
+      itsWorkerList[i]->Disconnect();
+      delete itsWorkerList[i];
+    }
   }
 
   delete itsInstance;
@@ -798,38 +851,36 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
 
 
 #ifdef DEBUG
-		  cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
+        cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
         return itsWorkerList[i];
       
-      } else if (itsWorkingList[i] == -1) {
+      } 
+	  else if (itsWorkingList[i] == -1) {
         // Create new connection
-    	try {
-          itsWorkerList[i] = new NFmiRadonDB(i);
+        itsWorkerList[i] = new NFmiRadonDB(i);
 
-          if (itsUsername != "" && itsPassword != "")
-          {
-        	  itsWorkerList[i]->user_ = itsUsername;
-        	  itsWorkerList[i]->password_ = itsPassword;
-          }
+        if (itsUsername != "" && itsPassword != "")
+        {
+      	  itsWorkerList[i]->user_ = itsUsername;
+       	  itsWorkerList[i]->password_ = itsPassword;
+        }
 
-          if (itsDatabase != "")
-          {
-        	  itsWorkerList[i]->database_ = itsDatabase;
-          }
+        if (itsDatabase != "")
+        {
+      	  itsWorkerList[i]->database_ = itsDatabase;
+        }
 
-          itsWorkerList[i]->Connect();  
+        itsWorkerList[i]->Connect(1);  
 
-          itsWorkingList[i] = 1;
+        itsWorkingList[i] = 1;
 
 #ifdef DEBUG
-		  cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
+        cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
-          return itsWorkerList[i];
-    	} catch (int e) {
-    	  throw e;
-    	}
-      }
+        return itsWorkerList[i];
+    
+	  }
     }
 
     // All threads active

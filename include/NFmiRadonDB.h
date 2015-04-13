@@ -52,6 +52,7 @@ public:
   std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
   std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
+  std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj, int gribedition, int gridtype);
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
   std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache = false);
   std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, const std::string& stationId, bool aggressive_cache = false); // overload for icao
@@ -71,6 +72,7 @@ private:
   std::map<std::string, std::map<std::string, std::string>> paramnetcdfinfo;
   std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
   std::map<std::string, std::map<std::string, std::string>> geometryinfo;
+  std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
   std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
   std::map<std::string, std::map<std::string, std::string>> stationinfo;
 
