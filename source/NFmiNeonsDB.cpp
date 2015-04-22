@@ -69,7 +69,7 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
     return "";
   }
 
-  assert(boost::lexical_cast<int> (row[0]) == offset);
+  assert(boost::lexical_cast<unsigned int> (row[0]) == offset);
   
   return row[1];
 }
@@ -339,21 +339,69 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
 
 string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator, long levelType) {
 
-  string parm_name;
-  string univ_id;
-  string parm_id = boost::lexical_cast<string>(InParmId);
-  string no_vers = boost::lexical_cast<string>(InCodeTableVer);
-  string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
-  string trInd = boost::lexical_cast<string>(timeRangeIndicator);
-  string levType = boost::lexical_cast<string> (levelType);
-
   // Implement some sort of caching: this function is quite expensive
 
-  string key = parm_id + "_" + no_vers + "_" + no_vers2 + "_" + trInd + "_" + levType;
+  string key = boost::lexical_cast<string>(InParmId) + "_" + 
+		  boost::lexical_cast<string>(InCodeTableVer) + "_" + 
+		  boost::lexical_cast<string>(OutCodeTableVer) + "_" + 
+		  boost::lexical_cast<string>(timeRangeIndicator) + "_" + 
+		  boost::lexical_cast<string> (levelType);
 
   if (gridparameterinfo.find(key) != gridparameterinfo.end())
+  {
+#ifdef DEBUG
+    cout << "GetGridParameterName() cache hit!" << endl;
+#endif
     return gridparameterinfo[key];
+  }
+  
+  stringstream query;
+  
+  query   << "SELECT parm_name "
+		  << "FROM "
+		  << "grid_param_grib g1, "
+		  << "grid_param_xref x1, "
+		  << "grid_param_xref x2 " 
+		  << "WHERE "
+		  << "g1.parm_id = " << InParmId
+		  << " AND g1.no_vers = " << InCodeTableVer
+		  << " AND g1.parm_name = x1.parm_name"
+		  << " AND x1.no_vers = " << InCodeTableVer
+		  << " AND x1.univ_id = " << InParmId
+		  << " AND x2.no_vers = " << OutCodeTableVer
+		  << " AND x1.univ_id = x2.univ_id"
+		  ;
+  
+  Query(query.str());
+  vector<string> row = FetchRow();
+  
+  if (row.empty())
+  {
+    return "";
+  }
 
+  string parm_name = row[0];
+
+  query.str("");
+ 
+  // This query is wrong and will return not work if two different producer classes use same code table
+  query << "SELECT max(producer_class) FROM fmi_producers WHERE no_vers = " << OutCodeTableVer;
+
+  Query(query.str());
+  vector<string> prod_class = FetchRow();
+
+  if (!prod_class.empty()) {
+    string pclass = prod_class[0];
+    /* Switch the -'s to _'s for point producers */
+    if( (pclass == "2") || (pclass == "3") ) {
+      parm_name.replace(parm_name.find("-"), 1, "_");
+    }
+  }
+
+  gridparameterinfo[key] = parm_name;
+  return gridparameterinfo[key];
+  
+#if 0		  
   string query = "SELECT parm_name "
                  "FROM grid_param_grib "
                  "WHERE parm_id = " + parm_id + " "
@@ -401,26 +449,9 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     if (!param.empty()) {
       parm_name = param[0];
     }
-
-    query = "SELECT max(producer_class) "
-            "FROM fmi_producers "
-            "WHERE no_vers = " +boost::lexical_cast<string>(OutCodeTableVer);
-
-    Query(query);
-    vector<string> prod_class = FetchRow();
-    string pclass;
-
-    if (!prod_class.empty()) {
-      pclass = prod_class[0];
-      /* Switch the -'s to _'s for point producers */
-      if( (pclass == "2") | (pclass == "3") ) {
-        parm_name.replace(parm_name.find("-"), 1, "_");
-      }
-    }
-  }
-
-  gridparameterinfo[key] = parm_name;
-  return gridparameterinfo[key];
+#endif
+	
+    
 }
 
 
