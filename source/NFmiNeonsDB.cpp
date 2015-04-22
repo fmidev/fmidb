@@ -357,7 +357,7 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
   
   stringstream query;
   
-  query   << "SELECT parm_name "
+  query   << "SELECT x2.parm_name "
 		  << "FROM "
 		  << "grid_param_grib g1, "
 		  << "grid_param_xref x1, "
