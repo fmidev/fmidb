@@ -356,8 +356,10 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
   }
   
   stringstream query;
-  
-  query   << "SELECT x2.parm_name "
+ 
+  if (InCodeTableVer != OutCodeTableVer)
+  { 
+    query   << "SELECT x2.parm_name "
 		  << "FROM "
 		  << "grid_param_grib g1, "
 		  << "grid_param_xref x1, "
@@ -371,7 +373,19 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 		  << " AND x2.no_vers = " << OutCodeTableVer
 		  << " AND x1.univ_id = x2.univ_id"
 		  ;
-  
+  }
+  else
+  {
+    query << "SELECT parm_name FROM grid_param_grib "
+          << " WHERE parm_id = " << InParmId
+          << " AND no_vers = " << InCodeTableVer
+          << " AND timerange_ind = " << timeRangeIndicator
+          << " AND (lvl_type IS NULL OR lvl_type = " << levelType << ") "
+          << "ORDER BY lvl_type NULLS LAST"
+          ;
+
+  }
+
   Query(query.str());
   vector<string> row = FetchRow();
   
