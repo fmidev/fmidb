@@ -557,6 +557,31 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
   string query;
   
   switch (producer_id) {
+    case 20011:
+      // ext synop
+
+      query = "SELECT "
+              "r.wmon AS station_id, "
+              "r.lat, "
+              "r.lon, "
+              "r.station_name, "
+              "r.fmisid, "
+              "NULL AS lpnn, "
+              "r.h "
+              "FROM "
+              "wmostations r "
+              "WHERE "
+              "r.lat BETWEEN " +
+              boost::lexical_cast<string> (min_latitude) +
+              " AND " +
+              boost::lexical_cast<string> (max_latitude) +
+              " AND "
+              "r.lon BETWEEN " +
+              boost::lexical_cast<string> (min_longitude) +
+              " AND " +
+              boost::lexical_cast<string> (max_longitude);
+      break;
+
     case 20013:
       // Road weather
 
