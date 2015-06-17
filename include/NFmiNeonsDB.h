@@ -18,7 +18,8 @@ public:
   NFmiNeonsDB(short theId = 0);
   ~NFmiNeonsDB();
 
-  void Connect(const int threadedMode = 0);
+  void Connect();
+  void Connect(const int threadedMode);
 
   void Connect(const std::string & user,
                 const std::string & password,

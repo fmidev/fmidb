@@ -26,6 +26,10 @@ NFmiNeonsDB::~NFmiNeonsDB() {
   Disconnect();              
 }
 
+void NFmiNeonsDB::Connect() {
+  return Connect(0);
+}
+
 void NFmiNeonsDB::Connect(const int threadedMode) {
   NFmiOracle::Connect(threadedMode);
   DateFormat("YYYYMMDDHH24MISS");

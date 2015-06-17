@@ -1,20 +1,22 @@
-#ifndef __NFMIODBC_H__
-#define __NFMIODBC_H__
+#pragma once
 
 #include <string>
 #include <vector>
 #include "otlsettings.h"
+#include "NFmiDatabase.h"
 
-class NFmiODBC {
+class NFmiODBC : public NFmiDatabase {
 
 public:
 
   NFmiODBC();
+  NFmiODBC(short theId);
   NFmiODBC(const std::string& user, const std::string& password, const std::string& database);
   virtual ~NFmiODBC();
         
   static NFmiODBC & Instance();
 
+  virtual void Connect();
   virtual void Connect(const int threadedMode);
 
   virtual void Connect( const std::string & user,
@@ -34,20 +36,13 @@ public:
   void Commit() throw (int);
   void Rollback() throw (int);
 
+  short Id() { return id_; }
 protected:
 
   odbc::otl_connect db_;
   odbc::otl_stream stream_;
   otl_stream_read_iterator<odbc::otl_stream, odbc::otl_exception, odbc::otl_lob_stream> rs_iterator_;
-          
-  bool connected_;
-
-  std::string user_;
-  std::string password_;
-  std::string database_;
    
-  std::string connection_string_;
+  int id_;
 
 };
-
-#endif

@@ -1,11 +1,11 @@
-#ifndef __NFMIORACLE_H__
-#define __NFMIORACLE_H__
+#pragma once
 
 #include <string>
 #include <vector>
 #include "otlsettings.h"
+#include "NFmiDatabase.h"
 
-class NFmiOracle {
+class NFmiOracle : public NFmiDatabase {
 
 public:
 
@@ -14,16 +14,19 @@ public:
         
   static NFmiOracle & Instance();
 
-  void Connect(const int threadedMode = 0);
+  virtual void Connect();
+  virtual void Connect(const int threadedMode);
 
-  void Connect( const std::string & user,
+  virtual void Connect( const std::string & user,
                 const std::string & password,
                 const std::string & database,
                 const int threadedMode = 0);
         
-  void Disconnect (void);
-        
-  void Query(const std::string & sql, const unsigned int buffer_size = 50);
+  virtual void Disconnect (void) final;
+  
+  virtual void Query(const std::string & sql) final;
+  virtual void Query(const std::string & sql, const unsigned int buffer_size) final;
+  
   std::vector<std::string> FetchRow(void);
   std::vector<std::string> FetchRowFromCursor(void);
   
@@ -33,8 +36,8 @@ public:
   std::string MakeDate(const otl_datetime &datetime);
   //std::string MakeNEONSDate(const otl_datetime &datetime);
 
-  void Commit() throw (int);
-  void Rollback() throw (int);
+  virtual void Commit() throw (int) final;
+  virtual void Rollback() throw (int) final;
 
   bool TestMode() { return test_mode_; }
   void TestMode(bool test_mode) { test_mode_ = test_mode; }
@@ -79,14 +82,6 @@ protected:
   otl_stream_read_iterator<oracle::otl_stream, oracle::otl_exception, oracle::otl_lob_stream> rs_iterator_;
   otl_stream_read_iterator<oracle::otl_refcur_stream, oracle::otl_exception, oracle::otl_lob_stream> rc_iterator_;
 
-  bool connected_;
-
-  std::string user_;
-  std::string password_;
-  std::string database_;
-   
-  std::string connection_string_;
-
   bool test_mode_;
 
   std::string date_mask_;
@@ -98,5 +93,3 @@ protected:
   bool credentials_set_;
 
 };
-
-#endif

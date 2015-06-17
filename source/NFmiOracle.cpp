@@ -31,7 +31,7 @@ NFmiOracle & NFmiOracle::Instance() {
   return instance_; 
 }
 
-NFmiOracle::NFmiOracle() 
+NFmiOracle::NFmiOracle()
   : test_mode_(false)
   , verbose_(false)
   , initialized_(false)
@@ -68,6 +68,10 @@ cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl
 
 }
 
+void NFmiOracle::Connect() {
+  return Connect(0);
+}
+
 void NFmiOracle::Connect(const int threadedMode) {
 
   if (connected_)
@@ -92,6 +96,10 @@ cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << en
     cerr << p.msg << endl; // print out error message
     exit(1);
   }    
+}
+
+void NFmiOracle::Query(const string & sql) {
+  return Query(sql, 50);
 }
 
 void NFmiOracle::Query(const string & sql, const unsigned int buffer_size) {

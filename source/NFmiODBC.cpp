@@ -24,13 +24,13 @@ NFmiODBC & NFmiODBC::Instance() {
 }
 
 
-NFmiODBC::NFmiODBC() : connected_(false){}
+NFmiODBC::NFmiODBC() : id_(0) {}
+
+NFmiODBC::NFmiODBC(short theId) : id_(theId) {}
 
 NFmiODBC::NFmiODBC(const std::string& user, const std::string& password, const std::string& database)
-	: connected_(false)
-	, user_(user)
-	, password_(password)
-	, database_(database)
+	: NFmiDatabase(user, password, database)
+	, id_(0)
 {}
 
 void NFmiODBC::Connect(const string & user,
@@ -61,6 +61,10 @@ cout << "DEBUG: connected to ODBC " << database << endl;
 
 }
 
+void NFmiODBC::Connect() {
+  return Connect(1);
+}
+
 void NFmiODBC::Connect(const int threadedMode) {
 
   if (connected_)
@@ -82,7 +86,8 @@ cout << "DEBUG: connected to ODBC " << database_ << endl;
     cerr << "Unable to connect to ODBC:" << endl;
     cerr << p.msg << endl; // print out error message
     throw p.code;
-  }    
+  }
+
 }
 
 void NFmiODBC::Query(const string & sql) {
@@ -148,7 +153,7 @@ vector<string> NFmiODBC::FetchRow() {
       ret.push_back("");
       continue;
     }
-    
+
     switch (desc[n].otl_var_dbtype) {
       case 1:
         // varchar

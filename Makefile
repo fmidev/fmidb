@@ -33,7 +33,8 @@ CFLAGS_DEBUG = -fPIC -std=c++0x -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 LDFLAGS_DEBUG =  -shared -Wl,-soname,$(LIB).so.$(MAJOR_VERSION)
 
 INCLUDES = -I$(includedir) \
-           -I/usr/include/oracle
+           -I/usr/include/oracle \
+	   -iquote/usr/include/pqxx
 
 LIBS =  -L$(LIBDIR) \
         -L$(LIBDIR)/odbc \
