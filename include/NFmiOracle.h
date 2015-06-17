@@ -22,10 +22,10 @@ public:
                 const std::string & database,
                 const int threadedMode = 0);
         
-  virtual void Disconnect (void) final;
+  virtual void Disconnect (void) FINAL;
   
-  virtual void Query(const std::string & sql) final;
-  virtual void Query(const std::string & sql, const unsigned int buffer_size) final;
+  virtual void Query(const std::string & sql) FINAL;
+  virtual void Query(const std::string & sql, const unsigned int buffer_size) FINAL;
   
   std::vector<std::string> FetchRow(void);
   std::vector<std::string> FetchRowFromCursor(void);
@@ -36,8 +36,8 @@ public:
   std::string MakeDate(const otl_datetime &datetime);
   //std::string MakeNEONSDate(const otl_datetime &datetime);
 
-  virtual void Commit() throw (int) final;
-  virtual void Rollback() throw (int) final;
+  virtual void Commit() throw (int) FINAL;
+  virtual void Rollback() throw (int) FINAL;
 
   bool TestMode() { return test_mode_; }
   void TestMode(bool test_mode) { test_mode_ = test_mode; }

@@ -1,5 +1,13 @@
 #pragma once
 
+#if defined(__GNUC__) && (__GNUC__>=4) && defined(__GNUC_MINOR__) && __GNUC_MINOR__ >= 7
+#define FINAL final
+#define OVERRIDE override
+#else
+#define FINAL
+#define OVERRIDE
+#endif
+
 class NFmiDatabase {
 
 public:

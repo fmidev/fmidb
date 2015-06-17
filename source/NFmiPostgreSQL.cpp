@@ -3,6 +3,7 @@
 #include <exception>
 #include <sstream>
 #include "boost/lexical_cast.hpp"
+#include <iostream>
 
 #ifdef DEBUG
 #include <assert.h>
