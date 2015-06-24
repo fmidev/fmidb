@@ -805,6 +805,8 @@ NFmiRadonDBPool::NFmiRadonDBPool()
   , itsUsername("")
   , itsPassword("")
   , itsDatabase("")
+  , itsHostname("")
+  , itsPort(5432)
 {}
 
 NFmiRadonDBPool::~NFmiRadonDBPool()
@@ -872,7 +874,13 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
         {
       	  itsWorkerList[i]->database_ = itsDatabase;
         }
+		
+		if (itsHostname != "")
+		{
+          itsWorkerList[i]->hostname_ = itsHostname;
+		}
 
+		itsWorkerList[i]->port_ = itsPort;
         itsWorkerList[i]->Connect();  
 
         itsWorkingList[i] = 1;

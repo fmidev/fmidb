@@ -97,10 +97,10 @@ class NFmiRadonDBPool {
 	  void Username(const std::string& theUsername) { itsUsername = theUsername; }
 	  void Password(const std::string& thePassword) { itsPassword = thePassword; }
 	  void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
+	  void Hostname(const std::string& theHostname) { itsHostname = theHostname; }
+	  void Port(int thePort) { itsPort = thePort; }
 
 	private:
-
-	  // Default to two workers
 
 	  NFmiRadonDBPool();
 
@@ -115,6 +115,8 @@ class NFmiRadonDBPool {
       std::string itsUsername;
 	  std::string itsPassword;
 	  std::string itsDatabase;
+	  std::string itsHostname;
+	  int itsPort;
 };
 
 #endif
