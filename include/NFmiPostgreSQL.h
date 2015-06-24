@@ -32,12 +32,12 @@ public:
 	virtual void Query(const std::string & sql);
 	virtual std::vector<std::string> FetchRow(void);
 
-	virtual void Execute(const std::string & sql) throw (int);
+	virtual void Execute(const std::string & sql);
 
 	//virtual std::string MakeStandardDate(const otl_datetime &datetime);
 
-	void Commit() throw (int);
-	void Rollback() throw (int);
+	void Commit();
+	void Rollback();
 
 	int Id() { return id_; }
 

@@ -121,13 +121,12 @@ vector<string> NFmiPostgreSQL::FetchRow() {
  *
  */
 
-void NFmiPostgreSQL::Execute(const string & sql) throw (int) { 
+void NFmiPostgreSQL::Execute(const string & sql) { 
 
 #ifdef DEBUG
 	cout << "DEBUG: " << sql << endl;
 #endif
 
-	Rollback();
 	wrk_->exec(sql);
 }
  
@@ -143,7 +142,7 @@ void NFmiPostgreSQL::Disconnect() {
 	}
 }
 
-void NFmiPostgreSQL::Commit() throw (int) {
+void NFmiPostgreSQL::Commit() {
 
 #ifdef DEBUG
 	cout << "DEBUG: COMMIT" << endl;
@@ -153,14 +152,21 @@ void NFmiPostgreSQL::Commit() throw (int) {
 
 }
 
-void NFmiPostgreSQL::Rollback() throw (int) {
+void NFmiPostgreSQL::Rollback() {
 
 #ifdef DEBUG
 	cout << "DEBUG: ROLLBACK" << endl;
 #endif
+	try
+	{
+		wrk_->abort();
+	}
+	catch (const pqxx::usage_error& e)
+	{
+	}
 
-	wrk_->abort();
-
+	// new transaction
+	wrk_ = unique_ptr<pqxx::nontransaction> (new pqxx::nontransaction(*db_));
 }
 
 /*
