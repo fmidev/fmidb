@@ -13,13 +13,15 @@ NFmiRadonDB& NFmiRadonDB::Instance() {
   return instance_; 
 }
 
-NFmiRadonDB::NFmiRadonDB(short theId) : NFmiODBC("neons_client", "kikka8si", "radon"), itsId(theId) {}
+NFmiRadonDB::NFmiRadonDB(short theId)
+	: NFmiPostgreSQL("neons_client", "kikka8si", "radon", "vorlon", 5432), itsId(theId) 
+{}
 
 NFmiRadonDB::~NFmiRadonDB() {
   Disconnect();              
 }
 
-void NFmiRadonDB::Connect(const int threadedMode) {
+void NFmiRadonDB::Connect() {
   NFmiPostgreSQL::Connect();
 
 /*  try
@@ -871,7 +873,7 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
       	  itsWorkerList[i]->database_ = itsDatabase;
         }
 
-        itsWorkerList[i]->Connect(1);  
+        itsWorkerList[i]->Connect();  
 
         itsWorkingList[i] = 1;
 
