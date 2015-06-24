@@ -48,7 +48,6 @@ protected:
 	pqxx::result res_;
 	pqxx::result::const_iterator iter_;
 
-	std::string database_;
 	std::string hostname_;
 	
 	int port_;
