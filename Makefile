@@ -18,19 +18,16 @@ DIFFICULTFLAGS = -pedantic -Weffc++ -Wredundant-decls -Wshadow -Woverloaded-virt
 
 CC = /usr/bin/g++
 
-MAJOR_VERSION=1
-MINOR_VERSION=0
-
 # Default compiler flags
 
 CFLAGS = -fPIC -std=c++0x -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
-LDFLAGS = -shared -Wl,-soname,$(LIB).so.$(MAJOR_VERSION)
+LDFLAGS = -shared 
 
 # Special modes
 
 CFLAGS_DEBUG = -fPIC -std=c++0x -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 
-LDFLAGS_DEBUG =  -shared -Wl,-soname,$(LIB).so.$(MAJOR_VERSION)
+LDFLAGS_DEBUG =  -shared
 
 INCLUDES = -I$(includedir) \
            -I/usr/include/oracle \
@@ -129,7 +126,7 @@ release: objdir $(LIB)
 
 $(LIB): $(OBJS)
 	ar rcs $(LIBDIR)/libfmidb.a $(OBJFILES)
-	$(CC) -o $(LIBDIR)/libfmidb.so.$(MAJOR_VERSION).$(MINOR_VERSION) $(LDFLAGS) $(OBJFILES)
+	$(CC) -o $(LIBDIR)/libfmidb.so $(LDFLAGS) $(OBJFILES)
 
 clean:
 	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/$(LIB).* *~ source/*~ include/*~

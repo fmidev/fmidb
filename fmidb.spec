@@ -3,7 +3,7 @@
 Summary: fmidb library
 Name: lib%{LIBNAME}
 Version: 15.6.24
-Release: 1%{dist}.fmi
+Release: 2%{dist}.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jun 24 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.6.24-2.fmi
+- Fix to error handling
 * Wed Jun 24 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.6.24-1.fmi
 - New database type NFmiPostgreSQL that uses native driver
 * Fri Apr 24 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.4.24-1.fmi
