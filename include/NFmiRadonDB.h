@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "NFmiODBC.h"
+#include "NFmiPostgreSQL.h"
 #include <mutex>
 
 
@@ -21,7 +21,7 @@ enum FmiRadonStationNetwork
 
 class NFmiRadonDBPool;
 
-class NFmiRadonDB : public NFmiODBC {
+class NFmiRadonDB : public NFmiPostgreSQL {
 
 public:
 
@@ -30,12 +30,13 @@ public:
   NFmiRadonDB(short theId = 0);
   ~NFmiRadonDB();
 
-  void Connect(const int threadedMode = 0);
+  void Connect();
 
   void Connect(const std::string & user,
                 const std::string & password,
                 const std::string & database,
-                const int threadedMode = 0);
+				const std::string & hostname,
+                const int port = 5432);
 
   static NFmiRadonDB & Instance();
 

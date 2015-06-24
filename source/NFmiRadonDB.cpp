@@ -20,7 +20,7 @@ NFmiRadonDB::~NFmiRadonDB() {
 }
 
 void NFmiRadonDB::Connect(const int threadedMode) {
-  NFmiODBC::Connect(threadedMode);
+  NFmiPostgreSQL::Connect();
 
 /*  try
   {
@@ -33,8 +33,8 @@ void NFmiRadonDB::Connect(const int threadedMode) {
 */
 } 
 
-void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const int threadedMode) {
-  NFmiODBC::Connect(user,password,database,threadedMode);
+void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const std::string & hostname, int port) {
+  NFmiPostgreSQL::Connect(user,password,database,hostname,port);
 /*
   try
   {
