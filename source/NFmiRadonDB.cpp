@@ -115,22 +115,23 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
   string prod_id = boost::lexical_cast<string> (producer_id);
   string univ_id = boost::lexical_cast<string> (universal_id);
   
-  map <string, string> producer_info = GetProducerDefinition(producer_id);
+  /*map <string, string> producer_info = GetProducerDefinition(producer_id);
 
   if (producer_info.empty())
 	  return ret;
-
+*/
 
   stringstream query;
   
   query << "SELECT "
-		<<"p.name, "
+		<< "p.id, "
+		<< "p.name, "
 		<< "g.base, "
 		<< "g.scale, "
 		<< "g.univ_id "
 		<< "FROM param_newbase g, param p "
-		<< "WHERE x.producer_id = f.producer_id"
-		<< " AND p.id = g.param_id "
+		<< "WHERE "
+		<< " p.id = g.param_id "
 		<< " AND g.univ_id = " << univ_id
 		<< " AND g.producer_id = " << producer_id;
 
@@ -141,10 +142,12 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
   if (row.empty())
     return ret;
     
-  ret["parm_name"] = row[0];
-  ret["base"] = row[1];
-  ret["scale"] = row[2];
-  ret["univ_id"] = row[3];
+  ret["id"] = row[0];
+  ret["name"] = row[1];
+  ret["parm_name"] = row[1]; // backwards compatibility
+  ret["base"] = row[2];
+  ret["scale"] = row[3];
+  ret["univ_id"] = row[4];
  // ret["parm_desc"] = row[4];
  // ret["unit_desc"] = row[5];
  // ret["col_name"] = row[6];
@@ -632,9 +635,10 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id
   stringstream query;
   
   query << "SELECT f.id, f.name, f.class_id, g.centre, g.ident "
-        << "FROM fmi_producer f, producer_grib g "
+        << "FROM fmi_producer f "
+		<< "LEFT OUTER JOIN producer_grib g ON (f.id = g.producer_id) "
         << "WHERE f.id = " << producer_id
-        << " AND f.id = g.producer_id";
+        ;
 
   map <string, string> ret;
   
