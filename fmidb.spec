@@ -3,13 +3,13 @@
 Summary: fmidb library
 Name: lib%{LIBNAME}
 Version: 15.8.10
-Release: 1%{dist}.fmi
+Release: 2%{dist}.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
-Provides: %{LIBNAME}
+Provides: lib%{LIBNAME}.so
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost-devel >= 1.55
@@ -51,7 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0644)
-%{_libdir}/lib%{LIBNAME}.so*
+%{_libdir}/lib%{LIBNAME}.so
 
 %files devel
 %defattr(-,root,root,0644)
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Aug 10 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.8.10-2.fmi
+- Fix to transaction handling
 * Mon Aug 10 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.8.10-1.fmi
 - Additions to NFmiPostgreSQL
 * Wed Jun 24 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.6.24-2.fmi
