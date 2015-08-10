@@ -148,8 +148,15 @@ void NFmiPostgreSQL::Commit() {
 	cout << "DEBUG: COMMIT" << endl;
 #endif
 
-	wrk_->commit();
-
+	try
+	{
+		wrk_->commit();
+	}
+	catch (const pqxx::usage_error& e)
+	{
+	}
+	
+	wrk_ = unique_ptr<pqxx::nontransaction> (new pqxx::nontransaction(*db_));
 }
 
 void NFmiPostgreSQL::Rollback() {
