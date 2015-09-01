@@ -2,8 +2,8 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.8.10
-Release: 2%{dist}.fmi
+Version: 15.9.1
+Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Sep  1 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.9.1-1.fmi
+- Add ClassName() function
 * Mon Aug 10 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.8.10-2.fmi
 - Fix to transaction handling
 * Mon Aug 10 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.8.10-1.fmi
