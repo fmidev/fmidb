@@ -19,7 +19,9 @@ public:
                 const std::string & password,
                 const std::string & database,
                 const int threadedMode = 0);
-
+  
+  std::string ClassName() const { return "NFmiCLDB"; }
+  
   static NFmiCLDB & Instance();
   
   std::map<std::string, std::string> GetStationInfo(unsigned long producer_id, unsigned long station_id, bool aggressive_cache = true);

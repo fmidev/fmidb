@@ -12,7 +12,9 @@ public:
 
   NFmiVerifDB();
   ~NFmiVerifDB();
-       
+
+  std::string ClassName() const { return "NFmiVerifDB"; }  
+
   static NFmiVerifDB & Instance();
   
   std::map<std::string, std::string> GetStationInfo(unsigned long station_id, bool aggressive_cache = true);

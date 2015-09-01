@@ -27,6 +27,8 @@ public:
 
   virtual void Commit() = 0;
   virtual void Rollback() = 0;
+  
+  virtual std::string ClassName() const = 0;
 
 protected:
 

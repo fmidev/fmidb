@@ -38,6 +38,7 @@ public:
 				const std::string & hostname,
                 const int port = 5432);
 
+  std::string ClassName() const { return "NFmiRadonDB"; }
   static NFmiRadonDB & Instance();
 
   std::map<std::string, std::string> GetProducerFromGrib(long centre, long process);

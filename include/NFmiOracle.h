@@ -12,6 +12,7 @@ public:
   NFmiOracle();
   virtual ~NFmiOracle();
         
+  std::string ClassName() const { return "NFmiOracle"; }
   static NFmiOracle & Instance();
 
   virtual void Connect();

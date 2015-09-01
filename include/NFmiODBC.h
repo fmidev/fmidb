@@ -14,6 +14,8 @@ public:
   NFmiODBC(const std::string& user, const std::string& password, const std::string& database);
   virtual ~NFmiODBC();
         
+  std::string ClassName() const { return "NFmiODBC"; }
+
   static NFmiODBC & Instance();
 
   virtual void Connect();

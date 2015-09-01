@@ -9,7 +9,8 @@ public:
 
   NFmiTestbedDB();
   ~NFmiTestbedDB();
-        
+  std::string ClassName() const { return "NFmiTestbedDB"; }
+	
   static NFmiTestbedDB & Instance();
 
 };

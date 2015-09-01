@@ -26,6 +26,8 @@ public:
                 const std::string & database,
                 const int threadedMode = 0);
 
+  std::string ClassName() const { return "NFmiNeonsDB"; }
+
   static NFmiNeonsDB & Instance();
 
   std::map<std::string,std::string> GetGridDatasetInfo(long centre, long process, const std::string& geomName, const std::string& baseDate);

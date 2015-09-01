@@ -16,7 +16,9 @@ public:
 	NFmiPostgreSQL(int theId);
 	NFmiPostgreSQL(const std::string& user, const std::string& password, const std::string& database, const std::string& hostname, int port = 5432);
 	virtual ~NFmiPostgreSQL();
-				
+
+    std::string ClassName() const { return "NFmiPostgreSQL"; }
+	
 	static NFmiPostgreSQL & Instance();
 
 	virtual void Connect();
