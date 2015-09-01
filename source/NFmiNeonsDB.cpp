@@ -839,7 +839,7 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(const string &producer_na
   string query = "SELECT"
                  " producer_id "
                  "FROM fmi_producers "
-                 "WHERE ref_prod = " + producer_name;
+                 "WHERE ref_prod = '" + producer_name +"'";
 
   Query(query);
   
