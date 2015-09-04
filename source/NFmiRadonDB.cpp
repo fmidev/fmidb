@@ -173,7 +173,7 @@ map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, co
 	
 	map<string,string> ret;
 	
-	query << "SELECT param_id,param_name,param_version,grib1_table_version,grib1_number,grib2_discipline,grib2_category,grib2_number FROM producer_param_v WHERE producer_id = " << producerId
+	query << "SELECT param_id,param_name,param_version,grib1_table_version,grib1_number,grib2_discipline,grib2_category,grib2_number,newbase_id FROM producer_param_v WHERE producer_id = " << producerId
 			<< " AND param_name = '" << parameterName << "'";
 	
 	Query(query.str());
@@ -190,6 +190,7 @@ map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, co
 	ret["grib2_discipline"] = row[5];
 	ret["grib2_category"] = row[6];
 	ret["grib2_number"] = row[7];
+	ret["univ_id"] = row[8];
 	
 	paramdbinfo[key] = ret;
 	return ret;
