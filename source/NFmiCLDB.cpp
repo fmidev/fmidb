@@ -641,6 +641,30 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
     case 20015:
 	  throw runtime_error("Area-based queries not supported for producer 20015 yet");
 	  break;
+	  
+    case 20016:
+		query = "SELECT w.wmon, "
+				"round(S.STATION_GEOMETRY.sdo_point.y, 5) as LATITUDE, "
+				"round(S.STATION_GEOMETRY.sdo_point.x, 5) as LONGITUDE, "
+				"s.station_name, "
+				"s.station_id AS fmisid,"
+				"NULL as lpnn, "
+				"s.station_elevation "
+				"FROM stations_v1 s, group_members_v1 gm, wmostations w "
+				"WHERE gm.group_id = 127 "
+				"AND w.fmisid = s.station_id "
+				"AND gm.station_id = s.station_id "
+				"AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
+				"AND gm.membership_on = 'Y' "
+				"AND round(S.STATION_GEOMETRY.sdo_point.x, 5) BETWEEN " + 
+				boost::lexical_cast<string> (min_longitude) +
+				" AND " +
+				boost::lexical_cast<string> (max_longitude) +
+				" AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " +
+				boost::lexical_cast<string> (min_latitude) +
+				" AND " +
+				boost::lexical_cast<string> (max_latitude);
+		  break;
 
     default:
       /*
@@ -729,6 +753,6 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
     }
 
   }  
-  
+
   return stationlist;
 }
