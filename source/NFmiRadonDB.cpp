@@ -536,8 +536,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 	  <<   " nj,"
 	  <<   " first_lat,"
 	  <<   " first_lon,"
-	  <<   " di/1e5,"
-	  <<   " dj/1e5, "
+	  <<   " di,"
+	  <<   " dj, "
 	  <<   " geom_parm_1,"
 	  <<   " geom_parm_2,"
 	  <<   " geom_parm_3,"
@@ -598,10 +598,10 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
             << "WHERE g.projection_id = p.id"
             << " AND nj = " << nj
             << " AND ni = " << ni
-            << " AND 1000 * st_x(first_point) = " << lon
-            << " AND 1000 * st_y(first_point) = " << lat
-            << " AND 1000 * di = " << di
-            << " AND 1000 * dj = " << dj
+            << " AND st_x(first_point) = " << lon
+            << " AND st_y(first_point) = " << lat
+            << " AND di = " << di
+            << " AND dj = " << dj
             << " AND p.grib" << gribedition << "_number = " << gridtype;
 
   map <string, string> ret;
