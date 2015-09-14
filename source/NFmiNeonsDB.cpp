@@ -143,6 +143,7 @@ string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId,
   string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
 
   // Implement caching since this function is quite expensive
+  assert(!parm_name.empty());
 
   string key = parm_name + "_" + lvl_id + "_" + no_vers + "_" + no_vers2;
 
@@ -228,7 +229,7 @@ string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId,
 string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer) {
 
   string parm_name = GetGridParameterName(InParmId,InCodeTableVer,OutCodeTableVer);
-
+  assert(!parm_name.empty());
   return GetGridLevelName(parm_name, InLvlId, InCodeTableVer, OutCodeTableVer);
 
 }
@@ -363,6 +364,8 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
  
   if (InCodeTableVer != OutCodeTableVer)
   { 
+    assert(OutCodeTableVer > 0);
+
     query   << "SELECT x2.parm_name "
 		  << "FROM "
 		  << "grid_param_grib g1, "
@@ -816,7 +819,6 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(unsigned long producer_id
   
     producerinfo[producer_id] = ret;
   }
-  
   return ret;
   
 }
