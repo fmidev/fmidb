@@ -148,9 +148,6 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
   ret["base"] = row[2];
   ret["scale"] = row[3];
   ret["univ_id"] = row[4];
- // ret["parm_desc"] = row[4];
- // ret["unit_desc"] = row[5];
- // ret["col_name"] = row[6];
 
   paramnewbaseinfo[key] = ret;
   
@@ -542,8 +539,9 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 	  <<   " geom_parm_2,"
 	  <<   " geom_parm_3,"
 	  <<   " scanning_mode "
-	  <<   "FROM geom_v, projection p "
-	  <<   "WHERE geom_name = '" << geom_name << "'";
+	  <<   "FROM geom_v g, projection p "
+	  <<   "WHERE geom_name = '" << geom_name << "'"
+	  <<   " AND p.id = g.projection_id";
 
   map <string, string> ret;
 
@@ -675,7 +673,7 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
   stringstream query;
   
   query << "SELECT id "
-        << "FROM fmi_producers"
+        << "FROM fmi_producer"
         << " WHERE name = '" << producer_name << "'";
 
   Query(query.str());
@@ -696,7 +694,7 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
 
   stringstream query;
   
-  query <<  "SELECT analysis_time "
+  query <<  "SELECT analysis_time::timestamp "
  	<<  "FROM as_grid_v"
 	<<  " WHERE producer_name = '" << ref_prod
 	<<  "' AND record_count > 0 ";
