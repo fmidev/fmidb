@@ -6,6 +6,8 @@
 
 using namespace std;
 
+const float kFloatMissing = 32700.f;
+
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
 NFmiRadonDB& NFmiRadonDB::Instance() {
@@ -764,7 +766,7 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
   }
 		  
   Query(query.str());
-  cout << query.str() << endl;
+
   auto row = FetchRow();
   
   if (row.empty())
@@ -787,7 +789,46 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
   
   return ret;
 }
+
+pair<long, double> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value)
+{
+  string key = boost::lexical_cast<string> (producer_id) + "_" +
+			boost::lexical_cast<string> (paramId) + "_" +
+			boost::lexical_cast<string> (source_level_id) + "_" +
+			boost::lexical_cast<string> (source_level_value);
+  stringstream ss;
+	
+				
+  if (leveltransforminfo.find(key) != leveltransforminfo.end())
+  {
+#ifdef DEBUG
+    cout << "DEBUG: GetLevelTransform() cache hit!" << endl;
+#endif
+
+    return leveltransforminfo[key];
+  }
+
+  ss << "SELECT target_level_id, target_level_value FROM param_level_xref WHERE "
+		<< "producer_id = " << producer_id << " AND "
+		<< "param_id = " << paramId << " AND "
+		<< "source_level_id = " << source_level_id << " AND "
+		<< "(source_level_value IS NULL OR source_level_value = " << source_level_value
+		<< " ORDER BY source_level_id, source_level_value NULLS LAST"
+			;
+	
+  Query(ss.str());
+	
+  auto row = FetchRow();
+	
+  if (row.empty()) {
+    return make_pair(kFloatMissing,kFloatMissing);
+  }
   
+  leveltransforminfo[key] = make_pair(boost::lexical_cast<int> (row[0]), (row[1] == "") ? kFloatMissing : boost::lexical_cast<double> (row[1]));
+  
+  return leveltransforminfo[key];
+	
+}
   
 NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
 
