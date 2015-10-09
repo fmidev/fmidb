@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.9.29
+Version: 15.10.9
 Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Oct  8 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.10.9-1.fmi
+- Add geometry name to return value of GetGridGeoms()
+* Thu Oct  8 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.10.8-1.fmi
+- Radon bugfix
 * Tue Sep 29 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.9.29-1.fmi
 - New function to get level transforms
 * Mon Sep 28 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.9.28-1.fmi
