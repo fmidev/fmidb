@@ -1,5 +1,6 @@
 #include <NFmiNeonsDB.h>
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 //#include <boost/thread.hpp>
 #include <stdexcept>
 #include <algorithm>
@@ -1012,7 +1013,7 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(size_t ni, size_t nj, dou
   }
 
   string query = "SELECT "
-		         " prjn_name,"
+		 " prjn_name,"
                  " row_cnt,"
                  " col_cnt,"
                  " lat_orig,"
@@ -1028,11 +1029,11 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 				 " gr.geom_name "
                  "FROM grid_reg_geom gr, grid_geom gm "
                  "WHERE row_cnt = " + boost::lexical_cast<string> (nj) +
-                 " AND col_cnt = " + boost::lexical_cast<string> (ni) +
-		         " AND lat_orig = " + boost::lexical_cast<string> (lat) +
-		         " AND long_orig = " + boost::lexical_cast<string> (lon) +
-                 " AND pas_latitude = " + boost::lexical_cast<string> (dj) +
-                 " AND pas_longitude = " + boost::lexical_cast<string> (di) +
+                 " AND col_cnt = "+ boost::lexical_cast<string> (ni) +
+	         " AND lat_orig = " + boost::str(boost::format("%.5f") % lat) +
+	         " AND long_orig = " + boost::str(boost::format("%.5f") % lon) +
+                 " AND pas_latitude = " + boost::str(boost::format("%.5f") % dj) +
+                 " AND pas_longitude = " + boost::str(boost::format("%.5f") % di) +
                  " AND gr.geom_name = gm.geom_name";
 
   map <string, string> ret;
