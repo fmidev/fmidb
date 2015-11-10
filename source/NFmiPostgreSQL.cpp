@@ -126,8 +126,15 @@ void NFmiPostgreSQL::Execute(const string & sql) {
 #ifdef DEBUG
 	cout << "DEBUG: " << sql << endl;
 #endif
-
-	wrk_->exec(sql);
+	try
+	{
+		wrk_->exec(sql);
+	}
+	catch (const pqxx::unique_violation& e)
+	{
+		// let caller deal with this
+		throw e;
+	}
 }
  
 NFmiPostgreSQL::~NFmiPostgreSQL() {
