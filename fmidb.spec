@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.11.5
+Version: 15.11.10
 Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Nov 11 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.10-1.fmi
+- Re-throw pqx::unique_violation
 * Thu Nov  5 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.5-1.fmi
 - Correct rounding of coordinates when fetching geom info (case icemap2)
 * Thu Oct  8 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.10.9-1.fmi
