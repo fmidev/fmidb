@@ -167,7 +167,7 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
   if (swedish_road_weather_stations.find(station_id) != swedish_road_weather_stations.end())
     return swedish_road_weather_stations[station_id];
   
-  string query = "SELECT "
+/*  string query = "SELECT "
                  "r.fmisid as station_id, "
                  "l.latitude, " 
                  "l.longitude, "
@@ -178,7 +178,17 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
                  "locations l "
                  "WHERE "
                  "r.fmisid = l.fmisid";
-
+*/
+    string query = "SELECT "
+                 "s.station_id as station_id, "
+                 "round(s.station_geometry.sdo_point.y, 5) as latitude, "
+                 "round(s.station_geometry.sdo_point.x, 5) as longitude, "
+                 "s.station_name, "
+                 "s.station_elevation "
+                 "FROM stations_v1 s, network_members_v1 n "
+                 "WHERE s.station_id = n.station_id "
+                 "AND n.network_id IN (50,67,64) "
+                 "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')";
   /*
    * If aggressive_cache is not set, query only for the individual station.
    * Also, if aggressive_cache is set and map stationinfo is already populated
@@ -187,15 +197,15 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
    */
   
   if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
-    query += " AND r.fmisid = " + boost::lexical_cast<string> (station_id);
-  
+    query += " AND s.station_id = " + boost::lexical_cast<string> (station_id);
+
   Query(query);
-  
+
   while (true) {
     vector <string> values = FetchRow();
       
     map <string, string> station;
-        
+
     if (values.empty())
       break;
       
@@ -208,18 +218,18 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
     station["fmisid"] = sid;
     station["elevation"] = values[4];
       
-    road_weather_stations[sid] = station;
+    swedish_road_weather_stations[sid] = station;
   
   }
   
   map <string, string> ret;
-
+  
   if (swedish_road_weather_stations.find(station_id) != road_weather_stations.end())
     ret = swedish_road_weather_stations[station_id];
   else
     // If station does not exist, place empty map as a placeholder
     swedish_road_weather_stations[station_id] = ret;
-    
+
   return ret;
 }
 
