@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.11.10
+Version: 15.11.16
 Release: 1%{dist}.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Nov 16 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.16-1.fmi
+- Change producer 20014 to cover all external road weather stations (Sweden,Norway,Estonia)
 * Tue Nov 11 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.10-1.fmi
 - Re-throw pqx::unique_violation
 * Thu Nov  5 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.5-1.fmi
