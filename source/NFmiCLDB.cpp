@@ -624,6 +624,30 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
       // Swedish road weather
 
       query = "SELECT "
+                 "s.station_id as station_id, "
+                 "round(s.station_geometry.sdo_point.y, 5) as latitude, "
+                 "round(s.station_geometry.sdo_point.x, 5) as longitude, "
+                 "s.station_name, "
+                 "s.station_id as fmisid, "
+                 "NULL as lpnn, "
+                 "s.station_elevation "
+                 "FROM stations_v1 s, network_members_v1 n "
+                 "WHERE s.station_id = n.station_id "
+                 "AND n.network_id IN (50,67,64) "
+                 "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')"
+                 "AND round(s.station_geometry.sdo_point.y, 5) BETWEEN " +
+                 boost::lexical_cast<string> (min_latitude) +
+                 " AND " +
+                 boost::lexical_cast<string> (max_latitude) +
+                 " AND "
+                 "round(s.station_geometry.sdo_point.x, 5) BETWEEN " +
+                 boost::lexical_cast<string> (min_longitude) +
+                 " AND " +
+                 boost::lexical_cast<string> (max_longitude);
+                 ;
+
+
+/*      query = "SELECT "
               "r.fmisid AS station_id, "
               "l.latitude, " 
               "l.longitude, "
@@ -646,6 +670,7 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
               boost::lexical_cast<string> (min_longitude) +
               " AND " +
               boost::lexical_cast<string> (max_longitude);
+*/
       break;     
 
     case 20015:
