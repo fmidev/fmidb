@@ -813,7 +813,7 @@ pair<long, double> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId
 		<< "param_id = " << paramId << " AND "
 		<< "source_level_id = " << source_level_id << " AND "
 		<< "(source_level_value IS NULL OR source_level_value = " << source_level_value
-		<< " ORDER BY source_level_id, source_level_value NULLS LAST"
+		<< ") ORDER BY source_level_id, source_level_value NULLS LAST"
 			;
 	
   Query(ss.str());
