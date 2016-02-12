@@ -2,8 +2,8 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 15.11.16
-Release: 1%{dist}.fmi
+Version: 16.2.12
+Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
@@ -59,6 +59,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Feb 12 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.2.12-1.fmi
+- Change signature of GetLevelTransform() so that more information can be returned
+* Mon Feb  8 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.2.8-1.fmi
+- Bugfix for radon level xref
 * Mon Nov 16 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.16-1.fmi
 - Change producer 20014 to cover all external road weather stations (Sweden,Norway,Estonia)
 * Tue Nov 11 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.10-1.fmi

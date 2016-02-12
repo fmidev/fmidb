@@ -790,15 +790,14 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
   return ret;
 }
 
-pair<long, double> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value)
+std::map<string,string> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value)
 {
   string key = boost::lexical_cast<string> (producer_id) + "_" +
 			boost::lexical_cast<string> (paramId) + "_" +
 			boost::lexical_cast<string> (source_level_id) + "_" +
 			boost::lexical_cast<string> (source_level_value);
   stringstream ss;
-	
-				
+
   if (leveltransforminfo.find(key) != leveltransforminfo.end())
   {
 #ifdef DEBUG
@@ -808,25 +807,32 @@ pair<long, double> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId
     return leveltransforminfo[key];
   }
 
-  ss << "SELECT target_level_id, target_level_value FROM param_level_xref WHERE "
-		<< "producer_id = " << producer_id << " AND "
-		<< "param_id = " << paramId << " AND "
-		<< "source_level_id = " << source_level_id << " AND "
-		<< "(source_level_value IS NULL OR source_level_value = " << source_level_value
-		<< ") ORDER BY source_level_id, source_level_value NULLS LAST"
-			;
+  ss << "SELECT x.target_level_id, l.name AS target_level_name, x.target_level_value FROM param_level_xref x, level l WHERE "
+	<< "x.target_level_id = l.id AND "
+	<< "x.producer_id = " << producer_id << " AND "
+	<< "x.param_id = " << paramId << " AND "
+	<< "x.source_level_id = " << source_level_id << " AND "
+	<< "(x.source_level_value IS NULL OR x.source_level_value = " << source_level_value
+	<< ") ORDER BY source_level_id, source_level_value NULLS LAST"
+	;
 	
   Query(ss.str());
 	
   auto row = FetchRow();
-	
+
+  map<string,string> ret;
+
   if (row.empty()) {
-    return make_pair(kFloatMissing,kFloatMissing);
+    return ret;
   }
-  
-  leveltransforminfo[key] = make_pair(boost::lexical_cast<int> (row[0]), (row[1] == "") ? kFloatMissing : boost::lexical_cast<double> (row[1]));
-  
-  return leveltransforminfo[key];
+
+  ret["id"] = row[0];
+  ret["name"] = row[1];
+  ret["value"] = row[2];
+
+  leveltransforminfo[key] = ret;
+ 
+  return ret;
 	
 }
   
@@ -939,7 +945,8 @@ NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
 
     // All threads active
 #ifdef DEBUG
-    cout << "DEBUG: Waiting for worker release" << endl;
+    cout << "DEBUG: Waiting for worker release. Pool size=" << itsWorkerList.size() << endl;
+    assert(itsWorkerList.size() == itsWorkingList.size());
 #endif
 
     usleep(100000); // 100 ms  

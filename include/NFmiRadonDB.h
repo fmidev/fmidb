@@ -58,7 +58,7 @@ public:
   std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
   std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache = false);
   std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, const std::string& stationId, bool aggressive_cache = false); // overload for icao
-  std::pair<long, double> GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value);
+  std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value);
   
   short Id() { return itsId; }
   
@@ -78,7 +78,7 @@ private:
   std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
   std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
   std::map<std::string, std::map<std::string, std::string>> stationinfo;
-  std::map<std::string, std::pair<long, double>> leveltransforminfo;
+  std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
 
   short itsId; // Only for connection pooling
 
