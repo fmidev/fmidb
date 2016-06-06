@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.2.12
+Version: 16.6.6
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Jun  6 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.6.6-1.fmi
+- type_id support extension
+* Thu May 26 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.5.26-1.fmi
+- producer_type table in radon database
 * Fri Feb 12 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.2.12-1.fmi
 - Change signature of GetLevelTransform() so that more information can be returned
 * Mon Feb  8 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.2.8-1.fmi
