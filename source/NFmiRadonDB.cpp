@@ -52,7 +52,7 @@ void NFmiRadonDB::Connect(const std::string & user, const std::string & password
 }
 
 
-map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
+map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, long type_id)
 {
 	using boost::lexical_cast;
 
@@ -68,9 +68,12 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
 
 	stringstream query;
 
-	query << "SELECT f.id, f.name, f.class_id FROM fmi_producer f, producer_grib p "
-			<< "WHERE f.id = p.producer_id AND p.centre = " << centre
-			<< " AND p.ident = " << process;
+	query 	<< "SELECT f.id, f.name, f.class_id, f.type_id "
+		<< "FROM fmi_producer f, producer_grib p, producer_type t "
+		<< "WHERE f.id = p.producer_id AND f.type_id = t.id"
+		<< " AND p.centre = " << centre
+		<< " AND p.ident = " << process
+		<< " AND t.id = " << type_id;
 
 
 	Query(query.str());
@@ -91,6 +94,7 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["class_id"] = row[2];
+		ret["type_id"] = row[3];
 		ret["centre"] = lexical_cast<string> (centre);
 		ret["ident"] = lexical_cast<string> (process);
 
