@@ -417,6 +417,48 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 	return ret;
 }
 
+map<string, string> NFmiRadonDB::GetLevelFromName(const std::string& name)
+{
+	using boost::lexical_cast;
+
+	if (levelnameinfo.find(name) != levelnameinfo.end())
+	{
+#ifdef DEBUG
+	   cout << "DEBUG: GetLevelFromName() cache hit!" << endl;
+#endif
+		return levelnameinfo[name];
+	}
+	
+	stringstream query;
+
+	query << "SELECT id, name "
+			<< "FROM level "
+			<< " WHERE upper('" << name << "') = name "
+	;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	map<string,string> ret;
+
+	if (row.empty())
+	{
+#ifdef DEBUG
+		cout << "DEBUG Level not found\n";
+#endif
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+
+		levelnameinfo[name] = ret;
+	}
+
+	return ret;
+}
+
 map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNumber, long edition)
 {
 	using boost::lexical_cast;

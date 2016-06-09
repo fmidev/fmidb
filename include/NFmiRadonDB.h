@@ -41,17 +41,18 @@ public:
   std::string ClassName() const { return "NFmiRadonDB"; }
   static NFmiRadonDB & Instance();
 
-  std::map<std::string, std::string> GetProducerFromGrib(long centre, long process);
+  std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
   std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
-  //std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1  
   std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
   std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
   std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
   std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName);
-  
+
+  std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
+  std::map<std::string, std::string> GetLevelFromName(const std::string& name);
+
   std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
-  std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
   std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
   std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
   std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj, int gribedition, int gridtype);
@@ -69,6 +70,7 @@ private:
   std::map<std::string, std::map<std::string, std::string > > gribproducerinfo;
   std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
   std::map<std::string, std::map<std::string, std::string> > levelinfo;
+  std::map<std::string, std::map<std::string, std::string> > levelnameinfo;
   std::map<std::string, std::map<std::string, std::string>> paramdbinfo;
   std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
   std::map<std::string, std::map<std::string, std::string>> paramgrib2info;
