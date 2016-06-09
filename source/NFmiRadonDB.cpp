@@ -417,7 +417,7 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetLevelFromName(const std::string& name)
+map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& name)
 {
 	using boost::lexical_cast;
 

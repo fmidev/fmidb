@@ -49,7 +49,7 @@ public:
   std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName);
 
   std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
-  std::map<std::string, std::string> GetLevelFromName(const std::string& name);
+  std::map<std::string, std::string> GetLevelFromDatabaseName(const std::string& name);
 
   std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
   std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
