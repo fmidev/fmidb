@@ -61,6 +61,8 @@ public:
   std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, const std::string& stationId, bool aggressive_cache = false); // overload for icao
   std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value);
   
+  std::string GetProducerMetaData(long producer_id, const std::string& attribute);
+  
   short Id() { return itsId; }
   
 private:
@@ -81,6 +83,7 @@ private:
   std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
   std::map<std::string, std::map<std::string, std::string>> stationinfo;
   std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
+  std::map<std::string, std::string> producermetadatainfo;
 
   short itsId; // Only for connection pooling
 

@@ -881,6 +881,34 @@ std::map<string,string> NFmiRadonDB::GetLevelTransform(long producer_id, long pa
   return ret;
 	
 }
+
+std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& attribute)
+{
+	string key = boost::lexical_cast<string> (producer_id) + "_" + attribute ;
+
+	if (producermetadatainfo.find(key) != producermetadatainfo.end())
+	{
+#ifdef DEBUG
+		cout << "DEBUG: GetProducerMetaData() cache hit!" << endl;
+#endif
+
+		return producermetadatainfo[key];
+	}
+	
+	string query = "SELECT value FROM producer_meta WHERE producer_id = " + boost::lexical_cast<string> (producer_id) + " AND attribute = '" + attribute + "'";
+	
+	Query(query);
+	
+	auto row = FetchRow();
+	
+	if (row.empty())
+	{
+		return "";
+	}
+	
+	producermetadatainfo[key] = row[0];
+	return row[0];
+}
   
 NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
 
