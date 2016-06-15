@@ -314,7 +314,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: ParameterFromGrib2() cache hit!" << endl;
+	   cout << "DEBUG: ParameterFromGrib2() cache hit for " << key << endl;
 #endif
            return paramgrib2info[key];
 	}
@@ -424,7 +424,7 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& nam
 	if (levelnameinfo.find(name) != levelnameinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetLevelFromName() cache hit!" << endl;
+	   cout << "DEBUG: GetLevelFromDatabaseName() cache hit for " << name << endl;
 #endif
 		return levelnameinfo[name];
 	}
@@ -468,7 +468,7 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 	if (levelinfo.find(key) != levelinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetLevelFromGrib() cache hit!" << endl;
+	   cout << "DEBUG: GetLevelFromGrib() cache hit for " << key << endl;
 #endif
 		return levelinfo[key];
 	}
