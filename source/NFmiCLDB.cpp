@@ -711,7 +711,7 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
 				"NULL as lpnn, "
 				"s.station_elevation "
 				"FROM stations_v1 s, group_members_v1 gm, wmostations w "
-				"WHERE gm.group_id = 127 "
+				"WHERE (gm.group_id = 125 OR gm.group_id = 127)"
 				"AND w.fmisid = s.station_id "
 				"AND gm.station_id = s.station_id "
 				"AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
@@ -767,7 +767,6 @@ map<int, map<string, string> > NFmiCLDB::GetStationListForArea(unsigned long pro
   
   while (true) {
     vector <string> values = FetchRow();
-      
     map <string, string> station;
         
     if (values.empty())
