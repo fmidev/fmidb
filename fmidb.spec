@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.6.6
+Version: 16.7.12
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Jul 12 2016 Mikko Vanhatalo <mikko.vanhatalo@fmi.fi> - 16.7.12-1.fmi
+- get producer meta data for radon
+- CLDB station queries for producer 20016 now use WMO groups 125 and 127
+* Thu Jun  9 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.6.9-1.fmi
+- Kiitotie stations for 20013
+- New function to radondb
 * Mon Jun  6 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.6.6-1.fmi
 - type_id support extension
 * Thu May 26 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.5.26-1.fmi
