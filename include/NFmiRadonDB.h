@@ -1,12 +1,11 @@
 #ifndef RADONDB_H
 #define RADONDB_H
 
+#include <map>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <map>
 #include "NFmiPostgreSQL.h"
-#include <mutex>
-
 
 // from radon table 'network'
 enum FmiRadonStationNetwork
@@ -21,110 +20,108 @@ enum FmiRadonStationNetwork
 
 class NFmiRadonDBPool;
 
-class NFmiRadonDB : public NFmiPostgreSQL {
+class NFmiRadonDB : public NFmiPostgreSQL
+{
+   public:
+	friend class NFmiRadonDBPool;
 
-public:
+	NFmiRadonDB(short theId = 0);
+	~NFmiRadonDB();
 
-  friend class NFmiRadonDBPool;
+	void Connect();
 
-  NFmiRadonDB(short theId = 0);
-  ~NFmiRadonDB();
+	void Connect(const std::string& user, const std::string& password, const std::string& database,
+	             const std::string& hostname, const int port = 5432);
 
-  void Connect();
+	std::string ClassName() const { return "NFmiRadonDB"; }
+	static NFmiRadonDB& Instance();
 
-  void Connect(const std::string & user,
-                const std::string & password,
-                const std::string & database,
-				const std::string & hostname,
-                const int port = 5432);
+	std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
+	std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
+	std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
+	                                                         long timeRangeIndicator, long levelId, double levelValue);
+	std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category,
+	                                                         long paramId, long levelId, double levelValue);
+	std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName,
+	                                                          long levelId, double levelValue);
+	std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName);
 
-  std::string ClassName() const { return "NFmiRadonDB"; }
-  static NFmiRadonDB & Instance();
+	std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
+	std::map<std::string, std::string> GetLevelFromDatabaseName(const std::string& name);
 
-  std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
-  std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
-  std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue);
-  std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue);
-  std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName, long levelId, double levelValue);
-  std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName);
+	std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
+	std::map<std::string, std::string> GetProducerDefinition(const std::string& producer_name);
+	std::vector<std::vector<std::string>> GetGridGeoms(const std::string& ref_prod, const std::string& analtime,
+	                                                   const std::string& geom_name = "");
+	std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
+	std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
+	                                                         double dj, int gribedition, int gridtype);
+	std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
+	std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
+	                                                        bool aggressive_cache = false);
+	std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType,
+	                                                        const std::string& stationId,
+	                                                        bool aggressive_cache = false);  // overload for icao
+	std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id,
+	                                                     double source_level_value);
 
-  std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
-  std::map<std::string, std::string> GetLevelFromDatabaseName(const std::string& name);
+	std::string GetProducerMetaData(long producer_id, const std::string& attribute);
 
-  std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
-  std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
-  std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
-  std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
-  std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj, int gribedition, int gridtype);
-  std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
-  std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache = false);
-  std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, const std::string& stationId, bool aggressive_cache = false); // overload for icao
-  std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value);
-  
-  std::string GetProducerMetaData(long producer_id, const std::string& attribute);
-  
-  short Id() { return itsId; }
-  
-private:
+	short Id() { return itsId; }
+   private:
+	// These maps are used for caching
 
-  // These maps are used for caching
+	std::map<std::string, std::map<std::string, std::string>> gribproducerinfo;
+	std::map<unsigned long, std::map<std::string, std::string>> producerinfo;
+	std::map<std::string, std::map<std::string, std::string>> levelinfo;
+	std::map<std::string, std::map<std::string, std::string>> levelnameinfo;
+	std::map<std::string, std::map<std::string, std::string>> paramdbinfo;
+	std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
+	std::map<std::string, std::map<std::string, std::string>> paramgrib2info;
+	std::map<std::string, std::map<std::string, std::string>> paramnetcdfinfo;
+	std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
+	std::map<std::string, std::map<std::string, std::string>> geometryinfo;
+	std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
+	std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
+	std::map<std::string, std::map<std::string, std::string>> stationinfo;
+	std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
+	std::map<std::string, std::string> producermetadatainfo;
 
-  std::map<std::string, std::map<std::string, std::string > > gribproducerinfo;
-  std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
-  std::map<std::string, std::map<std::string, std::string> > levelinfo;
-  std::map<std::string, std::map<std::string, std::string> > levelnameinfo;
-  std::map<std::string, std::map<std::string, std::string>> paramdbinfo;
-  std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
-  std::map<std::string, std::map<std::string, std::string>> paramgrib2info;
-  std::map<std::string, std::map<std::string, std::string>> paramnetcdfinfo;
-  std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
-  std::map<std::string, std::map<std::string, std::string>> geometryinfo;
-  std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
-  std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
-  std::map<std::string, std::map<std::string, std::string>> stationinfo;
-  std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
-  std::map<std::string, std::string> producermetadatainfo;
-
-  short itsId; // Only for connection pooling
-
+	short itsId;  // Only for connection pooling
 };
 
-class NFmiRadonDBPool {
-	
-	public:
-	
-	  static NFmiRadonDBPool* Instance();
+class NFmiRadonDBPool
+{
+   public:
+	static NFmiRadonDBPool* Instance();
 
-	  ~NFmiRadonDBPool();
+	~NFmiRadonDBPool();
 
-	  NFmiRadonDB * GetConnection();
-	  void Release(NFmiRadonDB *theWorker);
-	  void MaxWorkers(int theMaxWorkers);
-	  int MaxWorkers() const { return itsMaxWorkers; }
+	NFmiRadonDB* GetConnection();
+	void Release(NFmiRadonDB* theWorker);
+	void MaxWorkers(int theMaxWorkers);
+	int MaxWorkers() const { return itsMaxWorkers; }
+	void Username(const std::string& theUsername) { itsUsername = theUsername; }
+	void Password(const std::string& thePassword) { itsPassword = thePassword; }
+	void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
+	void Hostname(const std::string& theHostname) { itsHostname = theHostname; }
+	void Port(int thePort) { itsPort = thePort; }
+   private:
+	NFmiRadonDBPool();
 
-	  void Username(const std::string& theUsername) { itsUsername = theUsername; }
-	  void Password(const std::string& thePassword) { itsPassword = thePassword; }
-	  void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
-	  void Hostname(const std::string& theHostname) { itsHostname = theHostname; }
-	  void Port(int thePort) { itsPort = thePort; }
+	static NFmiRadonDBPool* itsInstance;
 
-	private:
+	int itsMaxWorkers;
+	std::vector<int> itsWorkingList;
+	std::vector<NFmiRadonDB*> itsWorkerList;
 
-	  NFmiRadonDBPool();
+	std::mutex itsGetMutex;
 
-	  static NFmiRadonDBPool* itsInstance;
-
-	  int itsMaxWorkers;
-	  std::vector<int> itsWorkingList;
-	  std::vector<NFmiRadonDB *> itsWorkerList;
-
-	  std::mutex itsGetMutex;
-          
-      std::string itsUsername;
-	  std::string itsPassword;
-	  std::string itsDatabase;
-	  std::string itsHostname;
-	  int itsPort;
+	std::string itsUsername;
+	std::string itsPassword;
+	std::string itsDatabase;
+	std::string itsHostname;
+	int itsPort;
 };
 
 #endif

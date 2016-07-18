@@ -1,131 +1,130 @@
 #ifndef NEONSDB_H
 #define NEONSDB_H
 
+#include <map>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <map>
 #include "NFmiOracle.h"
-#include <mutex>
 
 class NFmiNeonsDBPool;
 
-class NFmiNeonsDB : public NFmiOracle {
+class NFmiNeonsDB : public NFmiOracle
+{
+   public:
+	friend class NFmiNeonsDBPool;
 
-public:
+	NFmiNeonsDB(short theId = 0);
+	~NFmiNeonsDB();
 
-  friend class NFmiNeonsDBPool;
+	void Connect();
+	void Connect(const int threadedMode);
 
-  NFmiNeonsDB(short theId = 0);
-  ~NFmiNeonsDB();
+	void Connect(const std::string& user, const std::string& password, const std::string& database,
+	             const int threadedMode = 0);
 
-  void Connect();
-  void Connect(const int threadedMode);
+	std::string ClassName() const { return "NFmiNeonsDB"; }
+	static NFmiNeonsDB& Instance();
 
-  void Connect(const std::string & user,
-                const std::string & password,
-                const std::string & database,
-                const int threadedMode = 0);
+	std::map<std::string, std::string> GetGridDatasetInfo(long centre, long process, const std::string& geomName,
+	                                                      const std::string& baseDate);
 
-  std::string ClassName() const { return "NFmiNeonsDB"; }
+	std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer, long OutCodeTableVer);
+	std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer, long OutCodeTableVer);  // GRIB 1
+	std::string GetGridLevelName(long InLvlId, long InProducerId);                                         // GRIB 2
+	std::string GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer,
+	                                 long timeRangeIndicator = 0, long levelType = 0);  // GRIB 1
+	std::string GetGridParameterNameForGrib2(long InParmId, long InCategory, long InDiscipline,
+	                                         long InProducerId);  // GRIB 2
+	std::string GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string& param);
 
-  static NFmiNeonsDB & Instance();
+	std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, const std::string& parm_name);
+	std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, unsigned long universal_id);
+	std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
+	std::map<std::string, std::string> GetProducerDefinition(const std::string& producer_name);
+	std::map<std::string, std::string> GetGeometryDefinition(const std::string& geometry_name);
+	std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
+	                                                         double dj);
 
-  std::map<std::string,std::string> GetGridDatasetInfo(long centre, long process, const std::string& geomName, const std::string& baseDate);
+	std::map<std::string, std::string> GetGridModelDefinition(unsigned long producer_id);
+	std::pair<int, int> GetGrib2Parameter(unsigned long producerId, unsigned long parameterId);
 
-  std::string GetGridLevelName(const std::string& parm_name, long InLvlId, long InCodeTableVer,long OutCodeTableVer);
-  std::string GetGridLevelName(long InParmId, long InLvlId, long InCodeTableVer,long OutCodeTableVer); // GRIB 1
-  std::string GetGridLevelName(long InLvlId, long InProducerId); // GRIB 2
-  std::string GetGridParameterName(long InParmId,long InCodeTableVer,long OutCodeTableVer, long timeRangeIndicator = 0, long levelType = 0); // GRIB 1
-  std::string GetGridParameterNameForGrib2(long InParmId,long InCategory,long InDiscipline, long InProducerId); // GRIB 2
-  std::string GetGribParameterNameFromNetCDF(unsigned long producerId, const std::string &param);
+	std::map<std::string, std::string> GetStationInfo(unsigned long wmo_id, bool aggressive_cache = true);
+	std::map<int, std::map<std::string, std::string>> GetStationListForArea(double max_latitude, double min_latitude,
+	                                                                        double max_longitude, double min_longitude,
+	                                                                        bool temp = false);
 
-  std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, const std::string &parm_name);
-  std::map<std::string, std::string> GetParameterDefinition(unsigned long producer_id, unsigned long universal_id);
-  std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
-  std::map<std::string, std::string> GetProducerDefinition(const std::string &producer_name);
-  std::map<std::string, std::string> GetGeometryDefinition(const std::string &geometry_name);
-  std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj);
+	std::vector<std::string> GetNeonsTables(const std::string& start_time, const std::string& end_time,
+	                                        const std::string& producer_name);
+	std::vector<std::vector<std::string>> GetGridGeoms(const std::string& ref_prod, const std::string& analtime,
+	                                                   const std::string& geom_name = "");
 
-  std::map<std::string, std::string> GetGridModelDefinition(unsigned long producer_id);
-  std::pair<int, int> GetGrib2Parameter(unsigned long producerId, unsigned long parameterId);
+	long GetGridParameterId(long no_vers, const std::string& name);
 
-  std::map<std::string, std::string> GetStationInfo(unsigned long wmo_id, bool aggressive_cache = true);
-  std::map<int, std::map<std::string, std::string> > GetStationListForArea(double max_latitude, double min_latitude, double max_longitude, double min_longitude, bool temp = false);
-  
-  std::vector<std::string> GetNeonsTables(const std::string &start_time, const std::string &end_time, const std::string &producer_name);
-  std::vector<std::vector<std::string> > GetGridGeoms(const std::string& ref_prod, const std::string& analtime, const std::string& geom_name = "");
+	std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
 
-  long GetGridParameterId(long no_vers, const std::string& name);
+	short Id() { return itsId; }
+	void SQLDateMask(const std::string& theDateMask);
 
-  std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
-  
-  short Id() { return itsId; }
-  void SQLDateMask(const std::string& theDateMask);
-  
-private:
+   private:
+	// These maps are used for caching
 
-  // These maps are used for caching
+	std::map<std::string, std::map<std::string, std::string>> datasetinfo;
+	std::map<unsigned long, std::map<std::string, std::string>> producerinfo;
+	std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string>>> parameterinfo;
+	std::map<std::string, std::map<std::string, std::string>> geometryinfo;
+	std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
+	std::map<unsigned long, std::map<std::string, std::string>> stationinfo;
+	std::map<std::string, std::string> levelinfo;
+	std::map<std::string, std::string> gridparameterinfo;
+	std::map<std::string, std::vector<std::vector<std::string>>> gridgeoms;
+	std::map<std::string, long> gridparamid;
+	std::map<unsigned long, std::map<std::string, std::string>> gridmodeldefinition;
 
-  std::map<std::string, std::map<std::string, std::string>> datasetinfo;
-  std::map<unsigned long, std::map<std::string, std::string > > producerinfo;
-  std::map<unsigned long, std::map<unsigned long, std::map<std::string, std::string > > > parameterinfo;
-  std::map<std::string, std::map<std::string, std::string > > geometryinfo;
-  std::map<std::string, std::map<std::string, std::string > > geometryinfo_fromarea;
-  std::map<unsigned long, std::map<std::string, std::string> > stationinfo;  
-  std::map<std::string, std::string> levelinfo;
-  std::map<std::string, std::string> gridparameterinfo;
-  std::map<std::string, std::vector<std::vector<std::string> > > gridgeoms;
-  std::map<std::string, long> gridparamid;
-  std::map<unsigned long, std::map<std::string, std::string> > gridmodeldefinition;
-  
-  short itsId; // Only for connection pooling
-
+	short itsId;  // Only for connection pooling
 };
 
-class NFmiNeonsDBPool {
-	
-	public:
-	
-	  static NFmiNeonsDBPool* Instance();
+class NFmiNeonsDBPool
+{
+   public:
+	static NFmiNeonsDBPool* Instance();
 
-	  ~NFmiNeonsDBPool();
+	~NFmiNeonsDBPool();
 
-	  NFmiNeonsDB * GetConnection();
-	  void Release(NFmiNeonsDB *theWorker);
-	  void MaxWorkers(int theMaxWorkers);
-	  int MaxWorkers() const { return itsMaxWorkers; }
+	NFmiNeonsDB* GetConnection();
+	void Release(NFmiNeonsDB* theWorker);
+	void MaxWorkers(int theMaxWorkers);
+	int MaxWorkers() const { return itsMaxWorkers; }
+	void ExternalAuthentication(bool theExternalAuthentication)
+	{
+		itsExternalAuthentication = theExternalAuthentication;
+	}
+	bool ExternalAuthentication() const { return itsExternalAuthentication; }
+	void ReadWriteTransaction(bool theReadWriteTransaction) { itsReadWriteTransaction = theReadWriteTransaction; }
+	bool ReadWriteTransaction() const { return itsReadWriteTransaction; }
+	void Username(const std::string& theUsername) { itsUsername = theUsername; }
+	void Password(const std::string& thePassword) { itsPassword = thePassword; }
+	void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
+   private:
+	// Default to two workers
 
-	  void ExternalAuthentication(bool theExternalAuthentication) { itsExternalAuthentication = theExternalAuthentication; }
-	  bool ExternalAuthentication() const { return itsExternalAuthentication; }
+	NFmiNeonsDBPool();
 
-	  void ReadWriteTransaction(bool theReadWriteTransaction) { itsReadWriteTransaction = theReadWriteTransaction; }
-	  bool ReadWriteTransaction() const { return itsReadWriteTransaction; }
+	static NFmiNeonsDBPool* itsInstance;
 
-	  void Username(const std::string& theUsername) { itsUsername = theUsername; }
-	  void Password(const std::string& thePassword) { itsPassword = thePassword; }
-	  void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
+	int itsMaxWorkers;
+	std::vector<int> itsWorkingList;
+	std::vector<NFmiNeonsDB*> itsWorkerList;
 
-	private:
+	std::mutex itsGetMutex;
+	std::mutex itsReleaseMutex;
 
-	  // Default to two workers
+	bool itsExternalAuthentication;
+	bool itsReadWriteTransaction;
 
-	  NFmiNeonsDBPool();
-
-	  static NFmiNeonsDBPool* itsInstance;
-
-	  int itsMaxWorkers;
-	  std::vector<int> itsWorkingList;
-	  std::vector<NFmiNeonsDB *> itsWorkerList;
-
-	  std::mutex itsGetMutex;
-	  std::mutex itsReleaseMutex;
-
-	  bool itsExternalAuthentication;
-	  bool itsReadWriteTransaction;
-
-	  std::string itsUsername;
-	  std::string itsPassword;
-	  std::string itsDatabase;
+	std::string itsUsername;
+	std::string itsPassword;
+	std::string itsDatabase;
 };
 
 #endif
