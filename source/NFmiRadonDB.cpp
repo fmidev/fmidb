@@ -1,8 +1,10 @@
-#include <NFmiRadonDB.h>
 #include <NFmiODBC.h>
+#include <NFmiRadonDB.h>
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string_regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
-#include <algorithm>
 
 using namespace std;
 
@@ -10,53 +12,54 @@ const float kFloatMissing = 32700.f;
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-NFmiRadonDB& NFmiRadonDB::Instance() {
-  static NFmiRadonDB instance_;
-  return instance_; 
+NFmiRadonDB& NFmiRadonDB::Instance()
+{
+	static NFmiRadonDB instance_;
+	return instance_;
 }
 
 NFmiRadonDB::NFmiRadonDB(short theId)
-	: NFmiPostgreSQL("neons_client", "kikka8si", "radon", "vorlon", 5432), itsId(theId) 
-{}
-
-NFmiRadonDB::~NFmiRadonDB() {
-  Disconnect();              
+    : NFmiPostgreSQL("neons_client", "kikka8si", "radon", "vorlon", 5432), itsId(theId)
+{
 }
 
-void NFmiRadonDB::Connect() {
-  NFmiPostgreSQL::Connect();
+NFmiRadonDB::~NFmiRadonDB() { Disconnect(); }
+void NFmiRadonDB::Connect()
+{
+	NFmiPostgreSQL::Connect();
 
-/*  try
-  {
-    putenv("TZ=utc"); // for sqllite
-    Execute("SELECT load_extension('libspatialite.so.5')");
-    Execute("SELECT load_extension('libsqlitefunctions')");
-  }
-  catch (...)
-  {}
-*/
-} 
-
-void NFmiRadonDB::Connect(const std::string & user, const std::string & password, const std::string & database, const std::string & hostname, int port) {
-  NFmiPostgreSQL::Connect(user,password,database,hostname,port);
-/*
-  try
-  {
-    putenv("TZ=utc"); // for sqllite
-    Execute("SELECT load_extension('libspatialite.so.5')");
-    Execute("SELECT load_extension('libsqlitefunctions')");
-  }
-  catch (...)
-  {}
-*/
+	/*  try
+	  {
+	    putenv("TZ=utc"); // for sqllite
+	    Execute("SELECT load_extension('libspatialite.so.5')");
+	    Execute("SELECT load_extension('libsqlitefunctions')");
+	  }
+	  catch (...)
+	  {}
+	*/
 }
 
+void NFmiRadonDB::Connect(const std::string& user, const std::string& password, const std::string& database,
+                          const std::string& hostname, int port)
+{
+	NFmiPostgreSQL::Connect(user, password, database, hostname, port);
+	/*
+	  try
+	  {
+	    putenv("TZ=utc"); // for sqllite
+	    Execute("SELECT load_extension('libspatialite.so.5')");
+	    Execute("SELECT load_extension('libsqlitefunctions')");
+	  }
+	  catch (...)
+	  {}
+	*/
+}
 
 map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, long type_id)
 {
 	using boost::lexical_cast;
 
-	string key = lexical_cast<string> (centre) + "_" + lexical_cast<string> (process);
+	string key = lexical_cast<string>(centre) + "_" + lexical_cast<string>(process);
 
 	if (gribproducerinfo.find(key) != gribproducerinfo.end())
 	{
@@ -68,23 +71,20 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 
 	stringstream query;
 
-	query 	<< "SELECT f.id, f.name, f.class_id, f.type_id "
-		<< "FROM fmi_producer f, producer_grib p, producer_type t "
-		<< "WHERE f.id = p.producer_id AND f.type_id = t.id"
-		<< " AND p.centre = " << centre
-		<< " AND p.ident = " << process
-		<< " AND t.id = " << type_id;
-
+	query << "SELECT f.id, f.name, f.class_id, f.type_id "
+	      << "FROM fmi_producer f, producer_grib p, producer_type t "
+	      << "WHERE f.id = p.producer_id AND f.type_id = t.id"
+	      << " AND p.centre = " << centre << " AND p.ident = " << process << " AND t.id = " << type_id;
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 
 	if (row.empty())
 	{
-		//gridparamid[key] = -1;
+// gridparamid[key] = -1;
 #ifdef DEBUG
 		cout << "DEBUG Producer not found\n";
 #endif
@@ -95,11 +95,10 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 		ret["name"] = row[1];
 		ret["class_id"] = row[2];
 		ret["type_id"] = row[3];
-		ret["centre"] = lexical_cast<string> (centre);
-		ret["ident"] = lexical_cast<string> (process);
+		ret["centre"] = lexical_cast<string>(centre);
+		ret["ident"] = lexical_cast<string>(process);
 
 		gribproducerinfo[key] = ret;
-
 	}
 
 	return ret;
@@ -107,84 +106,85 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 
 map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id)
 {
-  string key = boost::lexical_cast<string> (producer_id) + "_" + boost::lexical_cast<string> (universal_id);
+	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(universal_id);
 
-  if (paramnewbaseinfo.find(key) != paramnewbaseinfo.end()) {
+	if (paramnewbaseinfo.find(key) != paramnewbaseinfo.end())
+	{
 #ifdef DEBUG
-    cout << "DEBUG: GetParameterFromNewbaseId() cache hit!" << endl;
+		cout << "DEBUG: GetParameterFromNewbaseId() cache hit!" << endl;
 #endif
-    return paramnewbaseinfo[key];
-  }
-  
-  map <string, string> ret;
-  
-  string prod_id = boost::lexical_cast<string> (producer_id);
-  string univ_id = boost::lexical_cast<string> (universal_id);
-  
-  /*map <string, string> producer_info = GetProducerDefinition(producer_id);
+		return paramnewbaseinfo[key];
+	}
 
-  if (producer_info.empty())
+	map<string, string> ret;
+
+	string prod_id = boost::lexical_cast<string>(producer_id);
+	string univ_id = boost::lexical_cast<string>(universal_id);
+
+	/*map <string, string> producer_info = GetProducerDefinition(producer_id);
+
+	if (producer_info.empty())
 	  return ret;
-*/
+  */
 
-  stringstream query;
-  
-  query << "SELECT "
-		<< "p.id, "
-		<< "p.name, "
-		<< "g.base, "
-		<< "g.scale, "
-		<< "g.univ_id "
-		<< "FROM param_newbase g, param p "
-		<< "WHERE "
-		<< " p.id = g.param_id "
-		<< " AND g.univ_id = " << univ_id
-		<< " AND g.producer_id = " << producer_id;
+	stringstream query;
 
-  Query(query.str());
-   
-  vector<string> row = FetchRow();
-  
-  if (row.empty())
-    return ret;
-    
-  ret["id"] = row[0];
-  ret["name"] = row[1];
-  ret["parm_name"] = row[1]; // backwards compatibility
-  ret["base"] = row[2];
-  ret["scale"] = row[3];
-  ret["univ_id"] = row[4];
+	query << "SELECT "
+	      << "p.id, "
+	      << "p.name, "
+	      << "g.base, "
+	      << "g.scale, "
+	      << "g.univ_id "
+	      << "FROM param_newbase g, param p "
+	      << "WHERE "
+	      << " p.id = g.param_id "
+	      << " AND g.univ_id = " << univ_id << " AND g.producer_id = " << producer_id;
 
-  paramnewbaseinfo[key] = ret;
-  
-  return ret;
-  
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	if (row.empty()) return ret;
+
+	ret["id"] = row[0];
+	ret["name"] = row[1];
+	ret["parm_name"] = row[1];  // backwards compatibility
+	ret["base"] = row[2];
+	ret["scale"] = row[3];
+	ret["univ_id"] = row[4];
+
+	paramnewbaseinfo[key] = ret;
+
+	return ret;
 }
 
-map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string& parameterName)
+map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string& parameterName)
 {
-	string key = boost::lexical_cast<string> (producerId) + "_" + parameterName;
-	
-	if (paramdbinfo.find(key) != paramdbinfo.end()) {
+	string key = boost::lexical_cast<string>(producerId) + "_" + parameterName;
+
+	if (paramdbinfo.find(key) != paramdbinfo.end())
+	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetParameterFromDatabaseName() cache hit!" << endl;
-	   return paramdbinfo[key];
+		cout << "DEBUG: GetParameterFromDatabaseName() cache hit!" << endl;
+		return paramdbinfo[key];
 #endif
 	}
-	
+
 	stringstream query;
-	
-	map<string,string> ret;
-	
-	query << "SELECT param_id,param_name,param_version,grib1_table_version,grib1_number,grib2_discipline,grib2_category,grib2_number,newbase_id FROM producer_param_v WHERE producer_id = " << producerId
-			<< " AND param_name = '" << parameterName << "'";
-	
+
+	map<string, string> ret;
+
+	query << "SELECT "
+	         "param_id,param_name,param_version,grib1_table_version,grib1_number,grib2_discipline,grib2_category,grib2_"
+	         "number,newbase_id FROM producer_param_v WHERE producer_id = "
+	      << producerId << " AND param_name = '" << parameterName << "'";
+
 	Query(query.str());
-	
+
 	auto row = FetchRow();
-	
+
 	if (row.empty()) return ret;
-	
+
 	ret["id"] = row[0];
 	ret["name"] = row[1];
 	ret["version"] = row[2];
@@ -194,13 +194,13 @@ map<string,string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, co
 	ret["grib2_category"] = row[6];
 	ret["grib2_number"] = row[7];
 	ret["univ_id"] = row[8];
-	
+
 	paramdbinfo[key] = ret;
 	return ret;
-	
 }
 /*
-string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long timeRangeIndicator, long levelType)
+string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, long OutCodeTableVer, long
+timeRangeIndicator, long levelType)
 {
 
   string parm_name;
@@ -219,13 +219,13 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     return gridparameterinfo[key];
 
   stringstream query;
-  
+
         query << "SELECT x.param_name "
                <<  "FROM param_grib1_v x, param_newbase y"
-               <<  " WHERE y.univ_id = " << parm_id 
+               <<  " WHERE y.univ_id = " << parm_id
                <<  " AND x.param_id = y.param_id"
                <<  " AND x.table_version = " << no_vers2
-               <<  " AND x.timerange_indicator = " << trInd 
+               <<  " AND x.timerange_indicator = " << trInd
                <<  " AND x.level_id IS NULL OR x.level_id = " << levType
                <<  " ORDER BY x.level_id NULLS LAST";
 
@@ -243,42 +243,40 @@ string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 }
 */
 
-
-map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId, long timeRangeIndicator, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
+                                                       long timeRangeIndicator, long levelId, double levelValue)
 {
-
 	using boost::lexical_cast;
 
-	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (tableVersion) + "_" +
-		lexical_cast<string> (paramId) + "_" + lexical_cast<string> (timeRangeIndicator) + "_" + lexical_cast<string> (levelId) + lexical_cast<string> (levelValue) ;
+	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(tableVersion) + "_" +
+	             lexical_cast<string>(paramId) + "_" + lexical_cast<string>(timeRangeIndicator) + "_" +
+	             lexical_cast<string>(levelId) + lexical_cast<string>(levelValue);
 
 	if (paramgrib1info.find(key) != paramgrib1info.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: ParameterFromGrib1() cache hit!" << endl;
+		cout << "DEBUG: ParameterFromGrib1() cache hit!" << endl;
 #endif
 		return paramgrib1info[key];
 	}
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id "
-			<< "FROM param_grib1 g, param p, param_unit u, interpolation_method i, fmi_producer f "
-			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
-			<< " AND f.id = " << producerId
-			<< " AND table_version = " << tableVersion
-			<< " AND number = " << paramId
-			<< " AND timerange_indicator = " << timeRangeIndicator
-			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
-			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
-		;
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, "
+	         "g.level_id "
+	      << "FROM param_grib1 g, param p, param_unit u, interpolation_method i, fmi_producer f "
+	      << "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
+	      << " AND f.id = " << producerId << " AND table_version = " << tableVersion << " AND number = " << paramId
+	      << " AND timerange_indicator = " << timeRangeIndicator << " AND (level_id IS NULL OR level_id = " << levelId
+	      << ")"
+	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 
 	if (row.empty())
 	{
@@ -291,54 +289,52 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["version"] = row[2];
-		ret["grib1_table_version"] = lexical_cast<string> (tableVersion);
-		ret["grib1_number"] = lexical_cast<string> (paramId);
+		ret["grib1_table_version"] = lexical_cast<string>(tableVersion);
+		ret["grib1_number"] = lexical_cast<string>(paramId);
 		ret["interpolation_method"] = row[4];
 		ret["level_id"] = row[5];
 		ret["level_value"] = row[6];
 
 		paramgrib1info[key] = ret;
-
 	}
 
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId,
+                                                       long levelId, double levelValue)
 {
 	using boost::lexical_cast;
 
-	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (discipline) + "_" + 
-		lexical_cast<string> (category) + "_" + lexical_cast<string> (paramId) + "_" + lexical_cast<string> (levelId) + "_" + lexical_cast<string> (levelValue) ;
+	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(discipline) + "_" +
+	             lexical_cast<string>(category) + "_" + lexical_cast<string>(paramId) + "_" +
+	             lexical_cast<string>(levelId) + "_" + lexical_cast<string>(levelValue);
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: ParameterFromGrib2() cache hit for " << key << endl;
+		cout << "DEBUG: ParameterFromGrib2() cache hit for " << key << endl;
 #endif
-           return paramgrib2info[key];
+		return paramgrib2info[key];
 	}
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id "
-			<< "FROM param_grib2 g, param p, param_unit u, interpolation_method i, fmi_producer f "
-			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
-			<< " AND f.id = " << producerId
-			<< " AND discipline = " << discipline
-			<< " AND category = " << category
-			<< " AND number = " << paramId
-			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
-			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
-		;
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, "
+	         "g.level_id "
+	      << "FROM param_grib2 g, param p, param_unit u, interpolation_method i, fmi_producer f "
+	      << "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
+	      << " AND f.id = " << producerId << " AND discipline = " << discipline << " AND category = " << category
+	      << " AND number = " << paramId << " AND (level_id IS NULL OR level_id = " << levelId << ")"
+	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
-	
+	map<string, string> ret;
+
 	if (row.empty())
 	{
 #ifdef DEBUG
@@ -350,9 +346,9 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["version"] = row[2];
-		ret["grib2_discipline"] = lexical_cast<string> (discipline);
-		ret["grib2_category"] = lexical_cast<string> (category);
-		ret["grib2_number"] = lexical_cast<string> (paramId);
+		ret["grib2_discipline"] = lexical_cast<string>(discipline);
+		ret["grib2_category"] = lexical_cast<string>(category);
+		ret["grib2_number"] = lexical_cast<string>(paramId);
 		ret["interpolation_method"] = row[4];
 		ret["level_id"] = row[5];
 		ret["level_value"] = row[6];
@@ -363,37 +359,38 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string& paramName, long levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string& paramName, long levelId,
+                                                        double levelValue)
 {
 	using boost::lexical_cast;
 
-	string key = lexical_cast<string> (producerId) + "_" + paramName + "_" + lexical_cast<string> (levelId) + "_" + lexical_cast<string> (levelValue) ;
+	string key = lexical_cast<string>(producerId) + "_" + paramName + "_" + lexical_cast<string>(levelId) + "_" +
+	             lexical_cast<string>(levelValue);
 
 	if (paramnetcdfinfo.find(key) != paramnetcdfinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetParameterFromNetCDF() cache hit!" << endl;
+		cout << "DEBUG: GetParameterFromNetCDF() cache hit!" << endl;
 #endif
 		return paramnetcdfinfo[key];
 	}
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, g.level_id, g.level_value "
-			<< "FROM param_netcdf g, param p, param_unit u, interpolation_method i, fmi_producer f "
-			<< "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
-			<< " AND f.id = " << producerId
-			<< " AND g.netcdf_name = '" << paramName << "'"
-			<< " AND (level_id IS NULL OR level_id = " << levelId << ")"
-			<< " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-			<< " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1"
-		;
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, p.interpolation_id, i.name AS interpolation_name, "
+	         "g.level_id, g.level_value "
+	      << "FROM param_netcdf g, param p, param_unit u, interpolation_method i, fmi_producer f "
+	      << "WHERE g.param_id = p.id AND p.unit_id = u.id AND p.interpolation_id = i.id AND f.id = g.producer_id "
+	      << " AND f.id = " << producerId << " AND g.netcdf_name = '" << paramName << "'"
+	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
+	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 
 	if (row.empty())
 	{
@@ -406,7 +403,7 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["version"] = row[2];
-		ret["netcdf_name"] = lexical_cast<string> (paramName);
+		ret["netcdf_name"] = lexical_cast<string>(paramName);
 		ret["interpolation_method"] = row[4];
 		ret["level_id"] = row[5];
 		ret["level_value"] = row[6];
@@ -424,23 +421,22 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& nam
 	if (levelnameinfo.find(name) != levelnameinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetLevelFromDatabaseName() cache hit for " << name << endl;
+		cout << "DEBUG: GetLevelFromDatabaseName() cache hit for " << name << endl;
 #endif
 		return levelnameinfo[name];
 	}
-	
+
 	stringstream query;
 
 	query << "SELECT id, name "
-			<< "FROM level "
-			<< " WHERE upper('" << name << "') = name "
-	;
+	      << "FROM level "
+	      << " WHERE upper('" << name << "') = name ";
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 
 	if (row.empty())
 	{
@@ -463,30 +459,28 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 {
 	using boost::lexical_cast;
 
-	string key = lexical_cast<string> (producerId) + "_" + lexical_cast<string> (levelNumber) + "_" + lexical_cast<string> (edition);
+	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(levelNumber) + "_" +
+	             lexical_cast<string>(edition);
 
 	if (levelinfo.find(key) != levelinfo.end())
 	{
 #ifdef DEBUG
-	   cout << "DEBUG: GetLevelFromGrib() cache hit for " << key << endl;
+		cout << "DEBUG: GetLevelFromGrib() cache hit for " << key << endl;
 #endif
 		return levelinfo[key];
 	}
-		
+
 	stringstream query;
 
 	query << "SELECT id, name "
-			<< "FROM level l, " << (edition == 2 ? "level_grib2 g " : "level_grib1 g")
-			<< " WHERE l.id = g.level_id "
-			<< " AND g.producer_id = " << producerId
-			<< " AND g.grib_level_id = " << levelNumber
-	;
+	      << "FROM level l, " << (edition == 2 ? "level_grib2 g " : "level_grib1 g") << " WHERE l.id = g.level_id "
+	      << " AND g.producer_id = " << producerId << " AND g.grib_level_id = " << levelNumber;
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 
 	if (row.empty())
 	{
@@ -498,393 +492,483 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
-		ret["grib1Number"] = lexical_cast<string> (levelNumber);
+		ret["grib1Number"] = lexical_cast<string>(levelNumber);
 
-		//param_grib1[key] = p
-		//gridparamid[key] = boost::lexical_cast<long> (row[0]);
+		// param_grib1[key] = p
+		// gridparamid[key] = boost::lexical_cast<long> (row[0]);
 
 		levelinfo[key] = ret;
 	}
 
 	return ret;
-
-
 }
 
-vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime, const string& geom_name) 
+vector<vector<string> > NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime,
+                                                  const string& geom_name)
 {
-
-  string key = ref_prod + "_" + analtime + "_" + geom_name;
-  if (gridgeoms.count(key) > 0) {
+	string key = ref_prod + "_" + analtime + "_" + geom_name;
+	if (gridgeoms.count(key) > 0)
+	{
 #ifdef DEBUG
-  cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
+		cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
 #endif
-    return gridgeoms[key];
-  }
-  
-  stringstream query;
-  
-        query << "SELECT as_grid.geometry_id, as_grid.table_name, as_grid.id, geom_v.geom_name"
-	        <<  " FROM as_grid, fmi_producer, geom_v"
-	        <<  " WHERE as_grid.record_count > 0"
-	        <<  " AND fmi_producer.name like '" << ref_prod << "'"
-		<<  " AND as_grid.producer_id = fmi_producer.id"
-	        <<  " AND as_grid.analysis_time = '" << analtime << "'"
-		<<  " AND as_grid.geometry_id = geom_v.geometry_id";
-
-  if (!geom_name.empty())
-  {
-	  query << " AND geom_v.geom_name = '" << geom_name << "'";
-  }
-
-  Query(query.str());
-
-  vector<vector<string> > ret;
-
-  while (true) {
-	vector<string> values = FetchRow();
-
-	if (values.empty()) {
-	  break;
+		return gridgeoms[key];
 	}
 
-	ret.push_back(values);
-  }
+	stringstream query;
 
-  gridgeoms[key] = ret;
+	query << "SELECT as_grid.geometry_id, as_grid.table_name, as_grid.id, geom_v.geom_name"
+	      << " FROM as_grid, fmi_producer, geom_v"
+	      << " WHERE as_grid.record_count > 0"
+	      << " AND fmi_producer.name like '" << ref_prod << "'"
+	      << " AND as_grid.producer_id = fmi_producer.id"
+	      << " AND as_grid.analysis_time = '" << analtime << "'"
+	      << " AND as_grid.geometry_id = geom_v.geometry_id";
 
-  return ret;
+	if (!geom_name.empty())
+	{
+		query << " AND geom_v.geom_name = '" << geom_name << "'";
+	}
+
+	Query(query.str());
+
+	vector<vector<string> > ret;
+
+	while (true)
+	{
+		vector<string> values = FetchRow();
+
+		if (values.empty())
+		{
+			break;
+		}
+
+		ret.push_back(values);
+	}
+
+	gridgeoms[key] = ret;
+
+	return ret;
 }
 
 map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 {
-    
-  if (geometryinfo.find(geom_name) != geometryinfo.end())
-  {
+	if (geometryinfo.find(geom_name) != geometryinfo.end())
+	{
 #ifdef DEBUG
-    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
+		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
 #endif
 
-    return geometryinfo[geom_name];
-  }
+		return geometryinfo[geom_name];
+	}
 
-  // find geom name corresponding id
+	// find geom name corresponding id
 
-  stringstream query;
+	stringstream query;
 
-  query.str("");
-   
-  query << "SELECT"
-	  <<   " projection_id,"
-	  <<   " projection_name,"
-	  <<   " ni,"
-	  <<   " nj,"
-	  <<   " first_lat,"
-	  <<   " first_lon,"
-	  <<   " di,"
-	  <<   " dj, "
-	  <<   " geom_parm_1,"
-	  <<   " geom_parm_2,"
-	  <<   " geom_parm_3,"
-	  <<   " scanning_mode "
-	  <<   "FROM geom_v g, projection p "
-	  <<   "WHERE geom_name = '" << geom_name << "'"
-	  <<   " AND p.id = g.projection_id";
+	query.str("");
 
-  map <string, string> ret;
+	// First get the grid type, so we know from which table to fetch detailed information
 
-  Query(query.str());
+	query << "SELECT id, name, projection_id FROM geom WHERE name = '" << geom_name << "'";
 
-  vector<string> row = FetchRow();
+	Query(query.str());
 
-  if (!row.empty()) {
-    ret["prjn_id"] = row[0];
-    ret["prjn_name"] = row[1];
-    ret["row_cnt"] = row[3];
-    ret["col_cnt"] = row[2];
-    ret["lat_orig"] = row[4];
-    ret["long_orig"] = row[5];
-    ret["pas_longitude"] = row[6];
-    ret["pas_latitude"] = row[7];
-	ret["geom_parm_1"] = row[8];
-    ret["geom_parm_2"] = row[9];
-    ret["geom_parm_3"] = row[10];
-	ret["stor_desc"] = row[11];
-	
-    geometryinfo[geom_name] = ret;
-  }
+	vector<string> row = FetchRow();
 
-  return ret;
+	if (row.empty())
+	{
+		return map<string, string>();
+	}
 
+	map<string, string> ret;
+
+	ret["geom_id"] = row[0];
+	ret["prjn_name"] = row[1];
+	ret["prjn_id"] = row[2];  // deprecated
+	ret["grid_type_id"] = row[2];
+
+	int grid_type_id = boost::lexical_cast<int>(row[2]);
+
+	query.str("");
+
+	switch (grid_type_id)
+	{
+		case 1:
+		{
+			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode FROM geom_v WHERE geometry_id = "
+			      << row[0];
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty()) return map<string, string>();
+
+			ret["ni"] = row[0];
+			ret["nj"] = row[1];
+			ret["first_point_lat"] = row[2];
+			ret["first_point_lon"] = row[3];
+			ret["di"] = row[4];
+			ret["dj"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["col_cnt"] = ret["ni"];                 // neons
+			ret["row_cnt"] = ret["nj"];                 // neons
+			ret["pas_longitude"] = ret["di"];           // neons
+			ret["pas_latitude"] = ret["dj"];            // neons
+			ret["stor_desc"] = ret["scanning_mode"];    // neons
+			ret["lat_orig"] = ret["first_point_lat"];   // neons
+			ret["long_orig"] = ret["first_point_lon"];  // neons
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
+		}
+
+		case 2:
+		{
+			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, geom_parm_1 FROM geom_v WHERE "
+			         "geometry_id = "
+			      << row[0];
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty()) return map<string, string>();
+
+			ret["ni"] = row[0];
+			ret["nj"] = row[1];
+			ret["first_point_lat"] = row[2];
+			ret["first_point_lon"] = row[3];
+			ret["di"] = row[4];
+			ret["dj"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["col_cnt"] = ret["ni"];               // neons
+			ret["row_cnt"] = ret["nj"];               // neons
+			ret["pas_longitude"] = ret["di"];         // neons
+			ret["pas_latitude"] = ret["dj"];          // neons
+			ret["stor_desc"] = ret["scanning_mode"];  // neons
+			ret["geom_parm_1"] = row[7];
+			ret["lat_orig"] = ret["first_point_lat"];   // neons
+			ret["long_orig"] = ret["first_point_lon"];  // neons
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
+		}
+		case 3:
+			break;
+
+		case 4:
+		{
+			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, geom_parm_1, geom_parm_2 FROM geom_v "
+			         "WHERE geometry_id = "
+			      << row[0];
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty()) return map<string, string>();
+
+			ret["ni"] = row[0];
+			ret["nj"] = row[1];
+			ret["first_point_lat"] = row[2];
+			ret["first_point_lon"] = row[3];
+			ret["di"] = row[4];
+			ret["dj"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["col_cnt"] = ret["ni"];               // neons
+			ret["row_cnt"] = ret["nj"];               // neons
+			ret["pas_longitude"] = ret["di"];         // neons
+			ret["pas_latitude"] = ret["dj"];          // neons
+			ret["stor_desc"] = ret["scanning_mode"];  // neons
+			ret["geom_parm_1"] = row[7];
+			ret["geom_parm_2"] = row[8];
+			ret["lat_orig"] = ret["first_point_lat"];   // neons
+			ret["long_orig"] = ret["first_point_lon"];  // neons
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
+		}
+		case 5:
+		{
+			query << "SELECT nj, st_y(first_point), st_x(first_point), st_y(last_point), st_x(last_point), n, "
+			         "scanning_mode, longitudes_along_latitudes FROM geom_reduced_gaussian WHERE id = "
+			      << row[0];
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty()) return map<string, string>();
+
+			ret["nj"] = row[0];
+			ret["first_point_lat"] = row[1];
+			ret["first_point_lon"] = row[2];
+			ret["last_point_lat"] = row[3];
+			ret["last_point_lon"] = row[4];
+			ret["n"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["longitudes_along_parallels"] = boost::trim_copy_if(row[7], boost::is_any_of("{}"));
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
+		}
+	}
+
+	return map<string, string>();
 }
 
-map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di, double dj, int gribedition, int gridtype) {
-
-	string key = boost::lexical_cast<string> (ni) + "_" +
-			boost::lexical_cast<string> (nj) + "_" +
-			boost::lexical_cast<string> (lat) + "_" +
-			boost::lexical_cast<string> (lon) + "_" +
-			boost::lexical_cast<string> (di) + "_" +
-			boost::lexical_cast<string> (dj) + "_" +
-			boost::lexical_cast<string> (gribedition) + "_" +
-			boost::lexical_cast<string> (gridtype);
-			
-  if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
-  {
-#ifdef DEBUG
-    cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
-#endif
-
-    return geometryinfo_fromarea[key];
-  }
-
-  stringstream query;
-	
-  query << "SELECT g.id,g.name FROM geom g, projection p "
-            << "WHERE g.projection_id = p.id"
-            << " AND nj = " << nj
-            << " AND ni = " << ni
-            << " AND st_x(first_point) = " << lon
-            << " AND st_y(first_point) = " << lat
-            << " AND di = " << di
-            << " AND dj = " << dj
-            << " AND p.grib" << gribedition << "_number = " << gridtype;
-
-  map <string, string> ret;
-
-  Query(query.str());
-
-  vector<string> row = FetchRow();
-
-  if (!row.empty()) {
-    ret["id"] = row[0];
-    ret["name"] = row[1];
- 	
-    geometryinfo_fromarea[key] = ret;
-  }
-
-  return ret;
-
-}
-
-
-map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id) 
+map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
+                                                       double dj, int gribedition, int gridtype)
 {
+	string key = boost::lexical_cast<string>(ni) + "_" + boost::lexical_cast<string>(nj) + "_" +
+	             boost::lexical_cast<string>(lat) + "_" + boost::lexical_cast<string>(lon) + "_" +
+	             boost::lexical_cast<string>(di) + "_" + boost::lexical_cast<string>(dj) + "_" +
+	             boost::lexical_cast<string>(gribedition) + "_" + boost::lexical_cast<string>(gridtype);
 
-  if (producerinfo.count(producer_id) > 0)
-  {
+	if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
+	{
 #ifdef DEBUG
-    cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
+		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
 #endif
-    return producerinfo[producer_id];
-  }
-  
-  stringstream query;
-  
-  query << "SELECT f.id, f.name, f.class_id, g.centre, g.ident "
-        << "FROM fmi_producer f "
-		<< "LEFT OUTER JOIN producer_grib g ON (f.id = g.producer_id) "
-        << "WHERE f.id = " << producer_id
-        ;
 
-  map <string, string> ret;
-  
-  Query(query.str());
+		return geometryinfo_fromarea[key];
+	}
 
-  vector<string> row = FetchRow();
+	stringstream query;
 
-  if (!row.empty()) {
-    ret["producer_id"] = row[0];
-    ret["ref_prod"] = row[1];
-    ret["producer_class"] = row[2];
-	ret["model_id"] = row[4];
-	ret["ident_id"] = row[3];
-  
-    producerinfo[producer_id] = ret;
-  }
-  
-  return ret;
-  
+	query << "SELECT g.id,g.name FROM geom g, projection p "
+	      << "WHERE g.projection_id = p.id"
+	      << " AND nj = " << nj << " AND ni " << (gridtype == 4 ? "IS NULL" : "= " + boost::lexical_cast<string>(ni))
+	      << " AND st_x(first_point) = " << lon << " AND st_y(first_point) = " << lat << " AND di "
+	      << (gridtype == 4 ? "IS NULL" : "= " + boost::lexical_cast<string>(di)) << " AND dj "
+	      << (gridtype == 4 ? "IS NULL" : "= " + boost::lexical_cast<string>(dj)) << " AND p.grib" << gribedition
+	      << "_number = " << gridtype;
+
+	map<string, string> ret;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	if (!row.empty())
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+
+		geometryinfo_fromarea[key] = ret;
+	}
+
+	return ret;
+}
+
+map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id)
+{
+	if (producerinfo.count(producer_id) > 0)
+	{
+#ifdef DEBUG
+		cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
+#endif
+		return producerinfo[producer_id];
+	}
+
+	stringstream query;
+
+	query << "SELECT f.id, f.name, f.class_id, g.centre, g.ident "
+	      << "FROM fmi_producer f "
+	      << "LEFT OUTER JOIN producer_grib g ON (f.id = g.producer_id) "
+	      << "WHERE f.id = " << producer_id;
+
+	map<string, string> ret;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	if (!row.empty())
+	{
+		ret["producer_id"] = row[0];
+		ret["ref_prod"] = row[1];
+		ret["producer_class"] = row[2];
+		ret["model_id"] = row[4];
+		ret["ident_id"] = row[3];
+
+		producerinfo[producer_id] = ret;
+	}
+
+	return ret;
 }
 
 /*
  * GetProducerDefinition(string)
- * 
+ *
  * Retrieves producer definition from radon meta-tables.
- * 
+ *
  *
  */
 
-map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_name)
+map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_name)
 {
+	stringstream query;
 
-  stringstream query;
-  
-  query << "SELECT id "
-        << "FROM fmi_producer"
-        << " WHERE name = '" << producer_name << "'";
+	query << "SELECT id "
+	      << "FROM fmi_producer"
+	      << " WHERE name = '" << producer_name << "'";
 
-  Query(query.str());
-  
-  vector<string> row = FetchRow();
-  
-  unsigned long int producer_id = boost::lexical_cast<unsigned long> (row[0]);
-  
-  if (producerinfo.find(producer_id) != producerinfo.end())
-    return producerinfo[producer_id];
- 
-  return GetProducerDefinition(row[0]);
-    
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	unsigned long int producer_id = boost::lexical_cast<unsigned long>(row[0]);
+
+	if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
+
+	return GetProducerDefinition(row[0]);
 }
 
 string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
+	stringstream query;
 
-  stringstream query;
-  
-  query <<  "SELECT analysis_time::timestamp "
- 	<<  "FROM as_grid_v"
-	<<  " WHERE producer_name = '" << ref_prod
-	<<  "' AND record_count > 0 ";
+	query << "SELECT analysis_time::timestamp "
+	      << "FROM as_grid_v"
+	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
 
-  if (!geom_name.empty())
-  {
-    query << " AND geometry_name = '" << geom_name << "'";
-  }
-  
-  query << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
-  
-  Query(query.str());
+	if (!geom_name.empty())
+	{
+		query << " AND geometry_name = '" << geom_name << "'";
+	}
 
-  vector<string> row = FetchRow();
+	query << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
 
-  if (row.size() == 0)
-  {
-    return "";
-  }
+	Query(query.str());
 
-  return row[0];
+	vector<string> row = FetchRow();
+
+	if (row.size() == 0)
+	{
+		return "";
+	}
+
+	return row[0];
 }
 
-map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId, bool aggressive_cache)
+map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
+                                                      bool aggressive_cache)
 {
+	assert(!aggressive_cache);  // not supported yet
 
-  assert(!aggressive_cache); // not supported yet
-  
-  string key = boost::lexical_cast<string> (networkType) + "_" + boost::lexical_cast<string> (stationId);
-  
-  if (stationinfo.find(key) != stationinfo.end())
-    return stationinfo[key];
+	string key = boost::lexical_cast<string>(networkType) + "_" + boost::lexical_cast<string>(stationId);
 
-  stringstream query;
-  
-  map<string,string> ret;
-  
-  query << "SELECT s.id,"
-		  << " s.name,"
-		  << " st_x(s.position) as longitude,"
-		  << " st_y(s.position) as latitude,"
-		  << " s.elevation,"
-		  << " wmo.local_station_id as wmoid,"
-		  << " icao.local_station_id as icaoid,"
-		  << " lpnn.local_station_id as lpnn,"
-		  << " rw.local_station_id as road_weather_id, "
-		  << " fs.local_station_id as fmisid "
-		  << "FROM station s "
-		  << "LEFT OUTER JOIN station_network_mapping wmo ON (s.id = wmo.station_id AND wmo.network_id = 1) "
-		  << "LEFT OUTER JOIN station_network_mapping icao ON (s.id = icao.station_id AND icao.network_id = 2) "
-		  << "LEFT OUTER JOIN station_network_mapping lpnn ON (s.id = lpnn.station_id AND lpnn.network_id = 3) "
-		  << "LEFT OUTER JOIN station_network_mapping rw ON (s.id = rw.station_id AND rw.network_id = 4) "
-		  << "LEFT OUTER JOIN station_network_mapping fs ON (s.id = fs.station_id AND fs.network_id = 5) ";
-  
-  switch (networkType)
-  {
-	  case kWMONetwork:
-	  case kICAONetwork:
-	  case kLPNNNetwork:
-	  case kRoadWeatherNetwork:
-	  default:
-		  throw runtime_error("Unsupported station network type: " + boost::lexical_cast<string> (networkType));
-		  break;
-	  case kFmiSIDNetwork:
-		  query << "JOIN station_network_mapping m ON (s.id = m.station_id AND m.network_id = 5 AND m.local_station_id = '" << stationId << "')";
-		  break;
-  }
-		  
-  Query(query.str());
+	if (stationinfo.find(key) != stationinfo.end()) return stationinfo[key];
 
-  auto row = FetchRow();
-  
-  if (row.empty())
-  {
-	return ret;  
-  }
-  
-  ret["id"] = row[0];
-  ret["station_name"] = row[1];
-  ret["longitude"] = row[2];
-  ret["latitude"] = row[3];
-  ret["altitude"] = row[4];
-  ret["wmoid"] = row[5];
-  ret["icaoid"] = row[6];
-  ret["lpnn"] = row[7];
-  ret["rwid"] = row[8];
-  ret["fmisid"] = row[9];
-  
-  stationinfo[key] = ret;
-  
-  return ret;
+	stringstream query;
+
+	map<string, string> ret;
+
+	query << "SELECT s.id,"
+	      << " s.name,"
+	      << " st_x(s.position) as longitude,"
+	      << " st_y(s.position) as latitude,"
+	      << " s.elevation,"
+	      << " wmo.local_station_id as wmoid,"
+	      << " icao.local_station_id as icaoid,"
+	      << " lpnn.local_station_id as lpnn,"
+	      << " rw.local_station_id as road_weather_id, "
+	      << " fs.local_station_id as fmisid "
+	      << "FROM station s "
+	      << "LEFT OUTER JOIN station_network_mapping wmo ON (s.id = wmo.station_id AND wmo.network_id = 1) "
+	      << "LEFT OUTER JOIN station_network_mapping icao ON (s.id = icao.station_id AND icao.network_id = 2) "
+	      << "LEFT OUTER JOIN station_network_mapping lpnn ON (s.id = lpnn.station_id AND lpnn.network_id = 3) "
+	      << "LEFT OUTER JOIN station_network_mapping rw ON (s.id = rw.station_id AND rw.network_id = 4) "
+	      << "LEFT OUTER JOIN station_network_mapping fs ON (s.id = fs.station_id AND fs.network_id = 5) ";
+
+	switch (networkType)
+	{
+		case kWMONetwork:
+		case kICAONetwork:
+		case kLPNNNetwork:
+		case kRoadWeatherNetwork:
+		default:
+			throw runtime_error("Unsupported station network type: " + boost::lexical_cast<string>(networkType));
+			break;
+		case kFmiSIDNetwork:
+			query << "JOIN station_network_mapping m ON (s.id = m.station_id AND m.network_id = 5 AND "
+			         "m.local_station_id = '"
+			      << stationId << "')";
+			break;
+	}
+
+	Query(query.str());
+
+	auto row = FetchRow();
+
+	if (row.empty())
+	{
+		return ret;
+	}
+
+	ret["id"] = row[0];
+	ret["station_name"] = row[1];
+	ret["longitude"] = row[2];
+	ret["latitude"] = row[3];
+	ret["altitude"] = row[4];
+	ret["wmoid"] = row[5];
+	ret["icaoid"] = row[6];
+	ret["lpnn"] = row[7];
+	ret["rwid"] = row[8];
+	ret["fmisid"] = row[9];
+
+	stationinfo[key] = ret;
+
+	return ret;
 }
 
-std::map<string,string> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id, double source_level_value)
+std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id,
+                                                        double source_level_value)
 {
-  string key = boost::lexical_cast<string> (producer_id) + "_" +
-			boost::lexical_cast<string> (paramId) + "_" +
-			boost::lexical_cast<string> (source_level_id) + "_" +
-			boost::lexical_cast<string> (source_level_value);
-  stringstream ss;
+	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(paramId) + "_" +
+	             boost::lexical_cast<string>(source_level_id) + "_" + boost::lexical_cast<string>(source_level_value);
+	stringstream ss;
 
-  if (leveltransforminfo.find(key) != leveltransforminfo.end())
-  {
+	if (leveltransforminfo.find(key) != leveltransforminfo.end())
+	{
 #ifdef DEBUG
-    cout << "DEBUG: GetLevelTransform() cache hit!" << endl;
+		cout << "DEBUG: GetLevelTransform() cache hit!" << endl;
 #endif
 
-    return leveltransforminfo[key];
-  }
+		return leveltransforminfo[key];
+	}
 
-  ss << "SELECT x.target_level_id, l.name AS target_level_name, x.target_level_value FROM param_level_xref x, level l WHERE "
-	<< "x.target_level_id = l.id AND "
-	<< "x.producer_id = " << producer_id << " AND "
-	<< "x.param_id = " << paramId << " AND "
-	<< "x.source_level_id = " << source_level_id << " AND "
-	<< "(x.source_level_value IS NULL OR x.source_level_value = " << source_level_value
-	<< ") ORDER BY source_level_id, source_level_value NULLS LAST"
-	;
-	
-  Query(ss.str());
-	
-  auto row = FetchRow();
+	ss << "SELECT x.target_level_id, l.name AS target_level_name, x.target_level_value FROM param_level_xref x, level "
+	      "l WHERE "
+	   << "x.target_level_id = l.id AND "
+	   << "x.producer_id = " << producer_id << " AND "
+	   << "x.param_id = " << paramId << " AND "
+	   << "x.source_level_id = " << source_level_id << " AND "
+	   << "(x.source_level_value IS NULL OR x.source_level_value = " << source_level_value
+	   << ") ORDER BY source_level_id, source_level_value NULLS LAST";
 
-  map<string,string> ret;
+	Query(ss.str());
 
-  if (row.empty()) {
-    return ret;
-  }
+	auto row = FetchRow();
 
-  ret["id"] = row[0];
-  ret["name"] = row[1];
-  ret["value"] = row[2];
+	map<string, string> ret;
 
-  leveltransforminfo[key] = ret;
- 
-  return ret;
-	
+	if (row.empty())
+	{
+		return ret;
+	}
+
+	ret["id"] = row[0];
+	ret["name"] = row[1];
+	ret["value"] = row[2];
+
+	leveltransforminfo[key] = ret;
+
+	return ret;
 }
 
 std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& attribute)
 {
-	string key = boost::lexical_cast<string> (producer_id) + "_" + attribute ;
+	string key = boost::lexical_cast<string>(producer_id) + "_" + attribute;
 
 	if (producermetadatainfo.find(key) != producermetadatainfo.end())
 	{
@@ -894,172 +978,173 @@ std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& att
 
 		return producermetadatainfo[key];
 	}
-	
-	string query = "SELECT value FROM producer_meta WHERE producer_id = " + boost::lexical_cast<string> (producer_id) + " AND attribute = '" + attribute + "'";
-	
+
+	string query = "SELECT value FROM producer_meta WHERE producer_id = " + boost::lexical_cast<string>(producer_id) +
+	               " AND attribute = '" + attribute + "'";
+
 	Query(query);
-	
+
 	auto row = FetchRow();
-	
+
 	if (row.empty())
 	{
 		return "";
 	}
-	
+
 	producermetadatainfo[key] = row[0];
 	return row[0];
 }
-  
+
 NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
 
 NFmiRadonDBPool* NFmiRadonDBPool::Instance()
 {
-    if (!itsInstance)
-    {
-        itsInstance = new NFmiRadonDBPool();
-    }
+	if (!itsInstance)
+	{
+		itsInstance = new NFmiRadonDBPool();
+	}
 
-    return itsInstance;
+	return itsInstance;
 }
 
 NFmiRadonDBPool::NFmiRadonDBPool()
-  : itsMaxWorkers(2)
-  , itsWorkingList(itsMaxWorkers, -1)
-  , itsWorkerList(itsMaxWorkers, NULL)
-  , itsUsername("")
-  , itsPassword("")
-  , itsDatabase("")
-  , itsHostname("")
-  , itsPort(5432)
-{}
+    : itsMaxWorkers(2),
+      itsWorkingList(itsMaxWorkers, -1),
+      itsWorkerList(itsMaxWorkers, NULL),
+      itsUsername(""),
+      itsPassword(""),
+      itsDatabase(""),
+      itsHostname(""),
+      itsPort(5432)
+{
+}
 
 NFmiRadonDBPool::~NFmiRadonDBPool()
 {
-  for (unsigned int i = 0; i < itsWorkerList.size(); i++) {
-    if (itsWorkerList[i]) {   
-      itsWorkerList[i]->Disconnect();
-      delete itsWorkerList[i];
-    }
-  }
+	for (unsigned int i = 0; i < itsWorkerList.size(); i++)
+	{
+		if (itsWorkerList[i])
+		{
+			itsWorkerList[i]->Disconnect();
+			delete itsWorkerList[i];
+		}
+	}
 
-  delete itsInstance;
+	delete itsInstance;
 }
 /*
  * GetConnection()
- * 
+ *
  * Returns a read-only connection to radon. When calling program has
  * finished, it should return the connection to the pool.
- * 
+ *
  * TODO: smart pointers ?
- * 
+ *
  */
 
-NFmiRadonDB * NFmiRadonDBPool::GetConnection() {
- 
-  /*
-   *  1 --> active
-   *  0 --> inactive
-   * -1 --> uninitialized
-   *
-   * Logic of returning connections:
-   * 
-   * 1. Check if worker is idle, if so return that worker.
-   * 2. Check if worker is uninitialized, if so create worker and return that.
-   * 3. Sleep and start over
-   */ 
+NFmiRadonDB* NFmiRadonDBPool::GetConnection()
+{
+	/*
+	 *  1 --> active
+	 *  0 --> inactive
+	 * -1 --> uninitialized
+	 *
+	 * Logic of returning connections:
+	 *
+	 * 1. Check if worker is idle, if so return that worker.
+	 * 2. Check if worker is uninitialized, if so create worker and return that.
+	 * 3. Sleep and start over
+	 */
 
-  lock_guard<mutex> lock(itsGetMutex);
+	lock_guard<mutex> lock(itsGetMutex);
 
-  while (true) {
-
-    for (unsigned int i = 0; i < itsWorkingList.size(); i++) {
-      // Return connection that has been initialized but is idle
-      if (itsWorkingList[i] == 0) {
-        itsWorkingList[i] = 1;
-
+	while (true)
+	{
+		for (unsigned int i = 0; i < itsWorkingList.size(); i++)
+		{
+			// Return connection that has been initialized but is idle
+			if (itsWorkingList[i] == 0)
+			{
+				itsWorkingList[i] = 1;
 
 #ifdef DEBUG
-        cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
+				cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
 #endif
-        return itsWorkerList[i];
-      
-      } 
-	  else if (itsWorkingList[i] == -1) {
-        // Create new connection
-        itsWorkerList[i] = new NFmiRadonDB(i);
+				return itsWorkerList[i];
+			}
+			else if (itsWorkingList[i] == -1)
+			{
+				// Create new connection
+				itsWorkerList[i] = new NFmiRadonDB(i);
 
-        if (itsUsername != "" && itsPassword != "")
-        {
-      	  itsWorkerList[i]->user_ = itsUsername;
-       	  itsWorkerList[i]->password_ = itsPassword;
-        }
+				if (itsUsername != "" && itsPassword != "")
+				{
+					itsWorkerList[i]->user_ = itsUsername;
+					itsWorkerList[i]->password_ = itsPassword;
+				}
 
-        if (itsDatabase != "")
-        {
-      	  itsWorkerList[i]->database_ = itsDatabase;
-        }
-		
-		if (itsHostname != "")
-		{
-          itsWorkerList[i]->hostname_ = itsHostname;
+				if (itsDatabase != "")
+				{
+					itsWorkerList[i]->database_ = itsDatabase;
+				}
+
+				if (itsHostname != "")
+				{
+					itsWorkerList[i]->hostname_ = itsHostname;
+				}
+
+				itsWorkerList[i]->port_ = itsPort;
+				itsWorkerList[i]->Connect();
+
+				itsWorkingList[i] = 1;
+
+#ifdef DEBUG
+				cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
+#endif
+				return itsWorkerList[i];
+			}
 		}
 
-		itsWorkerList[i]->port_ = itsPort;
-        itsWorkerList[i]->Connect();  
-
-        itsWorkingList[i] = 1;
-
+// All threads active
 #ifdef DEBUG
-        cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
-#endif
-        return itsWorkerList[i];
-    
-	  }
-    }
-
-    // All threads active
-#ifdef DEBUG
-    cout << "DEBUG: Waiting for worker release. Pool size=" << itsWorkerList.size() << endl;
-    assert(itsWorkerList.size() == itsWorkingList.size());
+		cout << "DEBUG: Waiting for worker release. Pool size=" << itsWorkerList.size() << endl;
+		assert(itsWorkerList.size() == itsWorkingList.size());
 #endif
 
-    usleep(100000); // 100 ms  
-
-  }   
+		usleep(100000);  // 100 ms
+	}
 }
 
 /*
  * Release()
- * 
+ *
  * Clears the database connection (does not disconnect!) and returns it
  * to pool.
  */
 
-void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker) {
-  
-  theWorker->Rollback();
-  itsWorkingList[theWorker->Id()] = 0;
+void NFmiRadonDBPool::Release(NFmiRadonDB* theWorker)
+{
+	theWorker->Rollback();
+	itsWorkingList[theWorker->Id()] = 0;
 
 #ifdef DEBUG
-  cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
+	cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
 #endif
-
 }
 
-void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers) {
-  
-  if (theMaxWorkers == itsMaxWorkers)
-    return;
+void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers)
+{
+	if (theMaxWorkers == itsMaxWorkers) return;
 
-  // Making pool smaller is not supported
-  
-  if (theMaxWorkers < itsMaxWorkers)
-    throw runtime_error("Making RadonDB pool size smaller is not supported (" + boost::lexical_cast<string> (itsMaxWorkers) + " to " + boost::lexical_cast<string> (theMaxWorkers) + ")");
-  
-  itsMaxWorkers = theMaxWorkers;
+	// Making pool smaller is not supported
 
-  itsWorkingList.resize(itsMaxWorkers, -1);
-  itsWorkerList.resize(itsMaxWorkers, NULL);
+	if (theMaxWorkers < itsMaxWorkers)
+		throw runtime_error("Making RadonDB pool size smaller is not supported (" +
+		                    boost::lexical_cast<string>(itsMaxWorkers) + " to " +
+		                    boost::lexical_cast<string>(theMaxWorkers) + ")");
 
+	itsMaxWorkers = theMaxWorkers;
+
+	itsWorkingList.resize(itsMaxWorkers, -1);
+	itsWorkerList.resize(itsMaxWorkers, NULL);
 }
-
