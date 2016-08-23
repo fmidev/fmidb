@@ -610,11 +610,14 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["di"] = row[4];
 			ret["dj"] = row[5];
 			ret["scanning_mode"] = row[6];
-			ret["col_cnt"] = ret["ni"];                 // neons
-			ret["row_cnt"] = ret["nj"];                 // neons
-			ret["pas_longitude"] = ret["di"];           // neons
-			ret["pas_latitude"] = ret["dj"];            // neons
-			ret["stor_desc"] = ret["scanning_mode"];    // neons
+			ret["col_cnt"] = ret["ni"];               // neons
+			ret["row_cnt"] = ret["nj"];               // neons
+			ret["pas_longitude"] = ret["di"];         // neons
+			ret["pas_latitude"] = ret["dj"];          // neons
+			ret["stor_desc"] = ret["scanning_mode"];  // neons
+			ret["geom_parm_1"] = "0";
+			ret["geom_parm_2"] = "0";
+			ret["geom_parm_3"] = "0";
 			ret["lat_orig"] = ret["first_point_lat"];   // neons
 			ret["long_orig"] = ret["first_point_lon"];  // neons
 
@@ -646,6 +649,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["pas_latitude"] = ret["dj"];          // neons
 			ret["stor_desc"] = ret["scanning_mode"];  // neons
 			ret["geom_parm_1"] = row[7];
+			ret["geom_parm_2"] = "0";
+			ret["geom_parm_3"] = "0";
 			ret["lat_orig"] = ret["first_point_lat"];   // neons
 			ret["long_orig"] = ret["first_point_lon"];  // neons
 
@@ -680,6 +685,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["stor_desc"] = ret["scanning_mode"];  // neons
 			ret["geom_parm_1"] = row[7];
 			ret["geom_parm_2"] = row[8];
+			ret["geom_parm_3"] = "0";
 			ret["lat_orig"] = ret["first_point_lat"];   // neons
 			ret["long_orig"] = ret["first_point_lon"];  // neons
 
