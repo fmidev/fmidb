@@ -950,11 +950,11 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 	return ret;
 }
 
-std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long paramId, long source_level_id,
-                                                        double source_level_value)
+std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long param_id, long fmi_level_id,
+                                                        double fmi_level_value)
 {
-	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(paramId) + "_" +
-	             boost::lexical_cast<string>(source_level_id) + "_" + boost::lexical_cast<string>(source_level_value);
+	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(param_id) + "_" +
+	             boost::lexical_cast<string>(fmi_level_id) + "_" + boost::lexical_cast<string>(fmi_level_value);
 	stringstream ss;
 
 	if (leveltransforminfo.find(key) != leveltransforminfo.end())
@@ -966,15 +966,16 @@ std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long p
 		return leveltransforminfo[key];
 	}
 
-	ss << "SELECT x.target_level_id, l.name AS target_level_name, "
-	      "x.target_level_value FROM param_level_xref x, level "
-	      "l WHERE "
-	   << "x.target_level_id = l.id AND "
+	ss << "SELECT x.other_level_id, l.name AS other_level_name, "
+	   << "x.other_level_value "
+	   << "FROM param_level_transform x, level l "
+	   << "WHERE "
+	   << "x.other_level_id = l.id AND "
 	   << "x.producer_id = " << producer_id << " AND "
-	   << "x.param_id = " << paramId << " AND "
-	   << "x.source_level_id = " << source_level_id << " AND "
-	   << "(x.source_level_value IS NULL OR x.source_level_value = " << source_level_value
-	   << ") ORDER BY source_level_id, source_level_value NULLS LAST";
+	   << "x.param_id = " << param_id << " AND "
+	   << "x.fmi_level_id = " << fmi_level_id << " AND "
+	   << "(x.fmi_level_value IS NULL OR x.fmi_level_value = " << fmi_level_value << ") "
+	   << "ORDER BY other_level_id, other_level_value NULLS LAST";
 
 	Query(ss.str());
 
