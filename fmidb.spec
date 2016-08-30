@@ -2,8 +2,8 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.8.23
-Release: 2.el7.fmi
+Version: 16.8.30
+Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
@@ -59,6 +59,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Aug 30 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.8.30-1.fmi
+- New release
+* Mon Aug 29 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.8.29-1.fmi
+- New release
 * Tue Aug 23 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.8.23-2.fmi
 - Bugfix release
 * Tue Aug 23 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.8.23-1.fmi
