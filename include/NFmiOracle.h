@@ -34,8 +34,8 @@ class NFmiOracle : public NFmiDatabase
 	std::string MakeDate(const otl_datetime &datetime);
 	// std::string MakeNEONSDate(const otl_datetime &datetime);
 
-	virtual void Commit() throw(int) FINAL;
-	virtual void Rollback() throw(int) FINAL;
+	virtual void Commit() throw(int)FINAL;
+	virtual void Rollback() throw(int)FINAL;
 
 	bool TestMode() { return test_mode_; }
 	void TestMode(bool test_mode) { test_mode_ = test_mode; }
@@ -52,7 +52,8 @@ class NFmiOracle : public NFmiDatabase
 
 	/*
 	 * This function can be called directly by the connection pool, or the library
-	 * can take care of calling it. If latter option is used, the session will only
+	 * can take care of calling it. If latter option is used, the session will
+	 * only
 	 * be started if it is absolutely needed (ie. requested data is not found from
 	 * cache).
 	 */
@@ -69,6 +70,7 @@ class NFmiOracle : public NFmiDatabase
 	void PooledConnection(bool pooled_connection);
 	bool PooledConnection() const;
 
+	oracle::otl_connect *RawConnection() { return &db_; };
    protected:
 	oracle::otl_connect db_;
 	oracle::otl_stream stream_;
