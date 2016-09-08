@@ -850,7 +850,7 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 {
 	stringstream query;
 
-	query << "SELECT analysis_time::timestamp "
+	query << "SELECT distinct analysis_time::timestamp "
 	      << "FROM as_grid_v"
 	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
 
