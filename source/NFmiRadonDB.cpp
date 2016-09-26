@@ -674,8 +674,34 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 
 			return ret;
 		}
-		case 3:
-			break;
+		case 5:
+			query << "SELECT ni,nj, st_y(first_point), st_x(first_point), "
+			         "di, dj, scanning_mode, orientation, latin1, latin2, "
+			         "st_y(south_pole), st_x(south_pole) FROM "
+			         "geom_lambert_conformal WHERE id = "
+			      << row[0];
+
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty()) return map<string, string>();
+
+			ret["ni"] = row[0];
+			ret["nj"] = row[1];
+			ret["first_point_lat"] = row[2];
+			ret["first_point_lon"] = row[3];
+			ret["di"] = row[4];
+			ret["dj"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["orientation"] = row[7];
+			ret["latin1"] = row[8];
+			ret["latin2"] = row[9];
+			ret["south_pole_lat"] = row[10];
+			ret["south_pole_lon"] = row[11];
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
 
 		case 4:
 		{
@@ -710,7 +736,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 
 			return ret;
 		}
-		case 5:
+		case 6:
 		{
 			query << "SELECT nj, st_y(first_point), st_x(first_point), "
 			         "st_y(last_point), st_x(last_point), n, "
