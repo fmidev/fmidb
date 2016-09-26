@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.9.8
+Version: 16.9.26
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Sep 26 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.9.26-1.fmi
+- Lambert support
 * Thu Sep  8 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.9.8-1.fmi
 - New release to support bdmlegacy
 * Tue Aug 30 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.8.30-1.fmi
