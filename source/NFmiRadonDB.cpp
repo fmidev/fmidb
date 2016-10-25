@@ -535,7 +535,8 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	      << " WHERE as_grid.record_count > 0"
 	      << " AND fmi_producer.name like '" << ref_prod << "'"
 	      << " AND as_grid.producer_id = fmi_producer.id"
-	      << " AND as_grid.analysis_time = '" << analtime << "'"
+	      << " AND as_grid.min_analysis_time <= '" << analtime << "'"
+	      << " AND as_grid.max_analysis_time > '" << analtime << "'"
 	      << " AND as_grid.geometry_id = geom_v.geometry_id";
 
 	if (!geom_name.empty())
@@ -913,7 +914,7 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 {
 	stringstream query;
 
-	query << "SELECT analysis_time::timestamp "
+	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
 	      << "FROM as_grid_v"
 	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
 
@@ -929,6 +930,24 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 	vector<string> row = FetchRow();
 
 	if (row.size() == 0)
+	{
+		return "";
+	}
+
+	if (row[0] == row[1])
+	{
+		// analysis time partitioning
+		return row[0];
+	}
+
+	query.str("");
+	query << "SELECT max(analysis_time) FROM " << row[2];
+
+	Query(query.str());
+
+	row = FetchRow();
+
+	if (row.empty())
 	{
 		return "";
 	}
