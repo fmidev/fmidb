@@ -535,8 +535,9 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	      << " WHERE as_grid.record_count > 0"
 	      << " AND fmi_producer.name like '" << ref_prod << "'"
 	      << " AND as_grid.producer_id = fmi_producer.id"
-	      << " AND as_grid.min_analysis_time <= '" << analtime << "'"
-	      << " AND as_grid.max_analysis_time > '" << analtime << "'"
+	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS (to_timestamp('" << analtime
+	      << "', 'yyyymmddhh24miss'),"
+	      << " to_timestamp('" << analtime << "', 'yyyymmddhh24miss'))"
 	      << " AND as_grid.geometry_id = geom_v.geometry_id";
 
 	if (!geom_name.empty())
