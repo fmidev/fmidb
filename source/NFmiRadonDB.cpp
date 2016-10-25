@@ -535,7 +535,9 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	      << " WHERE as_grid.record_count > 0"
 	      << " AND fmi_producer.name like '" << ref_prod << "'"
 	      << " AND as_grid.producer_id = fmi_producer.id"
-	      << " AND as_grid.analysis_time = '" << analtime << "'"
+	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS (to_timestamp('" << analtime
+	      << "', 'yyyymmddhh24miss'),"
+	      << " to_timestamp('" << analtime << "', 'yyyymmddhh24miss'))"
 	      << " AND as_grid.geometry_id = geom_v.geometry_id";
 
 	if (!geom_name.empty())
@@ -611,7 +613,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 		case 1:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode FROM "
-			         "geom_v WHERE geometry_id = "
+			         "geom_latitude_longitude_v WHERE geometry_id = "
 			      << row[0];
 			Query(query.str());
 			row = FetchRow();
@@ -644,7 +646,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 		case 2:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, "
-			         "geom_parm_1 FROM geom_v WHERE "
+			         "orientation FROM geom_stereographic_v WHERE "
 			         "geometry_id = "
 			      << row[0];
 			Query(query.str());
@@ -675,10 +677,10 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 			return ret;
 		}
 		case 5:
-			query << "SELECT ni,nj, st_y(first_point), st_x(first_point), "
+			query << "SELECT ni,nj, first_lat, first_lon, "
 			         "di, dj, scanning_mode, orientation, latin1, latin2, "
-			         "st_y(south_pole), st_x(south_pole) FROM "
-			         "geom_lambert_conformal WHERE id = "
+			         "south_pole_lat, south_pole_lon FROM "
+			         "geom_lambert_conformal_v WHERE geometry_id = "
 			      << row[0];
 
 			Query(query.str());
@@ -706,7 +708,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 		case 4:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, "
-			         "geom_parm_1, geom_parm_2 FROM geom_v "
+			         "south_pole_lat, south_pole_lon FROM geom_rotated_latitude_longitude_v "
 			         "WHERE geometry_id = "
 			      << row[0];
 			Query(query.str());
@@ -738,10 +740,9 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 		}
 		case 6:
 		{
-			query << "SELECT nj, st_y(first_point), st_x(first_point), "
-			         "st_y(last_point), st_x(last_point), n, "
-			         "scanning_mode, longitudes_along_latitudes FROM "
-			         "geom_reduced_gaussian WHERE id = "
+			query << "SELECT nj, first_lat, first_lon, last_lat, last_lon"
+			         "n, scanning_mode, points_along_parallels FROM "
+			         "geom_reduced_gaussian_v WHERE geometry_id = "
 			      << row[0];
 			Query(query.str());
 			row = FetchRow();
@@ -785,17 +786,55 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 
 	stringstream query;
 
-	query << "SELECT g.id,g.name FROM geom g, projection p "
-	      << "WHERE g.projection_id = p.id"
-	      << " AND nj = " << nj << " AND ni = " << ni << " AND st_x(first_point) = " << lon
-	      << " AND st_y(first_point) = " << lat << " AND di = " << di << " AND dj = " << dj << " AND p.grib"
-	      << gribedition << "_number = " << gridtype;
-
-	map<string, string> ret;
+	query << "SELECT id FROM projection WHERE grib" << gribedition << "_number = " << gridtype;
 
 	Query(query.str());
 
-	vector<string> row = FetchRow();
+	auto row = FetchRow();
+
+	map<string, string> ret;
+
+	if (row.empty())
+	{
+		return ret;
+	}
+
+	query.str("");
+
+	int projection_id = boost::lexical_cast<int>(row[0]);
+
+	// TODO: for projections other than latlon, extra properties should be checked,
+	// such as south pole, orientation etc.
+
+	switch (projection_id)
+	{
+		case 1:
+			query << "SELECT geometry_id, geometry_name FROM geom_latitude_longitude_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			break;
+		case 2:
+			query << "SELECT geometry_id, geometry_name FROM geom_stereographic_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			break;
+		case 4:
+			query << "SELECT geometry_id, geometry_name FROM geom_rotated_latitude_longitude_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			break;
+		case 5:
+			query << "SELECT geometry_id, geometry_name FROM geom_lambert_conformal_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			break;
+		default:
+			throw std::runtime_error("Unsupported database projection id: " + row[0]);
+	}
+
+	Query(query.str());
+
+	row = FetchRow();
 
 	if (!row.empty())
 	{
@@ -876,7 +915,7 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 {
 	stringstream query;
 
-	query << "SELECT distinct analysis_time::timestamp "
+	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
 	      << "FROM as_grid_v"
 	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
 
@@ -885,13 +924,33 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 		query << " AND geometry_name = '" << geom_name << "'";
 	}
 
-	query << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
+	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC LIMIT 1 "
+	         "OFFSET "
+	      << offset;
 
 	Query(query.str());
 
 	vector<string> row = FetchRow();
 
 	if (row.size() == 0)
+	{
+		return "";
+	}
+
+	if (row[0] == row[1])
+	{
+		// analysis time partitioning
+		return row[0];
+	}
+
+	query.str("");
+	query << "SELECT max(analysis_time) FROM " << row[2];
+
+	Query(query.str());
+
+	row = FetchRow();
+
+	if (row.empty())
 	{
 		return "";
 	}
