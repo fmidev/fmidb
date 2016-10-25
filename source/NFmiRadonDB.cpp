@@ -923,7 +923,9 @@ string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string
 		query << " AND geometry_name = '" << geom_name << "'";
 	}
 
-	query << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
+	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC LIMIT 1 "
+	         "OFFSET "
+	      << offset;
 
 	Query(query.str());
 
