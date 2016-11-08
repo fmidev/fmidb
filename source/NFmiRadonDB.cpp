@@ -329,14 +329,15 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, "
 	         "p.interpolation_id, i.name AS interpolation_name, "
 	         "g.level_id "
-	      << "FROM param_grib2 g, param p, param_unit u, interpolation_method i, "
+	      << "FROM param_grib2 g, level_grib2 l, param p, param_unit u, interpolation_method i, "
 	         "fmi_producer f "
 	      << "WHERE g.param_id = p.id AND p.unit_id = u.id AND "
 	         "p.interpolation_id = i.id AND f.id = g.producer_id "
 	      << " AND f.id = " << producerId << " AND discipline = " << discipline << " AND category = " << category
-	      << " AND number = " << paramId << " AND (level_id IS NULL OR level_id = " << levelId << ")"
+	      << " AND number = " << paramId
+             << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
+	      << " ORDER BY g.level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
 	Query(query.str());
 
