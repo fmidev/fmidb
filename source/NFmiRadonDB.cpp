@@ -184,18 +184,48 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	auto row = FetchRow();
 
-	if (row.empty()) return ret;
+	if (!row.empty())
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+		ret["version"] = row[2];
+		ret["grib1_table_version"] = row[3];
+		ret["grib1_number"] = row[4];
+		ret["grib2_discipline"] = row[5];
+		ret["grib2_category"] = row[6];
+		ret["grib2_number"] = row[7];
+		ret["univ_id"] = row[8];
+	}
 
-	ret["id"] = row[0];
-	ret["name"] = row[1];
-	ret["version"] = row[2];
-	ret["grib1_table_version"] = row[3];
-	ret["grib1_number"] = row[4];
-	ret["grib2_discipline"] = row[5];
-	ret["grib2_category"] = row[6];
-	ret["grib2_number"] = row[7];
-	ret["univ_id"] = row[8];
+	if (ret.find("grib2_discipline") == ret.end() || ret["grib2_discipline"].empty())
+	{
+		query.str("");
+		query << "SELECT p.id, t.discipline, t.category, t.number FROM "
+		      << "param_grib2_template t, param p "
+		      << "WHERE p.id = t.param_id AND p.name = '" << parameterName << "'";
 
+		Query(query.str());
+		row = FetchRow();
+
+		if (!row.empty())
+		{
+			ret["id"] = row[0];
+			ret["name"] = parameterName;
+			ret["grib2_discipline"] = row[1];
+			ret["grib2_category"] = row[2];
+			ret["grib2_number"] = row[3];
+
+			if (ret.find("grib1_table_version") == ret.end())
+			{
+				ret["grib1_table_version"] = "";
+				ret["grib1_number"] = "";
+			}
+			if (ret.find("univ_id") == ret.end())
+			{
+				ret["univ_id"] = "";
+			}
+		}
+	}
 	paramdbinfo[key] = ret;
 	return ret;
 }
@@ -274,7 +304,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 	         "p.interpolation_id = i.id AND f.id = g.producer_id "
 	      << " AND f.id = " << producerId << " AND table_version = " << tableVersion << " AND number = " << paramId
 	      << " AND timerange_indicator = " << timeRangeIndicator
-		  << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
+	      << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
 	      << " ORDER BY g.level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
@@ -335,7 +365,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	         "p.interpolation_id = i.id AND f.id = g.producer_id "
 	      << " AND f.id = " << producerId << " AND discipline = " << discipline << " AND category = " << category
 	      << " AND number = " << paramId
-             << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
+	      << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
 	      << " ORDER BY g.level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
@@ -347,24 +377,35 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 
 	if (row.empty())
 	{
-#ifdef DEBUG
-		cout << "DEBUG Parameter not found\n";
-#endif
-	}
-	else
-	{
-		ret["id"] = row[0];
-		ret["name"] = row[1];
-		ret["version"] = row[2];
-		ret["grib2_discipline"] = lexical_cast<string>(discipline);
-		ret["grib2_category"] = lexical_cast<string>(category);
-		ret["grib2_number"] = lexical_cast<string>(paramId);
-		ret["interpolation_method"] = row[4];
-		ret["level_id"] = row[5];
-		ret["level_value"] = row[6];
+		query.str("");
+		query << "SELECT p.id, p.name, p.version, p.interpolation_id, "
+		      << "NULL, NULL FROM param p, param_grib2_template t WHERE "
+		      << "p.id = t.param_id AND t.discipline = " << discipline << " AND t.category = " << category << " AND "
+		      << "t.number = " << paramId;
 
-		paramgrib2info[key] = ret;
+		Query(query.str());
+		row = FetchRow();
+
+		if (row.empty())
+		{
+#ifdef DEBUG
+			cout << "DEBUG Parameter not found\n";
+#endif
+			return ret;
+		}
 	}
+
+	ret["id"] = row[0];
+	ret["name"] = row[1];
+	ret["version"] = row[2];
+	ret["grib2_discipline"] = lexical_cast<string>(discipline);
+	ret["grib2_category"] = lexical_cast<string>(category);
+	ret["grib2_number"] = lexical_cast<string>(paramId);
+	ret["interpolation_method"] = row[4];
+	ret["level_id"] = row[5];
+	ret["level_value"] = row[6];
+
+	paramgrib2info[key] = ret;
 
 	return ret;
 }
@@ -536,8 +577,7 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	      << " WHERE as_grid.record_count > 0"
 	      << " AND fmi_producer.name like '" << ref_prod << "'"
 	      << " AND as_grid.producer_id = fmi_producer.id"
-	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analtime
-	      << "', '" << analtime << "')"
+	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analtime << "', '" << analtime << "')"
 	      << " AND as_grid.geometry_id = geom_v.geometry_id";
 
 	if (!geom_name.empty())
