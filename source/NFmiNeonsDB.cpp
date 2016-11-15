@@ -1215,7 +1215,32 @@ map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggre
 	    "country_id, "
 	    "CASE WHEN elevation_hp IS NOT NULL THEN elevation_hp "
 	    "WHEN elevation_ha IS NOT NULL THEN elevation_ha "
-	    "ELSE NULL END AS elevation "
+	    "ELSE NULL END AS elevation ,"
+	    "indicatif_oaci, "
+	    "indicatif_ship, "
+	    "niveau_pression, "
+	    "elevation_sondage1, "
+	    "elevation_sondage2, "
+	    "elevation_hp, "
+	    "elevation_ha, "
+	    "numero_region_mto, "
+	    "station_principale, "
+	    "obs00, "
+	    "obs03, "
+	    "obs06, "
+	    "obs09, "
+	    "obs12, "
+	    "obs15, "
+	    "obs18, "
+	    "obs21, "
+	    "obsalti00, "
+	    "obsalti06, "
+	    "obsalti12, "
+	    "obsalti18, "
+	    "heure00, "
+	    "heure06, "
+	    "heure12, "
+	    "heure18 "
 	    "FROM "
 	    "station "
 	    "WHERE "
@@ -1251,6 +1276,32 @@ map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggre
 		station["aws_id"] = values[5];
 		station["country_id"] = values[6];
 		station["elevation"] = values[7];
+		// legacy
+		station["indicatif_oaci"] = values[8];
+		station["indicatif_ship"] = values[9];
+		station["niveau_pression"] = values[10];
+		station["elevation_sondage1"] = values[11];
+		station["elevation_sondage2"] = values[12];
+		station["elevation_hp"] = values[13];
+		station["elevation_ha"] = values[14];
+		station["numero_region_mto"] = values[15];
+		station["station_principale"] = values[16];
+		station["obs00"] = values[17];
+		station["obs03"] = values[18];
+		station["obs06"] = values[19];
+		station["obs09"] = values[20];
+		station["obs12"] = values[21];
+		station["obs15"] = values[22];
+		station["obs18"] = values[23];
+		station["obs21"] = values[24];
+		station["obsalti00"] = values[25];
+		station["obsalti06"] = values[26];
+		station["obsalti12"] = values[27];
+		station["obsalti18"] = values[28];
+		station["heure00"] = values[29];
+		station["heure06"] = values[30];
+		station["heure12"] = values[31];
+		station["heure18"] = values[32];
 
 		stationinfo[wid] = station;
 	}
