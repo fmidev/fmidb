@@ -2,8 +2,8 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.11.8
-Release: 2.el7.fmi
+Version: 16.11.15
+Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
 URL: http://www.fmi.fi
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Nov 15 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.15-1.fmi
+- More station information fetched from neons
 * Tue Nov  8 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.8-2.fmi
 - Support table param_grib2_template
 * Tue Nov  8 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.8-1.fmi
