@@ -574,7 +574,7 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	query << "SELECT as_grid.geometry_id, as_grid.table_name, as_grid.id, "
 	         "geom_v.geom_name"
 	      << " FROM as_grid, fmi_producer, geom_v"
-	      << " WHERE as_grid.record_count > 0"
+	      << " WHERE"
 	      << " AND fmi_producer.name like '" << ref_prod << "'"
 	      << " AND as_grid.producer_id = fmi_producer.id"
 	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analtime << "', '" << analtime << "')"
@@ -953,49 +953,98 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
 
 string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string &geom_name, unsigned int offset)
 {
+
+	string key = ref_prod + "_" + geom_name + "_" + boost::lexical_cast<string> (offset);
+
+        if (latesttimeinfo.count(key) > 0)
+        {
+#ifdef DEBUG
+                cout << "DEBUG: GetLatestTime() cache hit!" << endl;
+#endif
+                return latesttimeinfo[key];
+        }
+
 	stringstream query;
 
 	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
 	      << "FROM as_grid_v"
-	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
+	      << " WHERE producer_name = '" << ref_prod << "'";
 
 	if (!geom_name.empty())
 	{
 		query << " AND geometry_name = '" << geom_name << "'";
 	}
 
-	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC LIMIT 1 "
-	         "OFFSET "
-	      << offset;
+	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC";
 
 	Query(query.str());
 
-	vector<string> row = FetchRow();
+	vector<vector<string>> tables;
 
-	if (row.size() == 0)
+	while (true)
+	{
+		vector<string> row = FetchRow();
+
+		if (row.empty())
+		{
+			break;
+		}
+
+		tables.push_back(row);
+	}
+
+	if (tables.empty())
 	{
 		return "";
 	}
 
-	if (row[0] == row[1])
+	unsigned int current = 0;
+
+	for (const auto& table : tables)
 	{
-		// analysis time partitioning
+		query.str("");
+		// Check table has at least one row
+		query << "SELECT 1 FROM " << table[2] << " LIMIT 1";
+
+		Query(query.str());
+
+		vector<string> row = FetchRow();
+
+		if (row.empty())
+		{
+			continue;
+		}
+
+		if (current != offset)
+		{
+			current++;
+			continue;
+		}
+
+		if (table[0] == table[1])
+		{
+			// analysis time partitioning
+			latesttimeinfo[key] = table[0];
+			return table[0];
+		}
+
+		query.str("");
+		query << "SELECT max(analysis_time) FROM " << table[2];
+
+		Query(query.str());
+
+		row = FetchRow();
+
+		if (row.empty())
+		{
+			return "";
+		}
+
+		latesttimeinfo[key] = row[0];
 		return row[0];
 	}
 
-	query.str("");
-	query << "SELECT max(analysis_time) FROM " << row[2];
-
-	Query(query.str());
-
-	row = FetchRow();
-
-	if (row.empty())
-	{
-		return "";
-	}
-
-	return row[0];
+	return "";
 }
 
 map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
