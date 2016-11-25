@@ -571,18 +571,18 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 
 	stringstream query;
 
-	query << "SELECT as_grid.geometry_id, as_grid.table_name, as_grid.id, "
-	         "geom_v.geom_name"
-	      << " FROM as_grid, fmi_producer, geom_v"
-	      << " WHERE as_grid.record_count > 0"
-	      << " AND fmi_producer.name like '" << ref_prod << "'"
-	      << " AND as_grid.producer_id = fmi_producer.id"
+	query << "SELECT g.geometry_id, a.table_name, a.id, "
+	         "g.geom_name"
+	      << " FROM as_grid_v a, fmi_producer f, geom_v g"
+	      << " WHERE a.record_count > 0"
+	      << " AND f.name = '" << ref_prod << "'"
+	      << " AND a.producer_id = f.id"
 	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analtime << "', '" << analtime << "')"
-	      << " AND as_grid.geometry_id = geom_v.geometry_id";
+	      << " AND a.geometry_name = g.geom_name";
 
 	if (!geom_name.empty())
 	{
-		query << " AND geom_v.geom_name = '" << geom_name << "'";
+		query << " AND g.geom_name = '" << geom_name << "'";
 	}
 
 	Query(query.str());
