@@ -86,7 +86,6 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::map<std::string, std::string>> stationinfo;
 	std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
 	std::map<std::string, std::string> producermetadatainfo;
-	std::map<std::string, std::string> latesttimeinfo;
 
 	short itsId;  // Only for connection pooling
 };
