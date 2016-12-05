@@ -98,21 +98,20 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
 	string query =
 	    "WITH stations AS ("
 	    "SELECT"
-	    "  rw.rw_station_id, rw.fmisid"
+	    " rw.rw_station_id, rw.fmisid, rw.station_formal_name "
 	    "FROM rw_stations rw "
 	    "UNION ALL "
 	    "SELECT"
-	    "  to_number(member_code), station_id "
+	    "  to_number(member_code), station_id, NULL as name "
 	    "FROM network_members_v1 "
 	    "WHERE"
 	    "  network_id = 31"
-	    ")"
+	    ") "
 	    "SELECT "
 	    "r.fmisid AS station_id, "
 	    "l.latitude, "
 	    "l.longitude, "
 	    "r.station_formal_name, "
-	    "r.fmisid,"
 	    "l.elevation "
 	    "FROM "
 	    "stations r, "
@@ -147,7 +146,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
 		station["longitude"] = values[2];
 		station["station_name"] = values[3];
 		station["fmisid"] = sid;
-		station["elevation"] = values[5];
+		station["elevation"] = values[4];
 
 		road_weather_stations[sid] = station;
 	}
