@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.11.25
+Version: 16.12.7
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,8 +59,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Dec  7 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.12.7-1.fmi
+- Fix for CLDB query
 * Fri Nov 25 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.25-1.fmi
-* Removing an invalid reference to table as_grid
+- Removing an invalid reference to table as_grid
 * Tue Nov 22 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.22-1.fmi
 - Latest time fetched not using record_count (as_grid)
 * Tue Nov 15 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.11.15-1.fmi
