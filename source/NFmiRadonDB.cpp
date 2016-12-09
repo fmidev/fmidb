@@ -158,9 +158,10 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string &parameterName)
+map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string &parameterName,
+                                                              int levelId, double levelValue)
 {
-	string key = boost::lexical_cast<string>(producerId) + "_" + parameterName;
+	string key = to_string(producerId) + "_" + parameterName + "_" + to_string(levelId) + "_" + to_string(levelValue);
 
 	if (paramdbinfo.find(key) != paramdbinfo.end())
 	{
@@ -174,107 +175,113 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	map<string, string> ret;
 
-	query << "SELECT "
-	         "param_id,param_name,param_version,grib1_table_version,grib1_number,"
-	         "grib2_discipline,grib2_category,grib2_"
-	         "number,newbase_id FROM producer_param_v WHERE producer_id = "
-	      << producerId << " AND param_name = '" << parameterName << "'";
+	// Fetch database information
+
+	query << "SELECT id, name, version FROM param WHERE name = '" << parameterName << "'";
 
 	Query(query.str());
-
 	auto row = FetchRow();
+
+	if (row.empty())
+	{
+		return ret;
+	}
+
+	ret["id"] = row[0];
+	ret["name"] = row[1];
+	ret["version"] = row[2];
+
+	// Fetch grib1 information
+
+	// levelId is database level id (not grib level id!)
+
+	query.str("");
+	query << "SELECT table_version, number FROM param_grib1_v WHERE"
+	      << " param_id = " << ret["id"]
+	      << " AND producer_id = " << producerId
+	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
+	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
+
+	Query(query.str());
+	row = FetchRow();
 
 	if (!row.empty())
 	{
-		ret["id"] = row[0];
-		ret["name"] = row[1];
-		ret["version"] = row[2];
-		ret["grib1_table_version"] = row[3];
-		ret["grib1_number"] = row[4];
-		ret["grib2_discipline"] = row[5];
-		ret["grib2_category"] = row[6];
-		ret["grib2_number"] = row[7];
-		ret["univ_id"] = row[8];
+		ret["grib1_table_version"] = row[0];
+		ret["grib1_number"] = row[1];
+	}
+	else
+	{
+		ret["grib1_table_version"] = "";
+		ret["grib1_number"] = "";
 	}
 
-	if (ret.find("grib2_discipline") == ret.end() || ret["grib2_discipline"].empty())
+	// Get grib2 information
+
+	query.str("");
+	query << "SELECT discipline, category, number FROM param_grib2 WHERE"
+	      << " param_id = " << ret["id"]
+	      << " AND producer_id = " << producerId
+	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
+	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
+
+	Query(query.str());
+	row = FetchRow();
+
+	if (!row.empty())
+	{
+		ret["grib2_discipline"] = row[0];
+		ret["grib2_category"] = row[1];
+		ret["grib2_number"] = row[2];
+	}
+	else
 	{
 		query.str("");
-		query << "SELECT p.id, t.discipline, t.category, t.number FROM "
-		      << "param_grib2_template t, param p "
-		      << "WHERE p.id = t.param_id AND p.name = '" << parameterName << "'";
+		query << "SELECT discipline, category, number FROM "
+		      << "param_grib2_template t "
+		      << "WHERE param_id = " << ret["id"];
 
 		Query(query.str());
 		row = FetchRow();
 
 		if (!row.empty())
 		{
-			ret["id"] = row[0];
-			ret["name"] = parameterName;
-			ret["grib2_discipline"] = row[1];
-			ret["grib2_category"] = row[2];
-			ret["grib2_number"] = row[3];
-
-			if (ret.find("grib1_table_version") == ret.end())
-			{
-				ret["grib1_table_version"] = "";
-				ret["grib1_number"] = "";
-			}
-			if (ret.find("univ_id") == ret.end())
-			{
-				ret["univ_id"] = "";
-			}
+			ret["grib2_discipline"] = row[0];
+			ret["grib2_category"] = row[1];
+			ret["grib2_number"] = row[2];
+		}
+		else
+		{
+			ret["grib2_discipline"] = "";
+			ret["grib2_category"] = "";
+			ret["grib2_number"] = "";
 		}
 	}
+
+	// Get newbase information
+
+	query.str("");
+	query << "SELECT univ_id FROM param_newbase WHERE"
+	      << " param_id = " << ret["id"]
+	      << " AND producer_id = " << producerId;
+
+	Query(query.str());
+	row = FetchRow();
+
+	if (!row.empty())
+	{
+		ret["univ_id"] = row[0];
+	}
+	else
+	{
+		ret["univ_id"] = "";
+	}
+
 	paramdbinfo[key] = ret;
 	return ret;
 }
-/*
-string NFmiRadonDB::GetGridParameterName(long InParmId, long InCodeTableVer,
-long OutCodeTableVer, long
-timeRangeIndicator, long levelType)
-{
-
-  string parm_name;
-  string univ_id;
-  string parm_id = boost::lexical_cast<string>(InParmId);
-  string no_vers = boost::lexical_cast<string>(InCodeTableVer);
-  string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
-  string trInd = boost::lexical_cast<string>(timeRangeIndicator);
-  string levType = boost::lexical_cast<string> (levelType);
-
-  // Implement some sort of caching: this function is quite expensive
-
-  string key = parm_id + "_" + no_vers + "_" + no_vers2 + "_" + trInd + "_" +
-levType;
-
-  if (gridparameterinfo.find(key) != gridparameterinfo.end())
-    return gridparameterinfo[key];
-
-  stringstream query;
-
-        query << "SELECT x.param_name "
-               <<  "FROM param_grib1_v x, param_newbase y"
-               <<  " WHERE y.univ_id = " << parm_id
-               <<  " AND x.param_id = y.param_id"
-               <<  " AND x.table_version = " << no_vers2
-               <<  " AND x.timerange_indicator = " << trInd
-               <<  " AND x.level_id IS NULL OR x.level_id = " << levType
-               <<  " ORDER BY x.level_id NULLS LAST";
-
-  Query(query.str());
-  vector<string> row = FetchRow();
-
-  if (!row.empty())
-    parm_name = row[0];
-
-  else
-    return "";
-
-  gridparameterinfo[key] = parm_name;
-  return gridparameterinfo[key];
-}
-*/
 
 map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
                                                        long timeRangeIndicator, long levelId, double levelValue)
