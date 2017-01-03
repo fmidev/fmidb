@@ -18,15 +18,22 @@ NFmiRadonDB &NFmiRadonDB::Instance()
 	return instance_;
 }
 
-NFmiRadonDB::NFmiRadonDB(short theId)
-    : NFmiPostgreSQL("neons_client", "kikka8si", "radon", "vorlon", 5432), itsId(theId)
-{
-}
-
+NFmiRadonDB::NFmiRadonDB(short theId) : NFmiPostgreSQL(), itsId(theId) {}
 NFmiRadonDB::~NFmiRadonDB() { Disconnect(); }
 void NFmiRadonDB::Connect()
 {
-	NFmiPostgreSQL::Connect();
+	string password;
+	const auto pw = getenv("RADON_NEONSCLIENT_PASSWORD");
+	if (pw)
+	{
+		password = string(pw);
+	}
+	else
+	{
+		throw;
+	}
+
+	NFmiRadonDB::Connect("neons_client", password, "radon", "vorlon", 5432);
 
 	/*  try
 	  {

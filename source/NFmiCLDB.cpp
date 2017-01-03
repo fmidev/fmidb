@@ -14,8 +14,17 @@ NFmiCLDB::NFmiCLDB() : NFmiOracle()
 {
 	connected_ = false;
 	user_ = "neons_client";
-	password_ = "kikka8si";
 	database_ = "CLDB";
+
+	const auto pw = getenv("CLDB_NEONSCLIENT_PASSWORD");
+	if (pw)
+	{
+		password_ = string(pw);
+	}
+	else
+	{
+		throw;
+	}
 }
 
 NFmiCLDB::~NFmiCLDB() { Disconnect(); }
