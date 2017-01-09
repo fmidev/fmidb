@@ -719,6 +719,25 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    " AND " + boost::lexical_cast<string>(max_latitude);
 			break;
 
+		case 20018:
+			query =
+			    "SELECT w.wmon, "
+			    "round(S.STATION_GEOMETRY.sdo_point.y, 5), LATITUDE"
+			    "round(S.STATION_GEOMETRY.sdo_point.x, 5), LONGITUDE"
+			    "s.station_name, "
+			    "s.station_id as fmisid, "
+			    "FROM stations_v1 s, group_members_v1 gm, wmostations w "
+			    "WHERE s.station_id = w.fmisid "
+			    "AND s.station_id = gm.station_id "
+			    "AND s.country_id = 0 "
+			    "AND gm.membership_on = 'Y' "
+			    "AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
+			    "AND round(S.STATION_GEOMETRY.sdo_point.x, 5) BETWEEN " +
+			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude) +
+			    " AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " + boost::lexical_cast<string>(min_latitude) +
+			    " AND " + boost::lexical_cast<string>(max_latitude);
+			break;
+
 		default:
 			/*
 			 *  LPNN stations
