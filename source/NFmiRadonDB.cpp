@@ -1263,6 +1263,11 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 					itsWorkerList[i]->hostname_ = itsHostname;
 				}
 
+				if (itsWorkerList[i]->hostname_.empty())
+				{
+					itsWorkerList[i]->hostname_ = "vorlon";
+				}
+
 				itsWorkerList[i]->port_ = itsPort;
 				itsWorkerList[i]->Connect(itsWorkerList[i]->user_, itsWorkerList[i]->password_,
 				                          itsWorkerList[i]->database_, itsWorkerList[i]->hostname_,
