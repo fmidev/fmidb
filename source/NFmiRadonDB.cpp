@@ -1264,7 +1264,9 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 				}
 
 				itsWorkerList[i]->port_ = itsPort;
-				itsWorkerList[i]->Connect();
+				itsWorkerList[i]->Connect(itsWorkerList[i]->user_, itsWorkerList[i]->password_,
+				                          itsWorkerList[i]->database_, itsWorkerList[i]->hostname_,
+				                          itsWorkerList[i]->port_);
 
 				itsWorkingList[i] = 1;
 
