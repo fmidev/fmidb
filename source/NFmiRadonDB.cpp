@@ -1247,6 +1247,8 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 				// Create new connection
 				itsWorkerList[i] = new NFmiRadonDB(i);
 
+				itsWorkerList[i]->Connect();
+
 				if (itsUsername != "" && itsPassword != "")
 				{
 					itsWorkerList[i]->user_ = itsUsername;
