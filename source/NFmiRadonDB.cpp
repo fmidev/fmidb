@@ -1258,6 +1258,11 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 					itsWorkerList[i]->database_ = itsDatabase;
 				}
 
+				if (itsWorkerList[i]->database_.empty())
+				{
+					itsWorkerList[i]->database_ = "radon";
+				}
+
 				if (itsHostname != "")
 				{
 					itsWorkerList[i]->hostname_ = itsHostname;
