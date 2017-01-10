@@ -1,7 +1,6 @@
 #include <NFmiNeonsDB.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-//#include <boost/thread.hpp>
 #include <algorithm>
 #include <stdexcept>
 
@@ -21,8 +20,17 @@ NFmiNeonsDB::NFmiNeonsDB(short theId) : NFmiOracle(), itsId(theId)
 {
 	connected_ = false;
 	user_ = "neons_client";
-	password_ = "kikka8si";
 	database_ = "neons";
+
+	const auto pw = getenv("NEONS_NEONSCLIENT_PASSWORD");
+	if (pw)
+	{
+		password_ = string(pw);
+	}
+	else
+	{
+		throw;
+	}
 }
 
 NFmiNeonsDB::~NFmiNeonsDB() { Disconnect(); }

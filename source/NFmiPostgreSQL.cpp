@@ -36,7 +36,7 @@ void NFmiPostgreSQL::Connect(const string& user, const string& password, const s
 	hostname_ = hostname;
 	port_ = port;
 
-	return Connect();
+	NFmiPostgreSQL::Connect();
 }
 
 void NFmiPostgreSQL::Connect()
