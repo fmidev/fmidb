@@ -23,7 +23,7 @@ NFmiCLDB::NFmiCLDB() : NFmiOracle()
 	}
 	else
 	{
-		throw;
+		throw std::runtime_error("Environment variable CLDB_NEONSCLIENT_PASSWORD not defined");
 	}
 }
 
@@ -722,10 +722,12 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 		case 20018:
 			query =
 			    "SELECT w.wmon, "
-			    "round(S.STATION_GEOMETRY.sdo_point.y, 5), LATITUDE"
-			    "round(S.STATION_GEOMETRY.sdo_point.x, 5), LONGITUDE"
+			    "round(S.STATION_GEOMETRY.sdo_point.y, 5) as LATITUDE, "
+			    "round(S.STATION_GEOMETRY.sdo_point.x, 5) as LONGITUDE, "
 			    "s.station_name, "
 			    "s.station_id as fmisid, "
+			    "NULL as lpnn, "
+			    "NULL as elevation "
 			    "FROM stations_v1 s, group_members_v1 gm, wmostations w "
 			    "WHERE s.station_id = w.fmisid "
 			    "AND s.station_id = gm.station_id "
