@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 16.12.9
+Version: 17.1.10
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Jan 10 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.1.10-1.fmi
+- Ship sounding fixes
 * Fri Dec  9 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.12.9-1.fmi
 - Radon parameter query with level information
 * Wed Dec  7 2016 Mikko Partio <mikko.partio@fmi.fi> - 16.12.7-1.fmi
