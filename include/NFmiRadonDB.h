@@ -1,11 +1,9 @@
-#ifndef RADONDB_H
-#define RADONDB_H
+#pragma once
+
+#include "NFmiPostgreSQL.h"
 
 #include <map>
 #include <mutex>
-#include <string>
-#include <vector>
-#include "NFmiPostgreSQL.h"
 
 // from radon table 'network'
 enum FmiRadonStationNetwork
@@ -124,5 +122,3 @@ class NFmiRadonDBPool
 	std::string itsHostname;
 	int itsPort;
 };
-
-#endif

@@ -1,15 +1,9 @@
-#include <NFmiOracle.h>
+#include "NFmiOracle.h"
+
 #include <algorithm>
-#include <exception>
 #include <iomanip>
-#include <sstream>
-#include <stdexcept>
 
-#include "boost/lexical_cast.hpp"
-
-#ifdef DEBUG
 #include <assert.h>
-#endif
 
 using namespace std;
 
@@ -48,9 +42,7 @@ void NFmiOracle::Connect(const string& user, const string& password, const strin
 		db_.rlogon(connection_string_.c_str(), 0);
 		connected_ = true;
 
-#ifdef DEBUG
-		cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: connected to Oracle " << database << " as user " << user << endl);
 	}
 	catch (oracle::otl_exception& p)
 	{
@@ -74,9 +66,7 @@ void NFmiOracle::Connect(const int threadedMode)
 		db_.rlogon(connection_string_.c_str(), 0);  // connect to NFmiOracle
 		connected_ = true;
 
-#ifdef DEBUG
-		cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: connected to Oracle " << database_ << " as user " << user_ << endl);
 
 		DateFormat("YYYYMMDDHH24MISS");
 	}
@@ -97,9 +87,7 @@ void NFmiOracle::Query(const string& sql, const unsigned int buffer_size)
 
 	if (TestMode()) return;
 
-#ifdef DEBUG
-	cout << "DEBUG: " << sql.c_str() << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: " << sql.c_str() << endl);
 
 	try
 	{
@@ -140,9 +128,7 @@ vector<string> NFmiOracle::FetchRow()
 {
 	if (!connected_) throw runtime_error("Cannot perform SQL query before connected");
 
-#ifdef DEBUG
 	assert(stream_.good());
-#endif
 
 	vector<string> ret;
 
@@ -192,7 +178,7 @@ vector<string> NFmiOracle::FetchRow()
 			case 20:
 				// different sized integers
 				rs_iterator_.get(n + 1, ival);
-				sval = boost::lexical_cast<string>(ival);
+				sval = to_string(ival);
 				ret.push_back(sval);
 
 				break;
@@ -210,7 +196,7 @@ vector<string> NFmiOracle::FetchRow()
 				if (ival == dval)
 				{
 					// int
-					ret.push_back(boost::lexical_cast<string>(ival));
+					ret.push_back(to_string(ival));
 				}
 				else
 				{
@@ -280,10 +266,8 @@ vector<string> NFmiOracle::FetchRowFromCursor()
 {
 	if (!connected_) throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
 
-#ifdef DEBUG
 	assert(stream_.good());
 	assert(refcur_.good());
-#endif
 
 	vector<string> ret;
 
@@ -332,7 +316,7 @@ vector<string> NFmiOracle::FetchRowFromCursor()
 			case 20:
 				// different sized integers
 				rc_iterator_.get(n + 1, ival);
-				sval = boost::lexical_cast<string>(ival);
+				sval = to_string(ival);
 				ret.push_back(sval);
 
 				break;
@@ -350,7 +334,7 @@ vector<string> NFmiOracle::FetchRowFromCursor()
 				if (ival == dval)
 				{
 					// int
-					ret.push_back(boost::lexical_cast<string>(ival));
+					ret.push_back(to_string(ival));
 				}
 				else
 				{
@@ -425,9 +409,7 @@ void NFmiOracle::Execute(const string& sql) throw(int)
 
 	BeginSession();
 
-#ifdef DEBUG
-	cout << "DEBUG: " << sql.c_str() << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: " << sql.c_str() << endl);
 
 	try
 	{
@@ -467,9 +449,7 @@ void NFmiOracle::ExecuteProcedure(const string& sql) throw(int)
 
 	string temp_sql = "BEGIN\n:cur<refcur,out> := " + sql + ";\nEND;";
 
-#ifdef DEBUG
-	cout << "DEBUG: " << temp_sql.c_str() << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: " << temp_sql.c_str() << endl);
 
 	try
 	{
@@ -531,9 +511,7 @@ string NFmiOracle::MakeDate(const otl_datetime& time)
 
 void NFmiOracle::Commit() throw(int)
 {
-#ifdef DEBUG
-	cout << "DEBUG: COMMIT" << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: COMMIT" << endl);
 
 	try
 	{
@@ -556,9 +534,7 @@ void NFmiOracle::Commit() throw(int)
 
 void NFmiOracle::Rollback() throw(int)
 {
-#ifdef DEBUG
-	cout << "DEBUG: ROLLBACK" << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: ROLLBACK" << endl);
 
 	try
 	{
@@ -617,9 +593,7 @@ void NFmiOracle::Attach()
 		db_.server_attach(database_.c_str());
 		connected_ = true;
 
-#ifdef DEBUG
-		cout << "DEBUG: attached to Oracle " << database_ << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: attached to Oracle " << database_ << endl);
 	}
 	catch (oracle::otl_exception& p)
 	{
@@ -639,9 +613,7 @@ void NFmiOracle::Detach()
 		db_.server_detach();
 		connected_ = false;
 
-#ifdef DEBUG
-		cout << "DEBUG: detached from Oracle " << database_ << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: detached from Oracle " << database_ << endl);
 	}
 	catch (oracle::otl_exception& p)
 	{
@@ -672,9 +644,7 @@ void NFmiOracle::BeginSession()
 			db_.session_begin(user_.c_str(), password_.c_str());
 		}
 
-#ifdef DEBUG
-		cout << "DEBUG: session started as " << user_ << "/***" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: session started as " << user_ << "/***" << endl);
 
 		initialized_ = true;
 		credentials_set_ = true;
@@ -719,9 +689,7 @@ void NFmiOracle::EndSession()
 		db_.session_end();
 		initialized_ = false;
 
-#ifdef DEBUG
-		cout << "DEBUG: session ended" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: session ended" << endl);
 	}
 	catch (oracle::otl_exception& p)
 	{

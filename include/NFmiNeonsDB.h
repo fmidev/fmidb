@@ -1,11 +1,9 @@
-#ifndef NEONSDB_H
-#define NEONSDB_H
+#pragma once
+
+#include "NFmiOracle.h"
 
 #include <map>
 #include <mutex>
-#include <string>
-#include <vector>
-#include "NFmiOracle.h"
 
 class NFmiNeonsDBPool;
 
@@ -126,5 +124,3 @@ class NFmiNeonsDBPool
 	std::string itsPassword;
 	std::string itsDatabase;
 };
-
-#endif

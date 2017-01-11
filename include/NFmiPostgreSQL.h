@@ -1,12 +1,10 @@
 #pragma once
 
-#include <memory>
+#include "NFmiDatabase.h"
+
 #include <pqxx/connection>
 #include <pqxx/nontransaction>
 #include <pqxx/result>
-#include <string>
-#include <vector>
-#include "NFmiDatabase.h"
 
 class NFmiPostgreSQL : public NFmiDatabase
 {

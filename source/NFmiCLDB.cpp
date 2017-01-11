@@ -1,5 +1,5 @@
-#include <NFmiCLDB.h>
-#include <boost/lexical_cast.hpp>
+#include "NFmiCLDB.h"
+
 #include <iomanip>
 
 using namespace std;
@@ -136,7 +136,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
 	 */
 
 	if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
-		query += " AND r.fmisid = " + boost::lexical_cast<string>(station_id);
+		query += " AND r.fmisid = " + to_string(station_id);
 
 	Query(query);
 
@@ -148,7 +148,7 @@ map<string, string> NFmiCLDB::GetRoadStationInfo(unsigned long station_id, bool 
 
 		if (values.empty()) break;
 
-		int sid = boost::lexical_cast<int>(values[0]);
+		int sid = std::stoi(values[0]);
 
 		station["station_id"] = sid;
 		station["latitude"] = values[1];
@@ -215,7 +215,7 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
 	 */
 
 	if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
-		query += " AND s.station_id = " + boost::lexical_cast<string>(station_id);
+		query += " AND s.station_id = " + to_string(station_id);
 
 	Query(query);
 
@@ -227,7 +227,7 @@ map<string, string> NFmiCLDB::GetSwedishRoadStationInfo(unsigned long station_id
 
 		if (values.empty()) break;
 
-		int sid = boost::lexical_cast<int>(values[0]);
+		int sid = std::stoi(values[0]);
 
 		station["station_id"] = sid;
 		station["latitude"] = values[1];
@@ -281,7 +281,7 @@ map<string, string> NFmiCLDB::GetExtSynopStationInfo(unsigned long station_id, b
 
 		if (values.empty()) break;
 
-		int sid = boost::lexical_cast<int>(values[0]);
+		int sid = std::stoi(values[0]);
 
 		station["station_id"] = sid;
 		station["latitude"] = values[1];
@@ -331,8 +331,8 @@ map<string, string> NFmiCLDB::GetExtSynopStationInfo(unsigned long station_id, b
 map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsigned long station_id,
                                                 bool aggressive_cache)
 {
-	string producer_id_str = boost::lexical_cast<string>(producer_id);
-	string key = producer_id_str + "_" + boost::lexical_cast<string>(station_id);
+	string producer_id_str = to_string(producer_id);
+	string key = producer_id_str + "_" + to_string(station_id);
 
 	if (fmi_stations.find(key) != fmi_stations.end()) return fmi_stations[key];
 
@@ -352,7 +352,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 		    "FROM sreg_view WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-			query += " AND wmon = " + boost::lexical_cast<string>(station_id);
+			query += " AND wmon = " + to_string(station_id);
 	}
 	else
 	{
@@ -363,8 +363,8 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 		    "network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-			query += " WHERE (s.station_id = " + boost::lexical_cast<string>(station_id) +
-			         " OR to_number(n.member_code) = " + boost::lexical_cast<string>(station_id) + ")";
+			query += " WHERE (s.station_id = " + to_string(station_id) +
+			         " OR to_number(n.member_code) = " + to_string(station_id) + ")";
 	}
 
 	Query(query);
@@ -376,8 +376,6 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 		vector<string> values = FetchRow();
 
 		if (values.empty()) break;
-
-		// int currid = boost::lexical_cast<int> (values[0]);
 
 		station["wmon"] = values[0];
 		station["latitude"] = values[1];
@@ -442,7 +440,7 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
 		    "FROM "
 		    "clim_param_xref "
 		    "WHERE producer_no = " +
-		    boost::lexical_cast<string>(producer_id);
+		    to_string(producer_id);
 
 		Query(query);
 
@@ -452,8 +450,8 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
 
 			if (values.empty()) break;
 
-			int uid = boost::lexical_cast<int>(values[0]);
-			int pid = boost::lexical_cast<int>(values[3]);
+			int uid = std::stoi(values[0]);
+			int pid = std::stoi(values[3]);
 
 			pinfo["univ_id"] = values[0];
 			pinfo["responding_col"] = values[1];
@@ -482,7 +480,7 @@ map<string, string> NFmiCLDB::GetParameterDefinition(unsigned long producer_id, 
 
 vector<map<string, string>> NFmiCLDB::GetParameterMapping(unsigned long producer_id, unsigned long universal_id)
 {
-	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(universal_id);
+	string key = to_string(producer_id) + "_" + to_string(universal_id);
 
 	if (parametermapping.find(key) != parametermapping.end()) return parametermapping[key];
 
@@ -497,7 +495,7 @@ vector<map<string, string>> NFmiCLDB::GetParameterMapping(unsigned long producer
 	    "FROM "
 	    "clim_param_xref_ng "
 	    "WHERE producer_id = " +
-	    boost::lexical_cast<string>(producer_id) + " AND univ_id = " + boost::lexical_cast<string>(universal_id);
+	    to_string(producer_id) + " AND univ_id = " + to_string(universal_id);
 
 	Query(query);
 
@@ -540,7 +538,7 @@ map<string, string> NFmiCLDB::GetProducerDefinition(unsigned long producer_id)
 	    "table_name "
 	    "FROM clim_producers "
 	    "WHERE producer_no = " +
-	    boost::lexical_cast<string>(producer_id);
+	    to_string(producer_id);
 
 	map<string, string> ret;
 
@@ -600,10 +598,10 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "wmostations r "
 			    "WHERE "
 			    "r.lat BETWEEN " +
-			    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
 			    "r.lon BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude);
+			    to_string(min_longitude) + " AND " + to_string(max_longitude);
 			break;
 
 		case 20013:
@@ -639,10 +637,10 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "s.station_id = l.fmisid "
 			    "AND "
 			    "l.latitude BETWEEN " +
-			    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
 			    "l.longitude BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude);
+			    to_string(min_longitude) + " AND " + to_string(max_longitude);
 			break;
 
 		case 20014:
@@ -662,10 +660,10 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "AND n.network_id IN (50,67,64) "
 			    "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')"
 			    "AND round(s.station_geometry.sdo_point.y, 5) BETWEEN " +
-			    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
 			    "round(s.station_geometry.sdo_point.x, 5) BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude);
+			    to_string(min_longitude) + " AND " + to_string(max_longitude);
 			;
 
 			/*      query = "SELECT "
@@ -683,14 +681,14 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			              "r.fmisid = l.fmisid "
 			              "AND "
 			              "l.latitude BETWEEN " +
-			              boost::lexical_cast<string> (min_latitude) +
+			              to_string (min_latitude) +
 			              " AND " +
-			              boost::lexical_cast<string> (max_latitude) +
+			              to_string (max_latitude) +
 			              " AND "
 			              "l.longitude BETWEEN " +
-			              boost::lexical_cast<string> (min_longitude) +
+			              to_string (min_longitude) +
 			              " AND " +
-			              boost::lexical_cast<string> (max_longitude);
+			              to_string (max_longitude);
 			*/
 			break;
 
@@ -714,9 +712,9 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
 			    "AND gm.membership_on = 'Y' "
 			    "AND round(S.STATION_GEOMETRY.sdo_point.x, 5) BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude) +
-			    " AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " + boost::lexical_cast<string>(min_latitude) +
-			    " AND " + boost::lexical_cast<string>(max_latitude);
+			    to_string(min_longitude) + " AND " + to_string(max_longitude) +
+			    " AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " + to_string(min_latitude) +
+			    " AND " + to_string(max_latitude);
 			break;
 
 		case 20018:
@@ -735,9 +733,9 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "AND gm.membership_on = 'Y' "
 			    "AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
 			    "AND round(S.STATION_GEOMETRY.sdo_point.x, 5) BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude) +
-			    " AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " + boost::lexical_cast<string>(min_latitude) +
-			    " AND " + boost::lexical_cast<string>(max_latitude);
+			    to_string(min_longitude) + " AND " + to_string(max_longitude) +
+			    " AND round(S.STATION_GEOMETRY.sdo_point.y, 5) BETWEEN " + to_string(min_latitude) +
+			    " AND " + to_string(max_latitude);
 			break;
 
 		default:
@@ -761,10 +759,10 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    "sreg "
 			    "WHERE "
 			    "floor(lat/100) + mod(lat,100)/60 + nvl(lat_sec, 0)/3600 BETWEEN " +
-			    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
 			    "floor(lon/100) + mod(lon,100)/60 + nvl(lon_sec, 0)/3600 BETWEEN " +
-			    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude) +
+			    to_string(min_longitude) + " AND " + to_string(max_longitude) +
 			    " AND wmon IS NOT NULL "
 			    "AND (message IN ('M200','M200A','M500','M500H','HASY','NAWS','AFTN') OR lpnn IN (1019)) "
 			    "AND enddate IS NULL "
@@ -782,7 +780,7 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 
 		if (values.empty()) break;
 
-		int id = boost::lexical_cast<int>(values[0]);
+		int id = std::stoi(values[0]);
 
 		station["station_id"] = id;
 		station["latitude"] = values[1];
@@ -818,7 +816,7 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 				break;
 
 			default:
-				fmi_stations[boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(id)] =
+				fmi_stations[to_string(producer_id) + "_" + to_string(id)] =
 				    station;
 				break;
 		}

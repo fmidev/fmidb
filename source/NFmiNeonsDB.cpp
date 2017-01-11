@@ -1,12 +1,7 @@
-#include <NFmiNeonsDB.h>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-#include <algorithm>
-#include <stdexcept>
+#include "NFmiNeonsDB.h"
 
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
+#include <boost/format.hpp>
+#include <algorithm>
 
 using namespace std;
 
@@ -82,7 +77,7 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
 		return "";
 	}
 
-	assert(boost::lexical_cast<unsigned int>(row[0]) == offset);
+	assert(std::stoul(row[0]) == offset);
 
 	return row[1];
 }
@@ -90,7 +85,7 @@ string NFmiNeonsDB::GetLatestTime(const std::string& ref_prod, const std::string
 map<string, string> NFmiNeonsDB::GetGridDatasetInfo(long centre, long process, const string& geomName,
                                                     const string& baseDate)
 {
-	string key = boost::lexical_cast<string>(centre) + "_" + boost::lexical_cast<string>(process) + "_" + geomName +
+	string key = to_string(centre) + "_" + to_string(process) + "_" + geomName +
 	             "_" + baseDate;
 
 	if (datasetinfo.find(key) != datasetinfo.end()) return datasetinfo[key];
@@ -145,9 +140,9 @@ string NFmiNeonsDB::GetGridLevelName(const std::string& parm_name, long InLvlId,
 {
 	string lvl_name;
 	string univ_id;
-	string lvl_id = boost::lexical_cast<string>(InLvlId);
-	string no_vers = boost::lexical_cast<string>(InCodeTableVer);
-	string no_vers2 = boost::lexical_cast<string>(OutCodeTableVer);
+	string lvl_id = to_string(InLvlId);
+	string no_vers = to_string(InCodeTableVer);
+	string no_vers2 = to_string(OutCodeTableVer);
 
 	// Implement caching since this function is quite expensive
 	assert(!parm_name.empty());
@@ -270,8 +265,8 @@ string NFmiNeonsDB::GetGridLevelName(long InParmId, long InLvlId, long InCodeTab
 string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId)
 {
 	string lvl_name;
-	string lvl_id = boost::lexical_cast<string>(InLvlId);
-	string producer_id = boost::lexical_cast<string>(InProducerId);
+	string lvl_id = to_string(InLvlId);
+	string producer_id = to_string(InProducerId);
 
 	// Implement caching since this function is quite expensive
 
@@ -329,15 +324,14 @@ string NFmiNeonsDB::GetGridLevelName(long InLvlId, long InProducerId)
 
 long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
 {
-	string no_vers_str = boost::lexical_cast<string>(no_vers);
+	string no_vers_str = to_string(no_vers);
 
 	string key = name + "_" + no_vers_str;
 
 	if (gridparamid.find(key) != gridparamid.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGridParameterId() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGridParameterId() cache hit!" << endl);
+		
 		return gridparamid[key];
 	}
 	string query =
@@ -353,7 +347,7 @@ long NFmiNeonsDB::GetGridParameterId(long no_vers, const std::string& name)
 	}
 	else
 	{
-		gridparamid[key] = boost::lexical_cast<long>(row[0]);
+		gridparamid[key] = std::stol(row[0]);
 	}
 
 	return gridparamid[key];
@@ -374,15 +368,14 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 {
 	// Implement some sort of caching: this function is quite expensive
 
-	string key = boost::lexical_cast<string>(InParmId) + "_" + boost::lexical_cast<string>(InCodeTableVer) + "_" +
-	             boost::lexical_cast<string>(OutCodeTableVer) + "_" + boost::lexical_cast<string>(timeRangeIndicator) +
-	             "_" + boost::lexical_cast<string>(levelType);
+	string key = to_string(InParmId) + "_" + to_string(InCodeTableVer) + "_" +
+	             to_string(OutCodeTableVer) + "_" + to_string(timeRangeIndicator) +
+	             "_" + to_string(levelType);
 
 	if (gridparameterinfo.find(key) != gridparameterinfo.end())
 	{
-#ifdef DEBUG
-		cout << "GetGridParameterName() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "GetGridParameterName() cache hit!" << endl);
+
 		return gridparameterinfo[key];
 	}
 
@@ -482,8 +475,8 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
     /* Finally dig out the parm_name on OutCodeTableVer */
     query = "SELECT parm_name "
             "FROM grid_param_xref "
-            "WHERE univ_id = " +univ_id + " "
-            "AND no_vers = "+boost::lexical_cast<string>(OutCodeTableVer);
+            "WHERE univ_id = " + univ_id + " "
+            "AND no_vers = "+ to_string(OutCodeTableVer);
 
     Query(query);
     vector<string> param = FetchRow();
@@ -504,10 +497,10 @@ string NFmiNeonsDB::GetGridParameterName(long InParmId, long InCodeTableVer, lon
 string NFmiNeonsDB::GetGridParameterNameForGrib2(long InParmId, long InCategory, long InDiscipline, long InProducerId)
 {
 	string parm_name;
-	string parm_id = boost::lexical_cast<string>(InParmId);
-	string category = boost::lexical_cast<string>(InCategory);
-	string discipline = boost::lexical_cast<string>(InDiscipline);
-	string producer_id = boost::lexical_cast<string>(InProducerId);
+	string parm_id = to_string(InParmId);
+	string category = to_string(InCategory);
+	string discipline = to_string(InDiscipline);
+	string producer_id = to_string(InProducerId);
 
 	// Implement some sort of caching: this function is quite expensive
 
@@ -586,14 +579,14 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
 	                  "FROM grid_param_grib2 g, grid_param_xref x, fmi_producers f, grid_num_model_grib n "
 	                  "WHERE g.parm_name = x.parm_name AND f.no_vers = x.no_vers AND f.producer_id = n.model_id "
 	                  "AND n.model_id = f.producer_id AND (n.ident_id = g.producer OR g.producer = 9999) "
-	                  "AND x.univ_id = " + boost::lexical_cast<string> (parameterId) + " "
-	                  "AND f.producer_id = " + boost::lexical_cast<string> (producerId);*/
+	                  "AND x.univ_id = " + to_string (parameterId) + " "
+	                  "AND f.producer_id = " + to_string (producerId);*/
 
 	pair<int, int> p = make_pair(-1, -1);
 
 	string query = "SELECT g.parm_name FROM grid_param_xref g, fmi_producers f WHERE g.univ_id = " +
-	               boost::lexical_cast<string>(parameterId) + " AND f.no_vers = g.no_vers AND f.producer_id = " +
-	               boost::lexical_cast<string>(producerId);
+	               to_string(parameterId) + " AND f.no_vers = g.no_vers AND f.producer_id = " +
+	               to_string(producerId);
 
 	Query(query);
 
@@ -607,7 +600,7 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
 	        "' AND (producer = 9999 OR producer = "
 	        "(SELECT ident_id FROM grid_num_model_grib g, fmi_producers f, grid_model m "
 	        "WHERE f.producer_id = " +
-	        boost::lexical_cast<string>(producerId) +
+	        to_string(producerId) +
 	        "AND f.ref_prod = m.model_type AND m.model_name = g.model_name)) ORDER BY producer";
 
 	Query(query);
@@ -616,7 +609,7 @@ pair<int, int> NFmiNeonsDB::GetGrib2Parameter(unsigned long producerId, unsigned
 
 	if (row.empty()) return p;
 
-	p = make_pair(boost::lexical_cast<int>(row[0]), boost::lexical_cast<int>(row[1]));
+	p = make_pair(std::stoi(row[0]), std::stoi(row[1]));
 
 	return p;
 }
@@ -641,7 +634,7 @@ std::string NFmiNeonsDB::GetGribParameterNameFromNetCDF(unsigned long producerId
 	    nc_param +
 	    "' "
 	    "AND producer_id = " +
-	    boost::lexical_cast<string>(producerId);
+	    to_string(producerId);
 
 	Query(query);
 
@@ -669,7 +662,7 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
 		return ret;
 	}
 
-	return GetParameterDefinition(producer_id, boost::lexical_cast<unsigned long>(row[0]));
+	return GetParameterDefinition(producer_id, std::stoul(row[0]));
 }
 
 /*
@@ -691,26 +684,25 @@ map<string, string> NFmiNeonsDB::GetParameterDefinition(unsigned long producer_i
 	{
 		if (parameterinfo[producer_id].find(universal_id) != parameterinfo[producer_id].end())
 		{
-#ifdef DEBUG
-			cout << "DEBUG: GetParameterDefinition() cache hit!" << endl;
-#endif
+			FMIDEBUG(cout << "DEBUG: GetParameterDefinition() cache hit!" << endl);
+
 			return parameterinfo[producer_id][universal_id];
 		}
 	}
 
 	map<string, string> ret;
 
-	string prod_id = boost::lexical_cast<string>(producer_id);
-	string univ_id = boost::lexical_cast<string>(universal_id);
+	string prod_id = to_string(producer_id);
+	string univ_id = to_string(universal_id);
 
 	map<string, string> producer_info = GetProducerDefinition(producer_id);
 
 	if (producer_info.empty()) return ret;
 
 	string forecast_type = producer_info["seq_type_prfx"];
-	int producer_class = boost::lexical_cast<int>(producer_info["producer_class"]);
+	int producer_class = std::stoi(producer_info["producer_class"]);
 	string no_vers = producer_info["no_vers"];
-	int dbclass_id = boost::lexical_cast<int>(producer_info["dbclass_id"]);
+	int dbclass_id = std::stoi(producer_info["dbclass_id"]);
 
 	string query =
 	    "SELECT "
@@ -821,9 +813,8 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(unsigned long producer_id
 {
 	if (producerinfo.count(producer_id) > 0)
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetProducerDefinition() cache hit!" << endl);
+
 		return producerinfo[producer_id];
 	}
 
@@ -838,7 +829,7 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(unsigned long producer_id
 	    " nvl(hours_for_latest,24) "
 	    "FROM fmi_producers "
 	    "WHERE producer_id = " +
-	    boost::lexical_cast<string>(producer_id);
+	    to_string(producer_id);
 
 	map<string, string> ret;
 
@@ -887,7 +878,7 @@ map<string, string> NFmiNeonsDB::GetProducerDefinition(const string& producer_na
 
 	vector<string> row = FetchRow();
 
-	unsigned long int producer_id = boost::lexical_cast<unsigned long>(row[0]);
+	unsigned long int producer_id = std::stoul(row[0]);
 
 	if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
 
@@ -906,9 +897,8 @@ vector<vector<string> > NFmiNeonsDB::GetGridGeoms(const string& ref_prod, const 
 	string key = ref_prod + "_" + analtime + "_" + geom_name;
 	if (gridgeoms.count(key) > 0)
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGridGeoms() cache hit!" << endl);
+
 		return gridgeoms[key];
 	}
 	string query =
@@ -959,9 +949,8 @@ map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_i
 {
 	if (gridmodeldefinition.count(producer_id) > 0)
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGridModelDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGridModelDefinition() cache hit!" << endl);
+
 		return gridmodeldefinition[producer_id];
 	}
 
@@ -979,7 +968,7 @@ map<string, string> NFmiNeonsDB::GetGridModelDefinition(unsigned long producer_i
 	    "grid_model.model_type "
 	    "FROM fmi_producers, grid_model, grid_model_name, grid_num_model_grib, grid_model_ident "
 	    "WHERE fmi_producers.producer_id = " +
-	    boost::lexical_cast<string>(producer_id) +
+	    to_string(producer_id) +
 	    " "
 	    "AND fmi_producers.producer_class = 1 "
 	    "AND fmi_producers.ref_prod = grid_model.model_type "
@@ -1043,15 +1032,13 @@ vector<string> NFmiNeonsDB::GetNeonsTables(const string& start_time, const strin
 map<string, string> NFmiNeonsDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
                                                        double dj)
 {
-	string key = boost::lexical_cast<string>(ni) + "_" + boost::lexical_cast<string>(nj) + "_" +
-	             boost::lexical_cast<string>(lat) + "_" + boost::lexical_cast<string>(lon) + "_" +
-	             boost::lexical_cast<string>(di) + "_" + boost::lexical_cast<string>(dj);
+	string key = to_string(ni) + "_" + to_string(nj) + "_" +
+	             to_string(lat) + "_" + to_string(lon) + "_" +
+	             to_string(di) + "_" + to_string(dj);
 
 	if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl);
 
 		return geometryinfo_fromarea[key];
 	}
@@ -1074,7 +1061,7 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 	    " gr.geom_name "
 	    "FROM grid_reg_geom gr, grid_geom gm "
 	    "WHERE row_cnt = " +
-	    boost::lexical_cast<string>(nj) + " AND col_cnt = " + boost::lexical_cast<string>(ni) + " AND lat_orig = " +
+	    to_string(nj) + " AND col_cnt = " + to_string(ni) + " AND lat_orig = " +
 	    boost::str(boost::format("%.5f") % lat) + " AND long_orig = " + boost::str(boost::format("%.5f") % lon) +
 	    " AND pas_latitude = " + boost::str(boost::format("%.5f") % dj) + " AND pas_longitude = " +
 	    boost::str(boost::format("%.5f") % di) + " AND gr.geom_name = gm.geom_name";
@@ -1126,9 +1113,7 @@ map<string, string> NFmiNeonsDB::GetGeometryDefinition(const string& geometry_na
 {
 	if (geometryinfo.find(geometry_name) != geometryinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl);
 
 		return geometryinfo[geometry_name];
 	}
@@ -1262,7 +1247,7 @@ map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggre
 	 */
 
 	if (!aggressive_cache || (aggressive_cache && stationinfo.size() > 0))
-		query += " AND indicatif_omm = " + boost::lexical_cast<string>(wmo_id);
+		query += " AND indicatif_omm = " + to_string(wmo_id);
 
 	Query(query);
 
@@ -1274,7 +1259,7 @@ map<string, string> NFmiNeonsDB::GetStationInfo(unsigned long wmo_id, bool aggre
 
 		if (values.empty()) break;
 
-		int wid = boost::lexical_cast<int>(values[0]);
+		int wid = std::stoi(values[0]);
 
 		station["indicatif_omm"] = values[0];
 		station["station_name"] = values[1];
@@ -1382,10 +1367,10 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
 	    "indicatif_omm IS NOT NULL "
 	    "AND "
 	    "lat/100000 BETWEEN " +
-	    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+	    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 	    " AND "
 	    "lon/100000 BETWEEN " +
-	    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude);
+	    to_string(min_longitude) + " AND " + to_string(max_longitude);
 
 	if (temp)
 		query +=
@@ -1407,7 +1392,7 @@ map<int, map<string, string> > NFmiNeonsDB::GetStationListForArea(double max_lat
 
 		if (values.empty()) break;
 
-		int wid = boost::lexical_cast<int>(values[0]);
+		int wid = std::stoi(values[0]);
 
 		station["indicatif_omm"] = values[0];
 		station["station_name"] = values[4];
@@ -1526,9 +1511,8 @@ NFmiNeonsDB* NFmiNeonsDBPool::GetConnection()
 
 				itsWorkerList[i]->SQLDateMask("YYYYMMDDHH24MISS");
 
-#ifdef DEBUG
-				cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
-#endif
+				FMIDEBUG(cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl);
+
 				return itsWorkerList[i];
 			}
 			else if (itsWorkingList[i] == -1)
@@ -1561,9 +1545,8 @@ NFmiNeonsDB* NFmiNeonsDBPool::GetConnection()
 
 					itsWorkingList[i] = 1;
 
-#ifdef DEBUG
-					cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl;
-#endif
+					FMIDEBUG(cout << "DEBUG: Worker returned with id " << itsWorkerList[i]->Id() << endl);
+
 					return itsWorkerList[i];
 				}
 				catch (int e)
@@ -1578,11 +1561,7 @@ NFmiNeonsDB* NFmiNeonsDBPool::GetConnection()
 		cout << "DEBUG: Waiting for worker release" << endl;
 #endif
 
-#ifdef _MSC_VER
-		Sleep(100);  // 100 ms
-#else
 		usleep(100000);  // 100 ms
-#endif
 	}
 
 	throw runtime_error("Impossible error at NFmiNeonsDBPool::GetConnection()");
@@ -1603,9 +1582,7 @@ void NFmiNeonsDBPool::Release(NFmiNeonsDB* theWorker)
 	theWorker->EndSession();
 	itsWorkingList[theWorker->Id()] = 0;
 
-#ifdef DEBUG
-	cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: Worker released for id " << theWorker->Id() << endl);
 }
 
 void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers)
@@ -1616,8 +1593,8 @@ void NFmiNeonsDBPool::MaxWorkers(int theMaxWorkers)
 
 	if (theMaxWorkers < itsMaxWorkers)
 		throw runtime_error("Making NeonsDB pool size smaller is not supported (" +
-		                    boost::lexical_cast<string>(itsMaxWorkers) + " to " +
-		                    boost::lexical_cast<string>(theMaxWorkers) + ")");
+		                    to_string(itsMaxWorkers) + " to " +
+		                    to_string(theMaxWorkers) + ")");
 
 	itsMaxWorkers = theMaxWorkers;
 

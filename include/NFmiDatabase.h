@@ -8,6 +8,16 @@
 #define OVERRIDE
 #endif
 
+#if defined(DEBUG)
+#define FMIDEBUG(Expr) do { Expr; } while(0)
+#else
+#define FMIDEBUG(Expr)
+#endif
+
+#include <string>
+#include <sstream>
+#include <vector>
+
 class NFmiDatabase
 {
    public:

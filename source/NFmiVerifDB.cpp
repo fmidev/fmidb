@@ -1,8 +1,6 @@
-#include <NFmiVerifDB.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include "NFmiVerifDB.h"
 
-#include <stdexcept>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -73,7 +71,7 @@ map<string, string> NFmiVerifDB::GetStationInfo(unsigned long station_id, bool a
 	 */
 
 	if (!aggressive_cache || (aggressive_cache && stations.size() > 0))
-		query += " AND fmisid = " + boost::lexical_cast<string>(station_id);
+		query += " AND fmisid = " + to_string(station_id);
 
 	Query(query);
 
@@ -85,7 +83,7 @@ map<string, string> NFmiVerifDB::GetStationInfo(unsigned long station_id, bool a
 
 		if (values.empty()) break;
 
-		int sid = boost::lexical_cast<int>(values[0]);
+		int sid = std::stoi(values[0]);
 
 		station["target_id"] = values[0];
 		station["fmisid"] = values[1];
@@ -179,10 +177,10 @@ map<int, map<string, string> > NFmiVerifDB::GetStationListForArea(unsigned long 
 	    "r.fmisid = l.fmisid "
 	    "AND "
 	    "l.latitude BETWEEN " +
-	    boost::lexical_cast<string>(min_latitude) + " AND " + boost::lexical_cast<string>(max_latitude) +
+	    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 	    " AND "
 	    "l.longitude BETWEEN " +
-	    boost::lexical_cast<string>(min_longitude) + " AND " + boost::lexical_cast<string>(max_longitude);
+	    to_string(min_longitude) + " AND " + to_string(max_longitude);
 
 	Query(query);
 
@@ -194,7 +192,7 @@ map<int, map<string, string> > NFmiVerifDB::GetStationListForArea(unsigned long 
 
 		if (values.empty()) break;
 
-		int id = boost::lexical_cast<int>(values[0]);
+		int id = std::stoi(values[0]);
 
 		station["station_id"] = values[0];
 		station["latitude"] = values[1];
@@ -291,7 +289,7 @@ int NFmiVerifDB::PeriodId(const string &thePeriodName)
 
 	if (row.empty()) throw runtime_error("Unable to fetch just inserted period id");
 
-	int periodId = boost::lexical_cast<int>(row[0]);
+	int periodId = std::stoi(row[0]);
 
 	metadata.periodIds[thePeriodName] = periodId;
 
@@ -322,7 +320,7 @@ void NFmiVerifDB::Initialize(void)
 
 		if (row.empty()) break;
 
-		int id = boost::lexical_cast<int>(row[0]);
+		int id = std::stoi(row[0]);
 		string name = row[1];
 
 		metadata.statIds[name] = id;
@@ -344,7 +342,7 @@ void NFmiVerifDB::Initialize(void)
 
 		if (row.empty()) break;
 
-		int id = boost::lexical_cast<int>(row[0]);
+		int id = std::stoi(row[0]);
 
 		metadata.periodIds[row[1]] = id;
 	}

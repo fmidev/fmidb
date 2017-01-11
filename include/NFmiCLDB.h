@@ -1,10 +1,8 @@
-#ifndef __NFMICLDB_H__
-#define __NFMICLDB_H__
+#pragma once
+
+#include "NFmiOracle.h"
 
 #include <map>
-#include <string>
-#include <vector>
-#include "NFmiOracle.h"
 
 class NFmiCLDB : public NFmiOracle
 {
@@ -46,4 +44,3 @@ class NFmiCLDB : public NFmiOracle
 	std::map<std::string, std::map<std::string, std::string>> fmi_stations;
 	std::map<unsigned long, std::map<std::string, std::string>> producerinfo;
 };
-#endif

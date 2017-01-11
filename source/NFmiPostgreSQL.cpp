@@ -1,13 +1,6 @@
-#include <NFmiPostgreSQL.h>
-#include <exception>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include "boost/lexical_cast.hpp"
+#include "NFmiPostgreSQL.h"
 
-#ifdef DEBUG
-#include <assert.h>
-#endif
+#include <iostream>
 
 using namespace std;
 
@@ -43,20 +36,16 @@ void NFmiPostgreSQL::Connect()
 {
 	if (connected_) return;
 
-#ifdef DEBUG
-	cout << "DEBUG: dsn is 'user=" << user_ << " password=xxx host=" << hostname_ << " dbname=" << database_
-	     << " port=" + boost::lexical_cast<string>(port_) << "'" << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: dsn is 'user=" << user_ << " password=xxx host=" << hostname_ << " dbname=" << database_
+			 << " port=" + to_string(port_) << "'" << endl);
 
 	connection_string_ = "user=" + user_ + " password=" + password_ + " host=" + hostname_ + " dbname=" + database_ +
-	                     " port=" + boost::lexical_cast<string>(port_);
+	                     " port=" + to_string(port_);
 	db_ = unique_ptr<pqxx::connection>(new pqxx::connection(connection_string_));
 	wrk_ = unique_ptr<pqxx::nontransaction>(new pqxx::nontransaction(*db_));
 	connected_ = true;
 
-#ifdef DEBUG
-	cout << "DEBUG: connected to PostgreSQL " << database_ << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: connected to PostgreSQL " << database_ << endl);
 }
 
 void NFmiPostgreSQL::Query(const string& sql)
@@ -67,15 +56,12 @@ void NFmiPostgreSQL::Query(const string& sql)
 		exit(1);
 	}
 
-#ifdef DEBUG
-	cout << "DEBUG: " << sql << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: " << sql << endl);
 
 	res_ = wrk_->exec(sql);
 	iter_ = res_.begin();
-#ifdef DEBUG
-	cout << "DEBUG: query returned " << res_.size() << " rows" << endl;
-#endif
+
+	FMIDEBUG(cout << "DEBUG: query returned " << res_.size() << " rows" << endl);
 }
 
 vector<string> NFmiPostgreSQL::FetchRow()
@@ -119,9 +105,8 @@ vector<string> NFmiPostgreSQL::FetchRow()
 
 void NFmiPostgreSQL::Execute(const string& sql)
 {
-#ifdef DEBUG
-	cout << "DEBUG: " << sql << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: " << sql << endl);
+
 	try
 	{
 		wrk_->exec(sql);
@@ -145,9 +130,7 @@ void NFmiPostgreSQL::Disconnect()
 
 void NFmiPostgreSQL::Commit()
 {
-#ifdef DEBUG
-	cout << "DEBUG: COMMIT" << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: COMMIT" << endl);
 
 	try
 	{
@@ -162,9 +145,8 @@ void NFmiPostgreSQL::Commit()
 
 void NFmiPostgreSQL::Rollback()
 {
-#ifdef DEBUG
-	cout << "DEBUG: ROLLBACK" << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: ROLLBACK" << endl);
+
 	try
 	{
 		wrk_->abort();

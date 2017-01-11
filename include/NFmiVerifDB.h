@@ -1,10 +1,8 @@
-#ifndef __NFMIVERIFDB_H__
-#define __NFMIVERIFDB_H__
+#pragma once
+
+#include "NFmiPostgreSQL.h"
 
 #include <map>
-#include <string>
-#include <vector>
-#include "NFmiPostgreSQL.h"
 
 class NFmiVerifDB : public NFmiPostgreSQL
 {
@@ -46,4 +44,3 @@ class NFmiVerifDB : public NFmiPostgreSQL
 
 	Metadata metadata;
 };
-#endif

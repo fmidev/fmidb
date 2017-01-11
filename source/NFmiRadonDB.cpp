@@ -1,10 +1,8 @@
-#include <NFmiODBC.h>
-#include <NFmiRadonDB.h>
+#include "NFmiRadonDB.h"
+
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
-#include <boost/lexical_cast.hpp>
-#include <stdexcept>
 
 using namespace std;
 
@@ -34,45 +32,26 @@ void NFmiRadonDB::Connect()
 	}
 
 	NFmiRadonDB::Connect("neons_client", password, "radon", "vorlon", 5432);
-
-	/*  try
-	  {
-	    putenv("TZ=utc"); // for sqllite
-	    Execute("SELECT load_extension('libspatialite.so.5')");
-	    Execute("SELECT load_extension('libsqlitefunctions')");
-	  }
-	  catch (...)
-	  {}
-	*/
 }
 
 void NFmiRadonDB::Connect(const std::string &user, const std::string &password, const std::string &database,
                           const std::string &hostname, int port)
 {
+	assert(!user.empty());
+	assert(!password.empty());
+	assert(!database.empty());
+	assert(!hostname.empty());
 	NFmiPostgreSQL::Connect(user, password, database, hostname, port);
-	/*
-	  try
-	  {
-	    putenv("TZ=utc"); // for sqllite
-	    Execute("SELECT load_extension('libspatialite.so.5')");
-	    Execute("SELECT load_extension('libsqlitefunctions')");
-	  }
-	  catch (...)
-	  {}
-	*/
 }
 
 map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, long type_id)
 {
-	using boost::lexical_cast;
-
-	string key = lexical_cast<string>(centre) + "_" + lexical_cast<string>(process);
+	const string key = to_string(centre) + "_" + to_string(process);
 
 	if (gribproducerinfo.find(key) != gribproducerinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl);
+
 		return gribproducerinfo[key];
 	}
 
@@ -92,9 +71,7 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 	if (row.empty())
 	{
 // gridparamid[key] = -1;
-#ifdef DEBUG
-		cout << "DEBUG Producer not found\n";
-#endif
+		FMIDEBUG(cout << "DEBUG Producer not found\n");
 	}
 	else
 	{
@@ -102,8 +79,8 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 		ret["name"] = row[1];
 		ret["class_id"] = row[2];
 		ret["type_id"] = row[3];
-		ret["centre"] = lexical_cast<string>(centre);
-		ret["ident"] = lexical_cast<string>(process);
+		ret["centre"] = to_string(centre);
+		ret["ident"] = to_string(process);
 
 		gribproducerinfo[key] = ret;
 	}
@@ -113,20 +90,19 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 
 map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id)
 {
-	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(universal_id);
+	string key = to_string(producer_id) + "_" + to_string(universal_id);
 
 	if (paramnewbaseinfo.find(key) != paramnewbaseinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetParameterFromNewbaseId() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetParameterFromNewbaseId() cache hit!" << endl);
+
 		return paramnewbaseinfo[key];
 	}
 
 	map<string, string> ret;
 
-	string prod_id = boost::lexical_cast<string>(producer_id);
-	string univ_id = boost::lexical_cast<string>(universal_id);
+	string prod_id = to_string(producer_id);
+	string univ_id = to_string(universal_id);
 
 	/*map <string, string> producer_info = GetProducerDefinition(producer_id);
 
@@ -172,10 +148,9 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	if (paramdbinfo.find(key) != paramdbinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetParameterFromDatabaseName() cache hit!" << endl;
+		FMIDEBUG(cout << "DEBUG: GetParameterFromDatabaseName() cache hit!" << endl);
+
 		return paramdbinfo[key];
-#endif
 	}
 
 	stringstream query;
@@ -294,17 +269,14 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
                                                        long timeRangeIndicator, long levelId, double levelValue)
 {
-	using boost::lexical_cast;
-
-	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(tableVersion) + "_" +
-	             lexical_cast<string>(paramId) + "_" + lexical_cast<string>(timeRangeIndicator) + "_" +
-	             lexical_cast<string>(levelId) + lexical_cast<string>(levelValue);
+	string key = to_string(producerId) + "_" + to_string(tableVersion) + "_" +
+		to_string(paramId) + "_" + to_string(timeRangeIndicator) + "_" +
+		to_string(levelId) + to_string(levelValue);
 
 	if (paramgrib1info.find(key) != paramgrib1info.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: ParameterFromGrib1() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: ParameterFromGrib1() cache hit!" << endl);
+
 		return paramgrib1info[key];
 	}
 
@@ -331,17 +303,15 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 
 	if (row.empty())
 	{
-#ifdef DEBUG
-		cout << "DEBUG Parameter not found\n";
-#endif
+		FMIDEBUG(cout << "DEBUG Parameter not found\n");
 	}
 	else
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["version"] = row[2];
-		ret["grib1_table_version"] = lexical_cast<string>(tableVersion);
-		ret["grib1_number"] = lexical_cast<string>(paramId);
+		ret["grib1_table_version"] = to_string(tableVersion);
+		ret["grib1_number"] = to_string(paramId);
 		ret["interpolation_method"] = row[4];
 		ret["level_id"] = row[5];
 		ret["level_value"] = row[6];
@@ -355,17 +325,14 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId,
                                                        long levelId, double levelValue)
 {
-	using boost::lexical_cast;
-
-	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(discipline) + "_" +
-	             lexical_cast<string>(category) + "_" + lexical_cast<string>(paramId) + "_" +
-	             lexical_cast<string>(levelId) + "_" + lexical_cast<string>(levelValue);
+	string key = to_string(producerId) + "_" + to_string(discipline) + "_" +
+		to_string(category) + "_" + to_string(paramId) + "_" +
+		to_string(levelId) + "_" + to_string(levelValue);
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: ParameterFromGrib2() cache hit for " << key << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: ParameterFromGrib2() cache hit for " << key << endl);
+
 		return paramgrib2info[key];
 	}
 
@@ -403,9 +370,8 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 
 		if (row.empty())
 		{
-#ifdef DEBUG
-			cout << "DEBUG Parameter not found\n";
-#endif
+			FMIDEBUG(cout << "DEBUG Parameter not found\n");
+
 			return ret;
 		}
 	}
@@ -413,9 +379,9 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	ret["id"] = row[0];
 	ret["name"] = row[1];
 	ret["version"] = row[2];
-	ret["grib2_discipline"] = lexical_cast<string>(discipline);
-	ret["grib2_category"] = lexical_cast<string>(category);
-	ret["grib2_number"] = lexical_cast<string>(paramId);
+	ret["grib2_discipline"] = to_string(discipline);
+	ret["grib2_category"] = to_string(category);
+	ret["grib2_number"] = to_string(paramId);
 	ret["interpolation_method"] = row[4];
 	ret["level_id"] = row[5];
 	ret["level_value"] = row[6];
@@ -428,16 +394,13 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string &paramName, long levelId,
                                                         double levelValue)
 {
-	using boost::lexical_cast;
-
-	string key = lexical_cast<string>(producerId) + "_" + paramName + "_" + lexical_cast<string>(levelId) + "_" +
-	             lexical_cast<string>(levelValue);
+	const string key = to_string(producerId) + "_" + paramName + "_" + to_string(levelId) + "_" +
+		to_string(levelValue);
 
 	if (paramnetcdfinfo.find(key) != paramnetcdfinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetParameterFromNetCDF() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetParameterFromNetCDF() cache hit!" << endl);
+
 		return paramnetcdfinfo[key];
 	}
 
@@ -463,9 +426,7 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 
 	if (row.empty())
 	{
-#ifdef DEBUG
-		cout << "DEBUG Parameter not found\n";
-#endif
+		FMIDEBUG(cout << "DEBUG Parameter not found\n");
 	}
 	else
 	{
@@ -485,13 +446,10 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 
 map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &name)
 {
-	using boost::lexical_cast;
-
 	if (levelnameinfo.find(name) != levelnameinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetLevelFromDatabaseName() cache hit for " << name << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetLevelFromDatabaseName() cache hit for " << name << endl);
+
 		return levelnameinfo[name];
 	}
 
@@ -509,9 +467,7 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &nam
 
 	if (row.empty())
 	{
-#ifdef DEBUG
-		cout << "DEBUG Level not found\n";
-#endif
+		FMIDEBUG(cout << "DEBUG Level not found\n");
 	}
 	else
 	{
@@ -526,16 +482,13 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &nam
 
 map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNumber, long edition)
 {
-	using boost::lexical_cast;
-
-	string key = lexical_cast<string>(producerId) + "_" + lexical_cast<string>(levelNumber) + "_" +
-	             lexical_cast<string>(edition);
+	const string key = to_string(producerId) + "_" + to_string(levelNumber) + "_" +
+	             to_string(edition);
 
 	if (levelinfo.find(key) != levelinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetLevelFromGrib() cache hit for " << key << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetLevelFromGrib() cache hit for " << key << endl);
+
 		return levelinfo[key];
 	}
 
@@ -553,19 +506,14 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 
 	if (row.empty())
 	{
-#ifdef DEBUG
-		cout << "DEBUG Level not found\n";
-#endif
+		FMIDEBUG(cout << "DEBUG Level not found\n");
 	}
 	else
 	{
 		ret["id"] = row[0];
 		ret["name"] = row[1];
-		ret["grib1Number"] = lexical_cast<string>(levelNumber);
-
-		// param_grib1[key] = p
-		// gridparamid[key] = boost::lexical_cast<long> (row[0]);
-
+		ret["grib1Number"] = to_string(levelNumber);
+		
 		levelinfo[key] = ret;
 	}
 
@@ -575,12 +523,11 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const string &analtime,
                                                  const string &geom_name)
 {
-	string key = ref_prod + "_" + analtime + "_" + geom_name;
+	const string key = ref_prod + "_" + analtime + "_" + geom_name;
 	if (gridgeoms.count(key) > 0)
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGridGeoms() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGridGeoms() cache hit!" << endl);
+
 		return gridgeoms[key];
 	}
 
@@ -625,9 +572,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 {
 	if (geometryinfo.find(geom_name) != geometryinfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl);
 
 		return geometryinfo[geom_name];
 	}
@@ -659,7 +604,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 	ret["prjn_id"] = row[2];  // deprecated
 	ret["grid_type_id"] = row[2];
 
-	int grid_type_id = boost::lexical_cast<int>(row[2]);
+	int grid_type_id = std::stoi(row[2]);
 
 	query.str("");
 
@@ -825,16 +770,14 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
                                                        double dj, int gribedition, int gridtype)
 {
-	string key = boost::lexical_cast<string>(ni) + "_" + boost::lexical_cast<string>(nj) + "_" +
-	             boost::lexical_cast<string>(lat) + "_" + boost::lexical_cast<string>(lon) + "_" +
-	             boost::lexical_cast<string>(di) + "_" + boost::lexical_cast<string>(dj) + "_" +
-	             boost::lexical_cast<string>(gribedition) + "_" + boost::lexical_cast<string>(gridtype);
+	string key = to_string(ni) + "_" + to_string(nj) + "_" +
+	             to_string(lat) + "_" + to_string(lon) + "_" +
+	             to_string(di) + "_" + to_string(dj) + "_" +
+	             to_string(gribedition) + "_" + to_string(gridtype);
 
 	if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetGeometryDefinition() cache hit!" << endl);
 
 		return geometryinfo_fromarea[key];
 	}
@@ -856,7 +799,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 
 	query.str("");
 
-	int projection_id = boost::lexical_cast<int>(row[0]);
+	int projection_id = std::stoi(row[0]);
 
 	// TODO: for projections other than latlon, extra properties should be checked,
 	// such as south pole, orientation etc.
@@ -912,9 +855,8 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id
 {
 	if (producerinfo.count(producer_id) > 0)
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetProducerDefinition() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetProducerDefinition() cache hit!" << endl);
+
 		return producerinfo[producer_id];
 	}
 
@@ -965,7 +907,7 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
 
 	vector<string> row = FetchRow();
 
-	unsigned long int producer_id = boost::lexical_cast<unsigned long>(row[0]);
+	unsigned long int producer_id = std::stoul(row[0]);
 
 	if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
 
@@ -1024,7 +966,7 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 {
 	assert(!aggressive_cache);  // not supported yet
 
-	string key = boost::lexical_cast<string>(networkType) + "_" + boost::lexical_cast<string>(stationId);
+	string key = to_string(static_cast<int>(networkType)) + "_" + to_string(stationId);
 
 	if (stationinfo.find(key) != stationinfo.end()) return stationinfo[key];
 
@@ -1061,7 +1003,7 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 		case kLPNNNetwork:
 		case kRoadWeatherNetwork:
 		default:
-			throw runtime_error("Unsupported station network type: " + boost::lexical_cast<string>(networkType));
+			throw runtime_error("Unsupported station network type: " + to_string(static_cast<int>(networkType)));
 			break;
 		case kFmiSIDNetwork:
 			query << "JOIN station_network_mapping m ON (s.id = m.station_id AND "
@@ -1099,15 +1041,13 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long param_id, long fmi_level_id,
                                                         double fmi_level_value)
 {
-	string key = boost::lexical_cast<string>(producer_id) + "_" + boost::lexical_cast<string>(param_id) + "_" +
-	             boost::lexical_cast<string>(fmi_level_id) + "_" + boost::lexical_cast<string>(fmi_level_value);
+	string key = to_string(producer_id) + "_" + to_string(param_id) + "_" +
+	             to_string(fmi_level_id) + "_" + to_string(fmi_level_value);
 	stringstream ss;
 
 	if (leveltransforminfo.find(key) != leveltransforminfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetLevelTransform() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetLevelTransform() cache hit!" << endl);
 
 		return leveltransforminfo[key];
 	}
@@ -1145,18 +1085,16 @@ std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long p
 
 std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string &attribute)
 {
-	string key = boost::lexical_cast<string>(producer_id) + "_" + attribute;
+	string key = to_string(producer_id) + "_" + attribute;
 
 	if (producermetadatainfo.find(key) != producermetadatainfo.end())
 	{
-#ifdef DEBUG
-		cout << "DEBUG: GetProducerMetaData() cache hit!" << endl;
-#endif
+		FMIDEBUG(cout << "DEBUG: GetProducerMetaData() cache hit!" << endl);
 
 		return producermetadatainfo[key];
 	}
 
-	string query = "SELECT value FROM producer_meta WHERE producer_id = " + boost::lexical_cast<string>(producer_id) +
+	string query = "SELECT value FROM producer_meta WHERE producer_id = " + to_string(producer_id) +
 	               " AND attribute = '" + attribute + "'";
 
 	Query(query);
@@ -1244,63 +1182,47 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 			{
 				itsWorkingList[i] = 1;
 
-#ifdef DEBUG
-				cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl;
-#endif
+				FMIDEBUG(cout << "DEBUG: Idle worker returned with id " << itsWorkerList[i]->Id() << endl);
+
 				return itsWorkerList[i];
 			}
 			else if (itsWorkingList[i] == -1)
 			{
+				if (itsUsername.empty())
+				{
+					throw std::runtime_error("NFmiRadonDBPool: empty username");
+				}
+
+				if (itsPassword.empty())
+				{
+					throw std::runtime_error("NFmiRadonDBPool: empty password");
+				}
+
+				if (itsDatabase.empty())
+				{
+					throw std::runtime_error("NFmiRadonDBPool: empty database name");
+				}
+
+				if (itsHostname.empty())
+				{
+					throw std::runtime_error("NFmiRadonDBPool: empty hostname");
+				}
+				
 				// Create new connection
-				itsWorkerList[i] = new NFmiRadonDB(i);
-
-				itsWorkerList[i]->Connect();
-
-				if (itsUsername != "" && itsPassword != "")
-				{
-					itsWorkerList[i]->user_ = itsUsername;
-					itsWorkerList[i]->password_ = itsPassword;
-				}
-
-				if (itsDatabase != "")
-				{
-					itsWorkerList[i]->database_ = itsDatabase;
-				}
-
-				if (itsWorkerList[i]->database_.empty())
-				{
-					itsWorkerList[i]->database_ = "radon";
-				}
-
-				if (itsHostname != "")
-				{
-					itsWorkerList[i]->hostname_ = itsHostname;
-				}
-
-				if (itsWorkerList[i]->hostname_.empty())
-				{
-					itsWorkerList[i]->hostname_ = "vorlon";
-				}
-
-				itsWorkerList[i]->port_ = itsPort;
-				itsWorkerList[i]->Connect(itsWorkerList[i]->user_, itsWorkerList[i]->password_,
-				                          itsWorkerList[i]->database_, itsWorkerList[i]->hostname_,
-				                          itsWorkerList[i]->port_);
+				itsWorkerList[i] = new NFmiRadonDB(static_cast<short>(i));
+				itsWorkerList[i]->Connect(itsUsername, itsPassword, itsDatabase, itsHostname, itsPort);
 
 				itsWorkingList[i] = 1;
 
-#ifdef DEBUG
-				cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl;
-#endif
+				FMIDEBUG(cout << "DEBUG: New worker returned with id " << itsWorkerList[i]->Id() << endl);
+
 				return itsWorkerList[i];
 			}
 		}
 
-// All threads active
-#ifdef DEBUG
-		cout << "DEBUG: Waiting for worker release. Pool size=" << itsWorkerList.size() << endl;
+		// All threads active
+		FMIDEBUG(cout << "DEBUG: Waiting for worker release. Pool size=" << itsWorkerList.size() << endl);
 		assert(itsWorkerList.size() == itsWorkingList.size());
-#endif
 
 		usleep(100000);  // 100 ms
 	}
@@ -1318,9 +1240,7 @@ void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker)
 	theWorker->Rollback();
 	itsWorkingList[theWorker->Id()] = 0;
 
-#ifdef DEBUG
-	cout << "DEBUG: Worker released for id " << theWorker->Id() << endl;
-#endif
+	FMIDEBUG(cout << "DEBUG: Worker released for id " << theWorker->Id() << endl);
 }
 
 void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers)
@@ -1331,8 +1251,8 @@ void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers)
 
 	if (theMaxWorkers < itsMaxWorkers)
 		throw runtime_error("Making RadonDB pool size smaller is not supported (" +
-		                    boost::lexical_cast<string>(itsMaxWorkers) + " to " +
-		                    boost::lexical_cast<string>(theMaxWorkers) + ")");
+		                    to_string(itsMaxWorkers) + " to " +
+		                    to_string(theMaxWorkers) + ")");
 
 	itsMaxWorkers = theMaxWorkers;
 

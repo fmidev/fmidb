@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include "NFmiDatabase.h"
+
 #include "otlsettings.h"
 
 class NFmiOracle : public NFmiDatabase
