@@ -30,7 +30,7 @@ void NFmiRadonDB::Connect()
 	}
 	else
 	{
-		throw;
+		throw runtime_error("Environment variable RADON_NEONSCLIENT_PASSWORD must be set");
 	}
 
 	NFmiRadonDB::Connect("neons_client", password, "radon", "vorlon", 5432);
@@ -269,8 +269,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	query.str("");
 	query << "SELECT univ_id,scale,base FROM param_newbase WHERE"
-	      << " param_id = " << ret["id"]
-	      << " AND producer_id = " << producerId;
+	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId;
 
 	Query(query.str());
 	row = FetchRow();
