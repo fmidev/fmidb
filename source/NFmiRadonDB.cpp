@@ -270,7 +270,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 	// Get newbase information
 
 	query.str("");
-	query << "SELECT univ_id FROM param_newbase WHERE"
+	query << "SELECT univ_id,scale,base FROM param_newbase WHERE"
 	      << " param_id = " << ret["id"]
 	      << " AND producer_id = " << producerId;
 
@@ -280,10 +280,14 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 	if (!row.empty())
 	{
 		ret["univ_id"] = row[0];
+		ret["scale"] = row[1];
+		ret["base"] = row[2];
 	}
 	else
 	{
 		ret["univ_id"] = "";
+		ret["scale"] = "1";
+		ret["base"] = "0";
 	}
 
 	paramdbinfo[key] = ret;
