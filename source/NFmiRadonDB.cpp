@@ -165,8 +165,8 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string &parameterName,
-                                                              int levelId, double levelValue)
+map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string &parameterName, int levelId,
+                                                              double levelValue)
 {
 	string key = to_string(producerId) + "_" + parameterName + "_" + to_string(levelId) + "_" + to_string(levelValue);
 
@@ -204,8 +204,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	query.str("");
 	query << "SELECT table_version, number FROM param_grib1_v WHERE"
-	      << " param_id = " << ret["id"]
-	      << " AND producer_id = " << producerId
+	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId
 	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
 	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
@@ -228,8 +227,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	query.str("");
 	query << "SELECT discipline, category, number FROM param_grib2 WHERE"
-	      << " param_id = " << ret["id"]
-	      << " AND producer_id = " << producerId
+	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId
 	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
 	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
@@ -271,8 +269,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	query.str("");
 	query << "SELECT univ_id FROM param_newbase WHERE"
-	      << " param_id = " << ret["id"]
-	      << " AND producer_id = " << producerId;
+	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId;
 
 	Query(query.str());
 	row = FetchRow();
@@ -882,6 +879,12 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
+		case 6:
+			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			break;
+
 		default:
 			throw std::runtime_error("Unsupported database projection id: " + row[0]);
 	}
