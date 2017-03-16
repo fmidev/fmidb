@@ -44,6 +44,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	                                                          long levelId, double levelValue);
 	std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName,
 	                                                                int levelId = -1, double levelValue = 32700.f);
+	std::map<std::string, std::string> GetParameterPrecision(const std::string& paramName);
 
 	std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
 	std::map<std::string, std::string> GetLevelFromDatabaseName(const std::string& name);

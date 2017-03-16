@@ -444,6 +444,31 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 	return ret;
 }
 
+map<string, string> NFmiRadonDB::GetParameterPrecision(const std::string& paramName)
+{
+	map<string, string> ret;
+
+	stringstream query;
+	query << "SELECT pp.id, pp.precision FROM param_precision pp, param p  WHERE p.name = " << paramName
+	      << "' AND p.id = pp.param_id";
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	if (row.empty())
+	{
+		FMIDEBUG(cout << "DEBUG Parameter " << paramName << " not found\n");
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["precision"] = row[1];
+	}
+
+	return ret;
+}
+
 map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &name)
 {
 	if (levelnameinfo.find(name) != levelnameinfo.end())
