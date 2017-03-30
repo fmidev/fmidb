@@ -21,17 +21,17 @@ NFmiRadonDB::~NFmiRadonDB() { Disconnect(); }
 void NFmiRadonDB::Connect()
 {
 	string password;
-	const auto pw = getenv("RADON_NEONSCLIENT_PASSWORD");
+	const auto pw = getenv("RADON_RADONCLIENT_PASSWORD");
 	if (pw)
 	{
 		password = string(pw);
 	}
 	else
 	{
-		throw runtime_error("Environment variable RADON_NEONSCLIENT_PASSWORD must be set");
+		throw runtime_error("Environment variable RADON_RADONCLIENT_PASSWORD must be set");
 	}
 
-	NFmiRadonDB::Connect("neons_client", password, "radon", "vorlon", 5432);
+	NFmiRadonDB::Connect("radon_client", password, "radon", "vorlon", 5432);
 }
 
 void NFmiRadonDB::Connect(const std::string &user, const std::string &password, const std::string &database,
