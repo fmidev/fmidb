@@ -21,17 +21,17 @@ NFmiRadonDB::~NFmiRadonDB() { Disconnect(); }
 void NFmiRadonDB::Connect()
 {
 	string password;
-	const auto pw = getenv("RADON_NEONSCLIENT_PASSWORD");
+	const auto pw = getenv("RADON_RADONCLIENT_PASSWORD");
 	if (pw)
 	{
 		password = string(pw);
 	}
 	else
 	{
-		throw runtime_error("Environment variable RADON_NEONSCLIENT_PASSWORD must be set");
+		throw runtime_error("Environment variable RADON_RADONCLIENT_PASSWORD must be set");
 	}
 
-	NFmiRadonDB::Connect("neons_client", password, "radon", "vorlon", 5432);
+	NFmiRadonDB::Connect("radon_client", password, "radon", "vorlon", 5432);
 }
 
 void NFmiRadonDB::Connect(const std::string &user, const std::string &password, const std::string &database,
@@ -439,6 +439,31 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 		ret["level_value"] = row[6];
 
 		paramnetcdfinfo[key] = ret;
+	}
+
+	return ret;
+}
+
+map<string, string> NFmiRadonDB::GetParameterPrecision(const std::string& paramName)
+{
+	map<string, string> ret;
+
+	stringstream query;
+	query << "SELECT pp.id, pp.precision FROM param_precision pp, param p  WHERE p.name = " << paramName
+	      << "' AND p.id = pp.param_id";
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	if (row.empty())
+	{
+		FMIDEBUG(cout << "DEBUG Parameter " << paramName << " not found\n");
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["precision"] = row[1];
 	}
 
 	return ret;

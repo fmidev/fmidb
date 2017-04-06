@@ -24,7 +24,7 @@ NFmiNeonsDB::NFmiNeonsDB(short theId) : NFmiOracle(), itsId(theId)
 	}
 	else
 	{
-		throw;
+		throw std::runtime_error("Environment variable NEONS_NEONSCLIENT_PASSWORD not defined");
 	}
 }
 
