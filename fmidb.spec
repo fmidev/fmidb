@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 17.2.15
+Version: 17.4.6
 Release: 1.el7.fmi
 License: FMI
 Group: Development/Tools
@@ -59,6 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Apr  6 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.4.6-1.fmi
+- User radon_client for radon
+- Add function to get decimal precision for a parameter
 * Wed Feb 15 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.2.15-1.fmi
 - Cleanup and username/password fixes
 * Fri Feb  3 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.2.3-1.fmi
