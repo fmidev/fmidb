@@ -449,7 +449,7 @@ map<string, string> NFmiRadonDB::GetParameterPrecision(const std::string& paramN
 	map<string, string> ret;
 
 	stringstream query;
-	query << "SELECT pp.id, pp.precision FROM param_precision pp, param p  WHERE p.name = " << paramName
+	query << "SELECT pp.id, pp.precision FROM param_precision pp, param p  WHERE p.name = '" << paramName
 	      << "' AND p.id = pp.param_id";
 
 	Query(query.str());
