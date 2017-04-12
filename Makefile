@@ -31,6 +31,7 @@ LDFLAGS_DEBUG =  -shared
 
 INCLUDES = -I$(includedir) \
            -I/usr/include/oracle \
+           -I/usr/include/oracle/11.2/client64 \
 	   -iquote/usr/include/pqxx
 
 LIBS =  -L$(LIBDIR) \
