@@ -1096,6 +1096,7 @@ std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long p
 
 	if (row.empty())
 	{
+		leveltransforminfo[key] = ret;
 		return ret;
 	}
 
@@ -1133,6 +1134,24 @@ std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string &att
 
 	producermetadatainfo[key] = row[0];
 	return row[0];
+}
+
+double NFmiRadonDB::GetProbabilityLimitForStation(long stationId, const std::string& paramName)
+{
+	std::stringstream ss;
+	ss << "SELECT probability_limit FROM station_probability_limit_v WHERE station_id = " 
+	   << stationId << " AND param_name = '" << paramName << "'";
+
+	Query(ss.str());
+
+	auto row = FetchRow();
+
+	if (row.empty())
+	{
+		return kFloatMissing;
+	}
+
+	return stod(row[0]);
 }
 
 NFmiRadonDBPool *NFmiRadonDBPool::itsInstance = NULL;

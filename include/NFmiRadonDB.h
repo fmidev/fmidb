@@ -65,6 +65,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id,
 	                                                     double source_level_value);
 
+	double GetProbabilityLimitForStation(long stationId, const std::string& paramName);
 	std::string GetProducerMetaData(long producer_id, const std::string& attribute);
 
 	short Id() { return itsId; }
