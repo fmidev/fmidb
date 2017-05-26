@@ -10,7 +10,7 @@ const float kFloatMissing = 32700.f;
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
-NFmiRadonDB &NFmiRadonDB::Instance()
+NFmiRadonDB& NFmiRadonDB::Instance()
 {
 	static NFmiRadonDB instance_;
 	return instance_;
@@ -34,8 +34,8 @@ void NFmiRadonDB::Connect()
 	NFmiRadonDB::Connect("radon_client", password, "radon", "vorlon", 5432);
 }
 
-void NFmiRadonDB::Connect(const std::string &user, const std::string &password, const std::string &database,
-                          const std::string &hostname, int port)
+void NFmiRadonDB::Connect(const std::string& user, const std::string& password, const std::string& database,
+                          const std::string& hostname, int port)
 {
 	assert(!user.empty());
 	assert(!password.empty());
@@ -70,7 +70,7 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 
 	if (row.empty())
 	{
-// gridparamid[key] = -1;
+		// gridparamid[key] = -1;
 		FMIDEBUG(cout << "DEBUG Producer not found\n");
 	}
 	else
@@ -141,7 +141,7 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string &parameterName, int levelId,
+map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, const string& parameterName, int levelId,
                                                               double levelValue)
 {
 	string key = to_string(producerId) + "_" + parameterName + "_" + to_string(levelId) + "_" + to_string(levelValue);
@@ -269,9 +269,8 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
                                                        long timeRangeIndicator, long levelId, double levelValue)
 {
-	string key = to_string(producerId) + "_" + to_string(tableVersion) + "_" +
-		to_string(paramId) + "_" + to_string(timeRangeIndicator) + "_" +
-		to_string(levelId) + to_string(levelValue);
+	string key = to_string(producerId) + "_" + to_string(tableVersion) + "_" + to_string(paramId) + "_" +
+	             to_string(timeRangeIndicator) + "_" + to_string(levelId) + to_string(levelValue);
 
 	if (paramgrib1info.find(key) != paramgrib1info.end())
 	{
@@ -325,9 +324,8 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId,
                                                        long levelId, double levelValue)
 {
-	string key = to_string(producerId) + "_" + to_string(discipline) + "_" +
-		to_string(category) + "_" + to_string(paramId) + "_" +
-		to_string(levelId) + "_" + to_string(levelValue);
+	string key = to_string(producerId) + "_" + to_string(discipline) + "_" + to_string(category) + "_" +
+	             to_string(paramId) + "_" + to_string(levelId) + "_" + to_string(levelValue);
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
@@ -391,11 +389,10 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string &paramName, long levelId,
+map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string& paramName, long levelId,
                                                         double levelValue)
 {
-	const string key = to_string(producerId) + "_" + paramName + "_" + to_string(levelId) + "_" +
-		to_string(levelValue);
+	const string key = to_string(producerId) + "_" + paramName + "_" + to_string(levelId) + "_" + to_string(levelValue);
 
 	if (paramnetcdfinfo.find(key) != paramnetcdfinfo.end())
 	{
@@ -469,7 +466,7 @@ map<string, string> NFmiRadonDB::GetParameterPrecision(const std::string& paramN
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &name)
+map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& name)
 {
 	if (levelnameinfo.find(name) != levelnameinfo.end())
 	{
@@ -507,8 +504,7 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string &nam
 
 map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNumber, long edition)
 {
-	const string key = to_string(producerId) + "_" + to_string(levelNumber) + "_" +
-	             to_string(edition);
+	const string key = to_string(producerId) + "_" + to_string(levelNumber) + "_" + to_string(edition);
 
 	if (levelinfo.find(key) != levelinfo.end())
 	{
@@ -538,15 +534,15 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 		ret["id"] = row[0];
 		ret["name"] = row[1];
 		ret["grib1Number"] = to_string(levelNumber);
-		
+
 		levelinfo[key] = ret;
 	}
 
 	return ret;
 }
 
-vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const string &analtime,
-                                                 const string &geom_name)
+vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime,
+                                                 const string& geom_name)
 {
 	const string key = ref_prod + "_" + analtime + "_" + geom_name;
 	if (gridgeoms.count(key) > 0)
@@ -593,7 +589,7 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string &ref_prod, const s
 	return ret;
 }
 
-map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
+map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 {
 	if (geometryinfo.find(geom_name) != geometryinfo.end())
 	{
@@ -795,10 +791,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string &geom_name)
 map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
                                                        double dj, int gribedition, int gridtype)
 {
-	string key = to_string(ni) + "_" + to_string(nj) + "_" +
-	             to_string(lat) + "_" + to_string(lon) + "_" +
-	             to_string(di) + "_" + to_string(dj) + "_" +
-	             to_string(gribedition) + "_" + to_string(gridtype);
+	string key = to_string(ni) + "_" + to_string(nj) + "_" + to_string(lat) + "_" + to_string(lon) + "_" +
+	             to_string(di) + "_" + to_string(dj) + "_" + to_string(gribedition) + "_" + to_string(gridtype);
 
 	if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
 	{
@@ -920,7 +914,7 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id
  *
  */
 
-map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_name)
+map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_name)
 {
 	stringstream query;
 
@@ -939,7 +933,7 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string &producer_na
 	return GetProducerDefinition(row[0]);
 }
 
-string NFmiRadonDB::GetLatestTime(const std::string &ref_prod, const std::string &geom_name, unsigned int offset)
+string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
 	stringstream query;
 
@@ -1066,8 +1060,8 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long param_id, long fmi_level_id,
                                                         double fmi_level_value)
 {
-	string key = to_string(producer_id) + "_" + to_string(param_id) + "_" +
-	             to_string(fmi_level_id) + "_" + to_string(fmi_level_value);
+	string key = to_string(producer_id) + "_" + to_string(param_id) + "_" + to_string(fmi_level_id) + "_" +
+	             to_string(fmi_level_value);
 	stringstream ss;
 
 	if (leveltransforminfo.find(key) != leveltransforminfo.end())
@@ -1096,6 +1090,7 @@ std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long p
 
 	if (row.empty())
 	{
+		leveltransforminfo[key] = ret;
 		return ret;
 	}
 
@@ -1108,7 +1103,7 @@ std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long p
 	return ret;
 }
 
-std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string &attribute)
+std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& attribute)
 {
 	string key = to_string(producer_id) + "_" + attribute;
 
@@ -1135,9 +1130,27 @@ std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string &att
 	return row[0];
 }
 
-NFmiRadonDBPool *NFmiRadonDBPool::itsInstance = NULL;
+double NFmiRadonDB::GetProbabilityLimitForStation(long stationId, const std::string& paramName)
+{
+	std::stringstream ss;
+	ss << "SELECT probability_limit FROM station_probability_limit_v WHERE station_id = " << stationId
+	   << " AND param_name = '" << paramName << "'";
 
-NFmiRadonDBPool *NFmiRadonDBPool::Instance()
+	Query(ss.str());
+
+	auto row = FetchRow();
+
+	if (row.empty())
+	{
+		return kFloatMissing;
+	}
+
+	return stod(row[0]);
+}
+
+NFmiRadonDBPool* NFmiRadonDBPool::itsInstance = NULL;
+
+NFmiRadonDBPool* NFmiRadonDBPool::Instance()
 {
 	if (!itsInstance)
 	{
@@ -1182,7 +1195,7 @@ NFmiRadonDBPool::~NFmiRadonDBPool()
  *
  */
 
-NFmiRadonDB *NFmiRadonDBPool::GetConnection()
+NFmiRadonDB* NFmiRadonDBPool::GetConnection()
 {
 	/*
 	 *  1 --> active
@@ -1232,7 +1245,7 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
 				{
 					throw std::runtime_error("NFmiRadonDBPool: empty hostname");
 				}
-				
+
 				// Create new connection
 				itsWorkerList[i] = new NFmiRadonDB(static_cast<short>(i));
 				itsWorkerList[i]->Connect(itsUsername, itsPassword, itsDatabase, itsHostname, itsPort);
@@ -1260,7 +1273,7 @@ NFmiRadonDB *NFmiRadonDBPool::GetConnection()
  * to pool.
  */
 
-void NFmiRadonDBPool::Release(NFmiRadonDB *theWorker)
+void NFmiRadonDBPool::Release(NFmiRadonDB* theWorker)
 {
 	theWorker->Rollback();
 	itsWorkingList[theWorker->Id()] = 0;
@@ -1275,8 +1288,7 @@ void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers)
 	// Making pool smaller is not supported
 
 	if (theMaxWorkers < itsMaxWorkers)
-		throw runtime_error("Making RadonDB pool size smaller is not supported (" +
-		                    to_string(itsMaxWorkers) + " to " +
+		throw runtime_error("Making RadonDB pool size smaller is not supported (" + to_string(itsMaxWorkers) + " to " +
 		                    to_string(theMaxWorkers) + ")");
 
 	itsMaxWorkers = theMaxWorkers;
