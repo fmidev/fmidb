@@ -937,9 +937,30 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
 {
 	stringstream query;
 
+	// First check if we have grid or previ producer
+
+	query << "SELECT class_id FROM fmi_producer WHERE name = '" << ref_prod << "'";
+
+	Query(query.str());
+
+	auto row = FetchRow();
+
+	if (row.size() == 0)
+	{
+		return "";
+	}
+
+	string tableName = "as_grid_v";
+
+	if (row[0] == "3")
+	{
+		tableName = "as_previ_v";
+	}
+
+	query.str("");
+
 	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
-	      << "FROM as_grid_v"
-	      << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
+	      << "FROM " << tableName << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
 
 	if (!geom_name.empty())
 	{
@@ -952,7 +973,7 @@ string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string
 
 	Query(query.str());
 
-	vector<string> row = FetchRow();
+	row = FetchRow();
 
 	if (row.size() == 0)
 	{
