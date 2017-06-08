@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 17.5.26
+Version: 17.6.8
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Jun  8 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.6.8-1.fmi
+- Fetch latest time for previ producers
 * Fri May 26 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.5.26-1.fmi
 - Fetch station probability limits from database
 * Tue Apr 11 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.4.11-1.fmi
@@ -120,7 +122,7 @@ rm -rf $RPM_BUILD_ROOT
 - Bugfix for radon level xref
 * Mon Nov 16 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.16-1.fmi
 - Change producer 20014 to cover all external road weather stations (Sweden,Norway,Estonia)
-* Tue Nov 11 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.10-1.fmi
+* Wed Nov 11 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.11-1.fmi
 - Re-throw pqx::unique_violation
 * Thu Nov  5 2015 Mikko Partio <mikko.partio@fmi.fi> - 15.11.5-1.fmi
 - Correct rounding of coordinates when fetching geom info (case icemap2)
@@ -158,13 +160,13 @@ rm -rf $RPM_BUILD_ROOT
 - Lots of radon changes
 * Mon Dec 29 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.29-1.fmi
 - New release
-* Wed Dec 18 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.18-1.fmi
+* Thu Dec 18 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.18-1.fmi
 - Removing oracle-specific stuff from NFmiODBC
 * Wed Dec 17 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.12.17-1.fmi
 - Radon additions
-* Tue Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-2.fmi
+* Thu Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-2.fmi
 - Semicolon-fix
-* Tue Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-1.fmi
+* Thu Oct 30 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.30-1.fmi
 - Level support for grib1 parameter definition
 * Tue Oct 28 2014 Mikko Partio <mikko.partio@fmi.fi> - 14.10.28-1.fmi
 - Changes wrt radon
