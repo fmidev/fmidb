@@ -929,7 +929,7 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_na
     {
         unsigned long int producer_id = std::stoul(row[0]);
         if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
-        return GetProducerDefinition(row[0]);        
+        return GetProducerDefinition(producer_id);        
     }
 
     map<string, string> empty;
