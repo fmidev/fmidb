@@ -925,12 +925,15 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_na
 	Query(query.str());
 
 	vector<string> row = FetchRow();
+    if (!row.empty())
+    {
+        unsigned long int producer_id = std::stoul(row[0]);
+        if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
+        return GetProducerDefinition(producer_id);        
+    }
 
-	unsigned long int producer_id = std::stoul(row[0]);
-
-	if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
-
-	return GetProducerDefinition(row[0]);
+    map<string, string> empty;
+    return empty;
 }
 
 string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
