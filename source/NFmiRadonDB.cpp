@@ -104,12 +104,6 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
 	string prod_id = to_string(producer_id);
 	string univ_id = to_string(universal_id);
 
-	/*map <string, string> producer_info = GetProducerDefinition(producer_id);
-
-	if (producer_info.empty())
-	  return ret;
-  */
-
 	stringstream query;
 
 	query << "SELECT "
@@ -157,112 +151,86 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	map<string, string> ret;
 
-	// Fetch database information
-
-	query << "SELECT id, name, version FROM param WHERE name = '" << parameterName << "'";
+	query << "SELECT "
+	      // Database information
+	      << "p.id, "
+	      << "p.name, "
+	      << "p.version, "
+	      // Grib1 information
+	      << "g1.table_version, "
+	      << "g1.number, "
+	      // Producer specific grib2
+	      << "g2.discipline, "
+	      << "g2.category, "
+	      << "g2.number, "
+	      // WMO template grib2
+	      << "g2t.discipline AS template_discipline, "
+	      << "g2t.category AS template_category, "
+	      << "g2t.number AS template_number, "
+	      // Newbase
+	      << "n.univ_id, "
+	      << "n.scale, "
+	      << "n.base, "
+	      // Precision
+	      << "pp.precision "
+	      // Rest of the SQL
+	      << "FROM "
+	      << "param p "
+	      << "LEFT OUTER JOIN param_grib1_v g1 "
+	      << "ON ( "
+	      << "p.id = g1.param_id AND "
+	      << "g1.producer_id = " << producerId << " AND "
+	      << "(g1.level_id IS NULL OR g1.level_id = " << levelId << ") AND "
+	      << "(g1.level_value IS NULL OR g1.level_value = " << levelValue << ")"
+	      << ") "
+	      << "LEFT OUTER JOIN param_grib2_v g2 "
+	      << "ON ( "
+	      << "g2.param_id = p.id AND "
+	      << "g2.producer_id = " << producerId << " AND "
+	      << "(g2.level_id IS NULL OR g2.level_id = " << levelId << ") AND "
+	      << "(g2.level_value IS NULL OR g2.level_value = " << levelValue << ")"
+	      << ") "
+	      << "LEFT OUTER JOIN param_grib2_template g2t "
+	      << "ON ( "
+	      << "g2t.param_id = p.id"
+	      << ") "
+	      << "LEFT OUTER JOIN param_newbase n "
+	      << "ON ("
+	      << "p.id = n.param_id AND "
+	      << "n.producer_id = " << producerId << ") "
+	      << "LEFT OUTER JOIN param_precision pp "
+	      << "ON (p.id = pp.param_id) "
+	      << "WHERE "
+	      << "p.name = '" << parameterName << "'"
+	      << "ORDER BY "
+	      << "g1.level_id NULLS LAST, g1.level_value NULLS LAST,"
+	      << "g2.level_id NULLS LAST, g2.level_value NULLS LAST";
+	;
 
 	Query(query.str());
 	auto row = FetchRow();
 
 	if (row.empty())
 	{
+		paramdbinfo[key] = ret;
 		return ret;
 	}
 
 	ret["id"] = row[0];
 	ret["name"] = row[1];
 	ret["version"] = row[2];
-
-	// Fetch grib1 information
-
-	// levelId is database level id (not grib level id!)
-
-	query.str("");
-	query << "SELECT table_version, number FROM param_grib1_v WHERE"
-	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId
-	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
-	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
-
-	Query(query.str());
-	row = FetchRow();
-
-	if (!row.empty())
-	{
-		ret["grib1_table_version"] = row[0];
-		ret["grib1_number"] = row[1];
-	}
-	else
-	{
-		ret["grib1_table_version"] = "";
-		ret["grib1_number"] = "";
-	}
-
-	// Get grib2 information
-
-	query.str("");
-	query << "SELECT discipline, category, number FROM param_grib2 WHERE"
-	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId
-	      << " AND (level_id IS NULL OR level_id = " << levelId << ")"
-	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
-	      << " ORDER BY level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
-
-	Query(query.str());
-	row = FetchRow();
-
-	if (!row.empty())
-	{
-		ret["grib2_discipline"] = row[0];
-		ret["grib2_category"] = row[1];
-		ret["grib2_number"] = row[2];
-	}
-	else
-	{
-		query.str("");
-		query << "SELECT discipline, category, number FROM "
-		      << "param_grib2_template t "
-		      << "WHERE param_id = " << ret["id"];
-
-		Query(query.str());
-		row = FetchRow();
-
-		if (!row.empty())
-		{
-			ret["grib2_discipline"] = row[0];
-			ret["grib2_category"] = row[1];
-			ret["grib2_number"] = row[2];
-		}
-		else
-		{
-			ret["grib2_discipline"] = "";
-			ret["grib2_category"] = "";
-			ret["grib2_number"] = "";
-		}
-	}
-
-	// Get newbase information
-
-	query.str("");
-	query << "SELECT univ_id,scale,base FROM param_newbase WHERE"
-	      << " param_id = " << ret["id"] << " AND producer_id = " << producerId;
-
-	Query(query.str());
-	row = FetchRow();
-
-	if (!row.empty())
-	{
-		ret["univ_id"] = row[0];
-		ret["scale"] = row[1];
-		ret["base"] = row[2];
-	}
-	else
-	{
-		ret["univ_id"] = "";
-		ret["scale"] = "1";
-		ret["base"] = "0";
-	}
+	ret["grib1_table_version"] = row[3];
+	ret["grib1_number"] = row[4];
+	ret["grib2_discipline"] = row[5].empty() ? row[8] : row[5];
+	ret["grib2_category"] = row[6].empty() ? row[9] : row[6];
+	ret["grib2_number"] = row[7].empty() ? row[10] : row[7];
+	ret["univ_id"] = row[11];
+	ret["scale"] = row[12];
+	ret["base"] = row[13];
+	ret["precision"] = row[14];
 
 	paramdbinfo[key] = ret;
+
 	return ret;
 }
 
@@ -925,58 +893,58 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_na
 	Query(query.str());
 
 	vector<string> row = FetchRow();
-    if (!row.empty())
-    {
-        unsigned long int producer_id = std::stoul(row[0]);
-        if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
-        return GetProducerDefinition(producer_id);        
-    }
 
-    map<string, string> empty;
-    return empty;
+	if (!row.empty())
+	{
+		return GetProducerDefinition(std::stoul(row[0]));
+	}
+
+	map<string, string> empty;
+	return empty;
 }
 
 string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
-	stringstream query;
+	auto prod = GetProducerDefinition(ref_prod);
+	if (prod.empty()) return "";
 
+	return GetLatestTime(std::stoi(prod["producer_id"]), geom_name, offset);
+}
+
+string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name, unsigned int offset)
+{
 	// First check if we have grid or previ producer
 
-	query << "SELECT class_id FROM fmi_producer WHERE name = '" << ref_prod << "'";
+	auto prod = GetProducerDefinition(producer_id);
 
-	Query(query.str());
-
-	auto row = FetchRow();
-
-	if (row.size() == 0)
+	if (prod.empty())
 	{
 		return "";
 	}
 
 	string tableName = "as_grid_v";
 
-	if (row[0] == "3")
+	if (prod["producer_class"] == "3")
 	{
 		tableName = "as_previ_v";
 	}
 
-	query.str("");
+	stringstream query;
 
 	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
-	      << "FROM " << tableName << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
+	      << "FROM " << tableName << " WHERE producer_id = " << producer_id << " AND record_count > 0 ";
 
 	if (!geom_name.empty())
 	{
 		query << " AND geometry_name = '" << geom_name << "'";
 	}
 
-	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC LIMIT 1 "
-	         "OFFSET "
-	      << offset;
+	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name "
+	      << " ORDER BY max_analysis_time DESC LIMIT 1 OFFSET " << offset;
 
 	Query(query.str());
 
-	row = FetchRow();
+	auto row = FetchRow();
 
 	if (row.size() == 0)
 	{
