@@ -925,58 +925,59 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_na
 	Query(query.str());
 
 	vector<string> row = FetchRow();
-    if (!row.empty())
-    {
-        unsigned long int producer_id = std::stoul(row[0]);
-        if (producerinfo.find(producer_id) != producerinfo.end()) return producerinfo[producer_id];
-        return GetProducerDefinition(producer_id);        
-    }
 
-    map<string, string> empty;
-    return empty;
+	if (!row.empty())
+	{
+		return GetProducerDefinition(std::stoul(row[0]));
+	}
+
+	map<string, string> empty;
+	return empty;
 }
 
 string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
-	stringstream query;
+	auto prod = GetProducerDefinition(ref_prod);
+	if (prod.empty()) return "";
 
+	return GetLatestTime(std::stoi(prod["producer_id"]), geom_name, offset);
+}
+
+string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name, unsigned int offset)
+{
 	// First check if we have grid or previ producer
 
-	query << "SELECT class_id FROM fmi_producer WHERE name = '" << ref_prod << "'";
+	auto prod = GetProducerDefinition(producer_id);
 
-	Query(query.str());
-
-	auto row = FetchRow();
-
-	if (row.size() == 0)
+	if (prod.empty())
 	{
 		return "";
 	}
 
 	string tableName = "as_grid_v";
 
-	if (row[0] == "3")
+	if (prod["producer_class"] == "3")
 	{
 		tableName = "as_previ_v";
 	}
 
-	query.str("");
+	stringstream query;
 
 	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
-	      << "FROM " << tableName << " WHERE producer_name = '" << ref_prod << "' AND record_count > 0 ";
+	      << "FROM " << tableName << " WHERE producer_id = " << producer_id << " AND record_count > 0 ";
 
 	if (!geom_name.empty())
 	{
 		query << " AND geometry_name = '" << geom_name << "'";
 	}
 
-	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name ORDER BY max_analysis_time DESC LIMIT 1 "
-	         "OFFSET "
+	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name "
+	      << " ORDER BY max_analysis_time DESC LIMIT 1 OFFSET "
 	      << offset;
 
 	Query(query.str());
 
-	row = FetchRow();
+	auto row = FetchRow();
 
 	if (row.size() == 0)
 	{
