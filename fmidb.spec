@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 17.6.8
+Version: 17.8.10
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Aug 10 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.8.10-1.fmi
+- Bugfixes and optimizations
 * Thu Jun  8 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.6.8-1.fmi
 - Fetch latest time for previ producers
 * Fri May 26 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.5.26-1.fmi
