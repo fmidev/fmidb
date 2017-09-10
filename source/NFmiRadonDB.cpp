@@ -1122,6 +1122,47 @@ std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& att
 	return row[0];
 }
 
+map<string, string> NFmiRadonDB::GetTableName(long producerId, const string& analysisTime, const string& geomName)
+{
+       const string key = to_string(producerId) + "_" + analysisTime + "_" + geomName;
+
+	if (tablenameinfo.find(key) != tablenameinfo.end())
+	{
+		FMIDEBUG(cout << "DEBUG: GetTableName() cache hit!" << endl);
+               return tablenameinfo[key];
+       }
+
+       stringstream ss;
+
+       ss << "SELECT "
+          << "id, schema_name, table_name, partition_name, record_count "
+          << "FROM as_grid_v "
+          << "WHERE geometry_name = '" << geomName << "'"
+          << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analysisTime << "'"
+          << ", '" << analysisTime << "')"
+          << " AND producer_id = " << producerId;
+
+       Query(ss.str());
+
+       const auto row = FetchRow();
+
+       map<string, string> ret;
+
+       if (row.empty())
+       {
+               return ret;
+       }
+
+       ret["id"] = row[0];
+       ret["schema_name"] = row[1];
+       ret["table_name"] = row[2];
+       ret["partition_name"] = row[3];
+       ret["record_count"] = row[4];
+
+       tablenameinfo[key] = ret;
+       return ret;
+}
+
 double NFmiRadonDB::GetProbabilityLimitForStation(long stationId, const std::string& paramName)
 {
 	std::stringstream ss;

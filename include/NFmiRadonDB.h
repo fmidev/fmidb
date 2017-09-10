@@ -65,9 +65,10 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	                                                        bool aggressive_cache = false);  // overload for icao
 	std::map<std::string, std::string> GetLevelTransform(long producer_id, long paramId, long source_level_id,
 	                                                     double source_level_value);
-
 	double GetProbabilityLimitForStation(long stationId, const std::string& paramName);
 	std::string GetProducerMetaData(long producer_id, const std::string& attribute);
+	std::map<std::string, std::string> GetTableName(long producerId, const std::string& analysisTime,
+	                                                const std::string& geomName);
 
 	short Id() { return itsId; }
    private:
@@ -88,6 +89,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::map<std::string, std::string>> stationinfo;
 	std::map<std::string, std::map<std::string, std::string>> leveltransforminfo;
 	std::map<std::string, std::string> producermetadatainfo;
+	std::map<std::string, std::map<std::string, std::string>> tablenameinfo;
 
 	short itsId;  // Only for connection pooling
 };
