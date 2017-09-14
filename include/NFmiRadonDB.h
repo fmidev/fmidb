@@ -36,6 +36,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 
 	std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
 	std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
+	void WarmGrib1ParameterCache(long producerId);
 	std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
 	                                                         long timeRangeIndicator, long levelId, double levelValue);
 	std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category,
