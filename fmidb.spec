@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 17.9.18
+Version: 18.1.10
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jan 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.1.10-1.fmi
+- Improved station information fetching
 * Mon Sep 18 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.9.18-1.fmi
 - Add function to warm grib1 parameter cache
 * Fri Sep 15 2017 Mikko Partio <mikko.partio@fmi.fi> - 17.9.15-1.fmi
