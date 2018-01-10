@@ -18,8 +18,13 @@ NFmiRadonDB& NFmiRadonDB::Instance()
 	return instance_;
 }
 
-NFmiRadonDB::NFmiRadonDB(short theId) : NFmiPostgreSQL(), itsId(theId) {}
-NFmiRadonDB::~NFmiRadonDB() { Disconnect(); }
+NFmiRadonDB::NFmiRadonDB(short theId) : NFmiPostgreSQL(), itsId(theId)
+{
+}
+NFmiRadonDB::~NFmiRadonDB()
+{
+	Disconnect();
+}
 void NFmiRadonDB::Connect()
 {
 	string password;
@@ -123,7 +128,8 @@ map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long produce
 
 	vector<string> row = FetchRow();
 
-	if (row.empty()) return ret;
+	if (row.empty())
+		return ret;
 
 	ret["id"] = row[0];
 	ret["name"] = row[1];
@@ -283,7 +289,8 @@ void NFmiRadonDB::WarmGrib1ParameterCache(long producerId)
 		{
 			const auto row = FetchRow();
 
-			if (row.empty()) break;
+			if (row.empty())
+				break;
 
 			const auto id = row[0];
 			const auto name = row[1];
@@ -765,7 +772,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			Query(query.str());
 			row = FetchRow();
 
-			if (row.empty()) return map<string, string>();
+			if (row.empty())
+				return map<string, string>();
 
 			ret["ni"] = row[0];
 			ret["nj"] = row[1];
@@ -799,7 +807,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			Query(query.str());
 			row = FetchRow();
 
-			if (row.empty()) return map<string, string>();
+			if (row.empty())
+				return map<string, string>();
 
 			ret["ni"] = row[0];
 			ret["nj"] = row[1];
@@ -833,7 +842,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			Query(query.str());
 			row = FetchRow();
 
-			if (row.empty()) return map<string, string>();
+			if (row.empty())
+				return map<string, string>();
 
 			ret["ni"] = row[0];
 			ret["nj"] = row[1];
@@ -861,7 +871,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			Query(query.str());
 			row = FetchRow();
 
-			if (row.empty()) return map<string, string>();
+			if (row.empty())
+				return map<string, string>();
 
 			ret["ni"] = row[0];
 			ret["nj"] = row[1];
@@ -894,7 +905,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			Query(query.str());
 			row = FetchRow();
 
-			if (row.empty()) return map<string, string>();
+			if (row.empty())
+				return map<string, string>();
 
 			ret["nj"] = row[0];
 			ret["first_point_lat"] = row[1];
@@ -1064,7 +1076,8 @@ map<string, string> NFmiRadonDB::GetProducerDefinition(const string& producer_na
 string NFmiRadonDB::GetLatestTime(const std::string& ref_prod, const std::string& geom_name, unsigned int offset)
 {
 	auto prod = GetProducerDefinition(ref_prod);
-	if (prod.empty()) return "";
+	if (prod.empty())
+		return "";
 
 	return GetLatestTime(std::stoi(prod["producer_id"]), geom_name, offset);
 }
@@ -1133,15 +1146,12 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
                                                       bool aggressive_cache)
 {
-	assert(!aggressive_cache);  // not supported yet
-
 	string key = to_string(static_cast<int>(networkType)) + "_" + to_string(stationId);
 
-	if (stationinfo.find(key) != stationinfo.end()) return stationinfo[key];
+	if (stationinfo.find(key) != stationinfo.end())
+		return stationinfo[key];
 
 	stringstream query;
-
-	map<string, string> ret;
 
 	query << "SELECT s.id,"
 	      << " s.name,"
@@ -1163,48 +1173,73 @@ map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork net
 	      << "LEFT OUTER JOIN station_network_mapping rw ON (s.id = "
 	         "rw.station_id AND rw.network_id = 4) "
 	      << "LEFT OUTER JOIN station_network_mapping fs ON (s.id = "
-	         "fs.station_id AND fs.network_id = 5) ";
+	         "fs.station_id AND fs.network_id = 5) "
+	      << "JOIN station_network_mapping m ON (s.id = m.station_id AND m.network_id = "
+	      << static_cast<int>(networkType);
 
-	switch (networkType)
+	if (!aggressive_cache)
 	{
-		case kWMONetwork:
-		case kICAONetwork:
-		case kLPNNNetwork:
-		case kRoadWeatherNetwork:
-		default:
-			throw runtime_error("Unsupported station network type: " + to_string(static_cast<int>(networkType)));
-			break;
-		case kFmiSIDNetwork:
-			query << "JOIN station_network_mapping m ON (s.id = m.station_id AND "
-			         "m.network_id = 5 AND "
-			         "m.local_station_id = '"
-			      << stationId << "')";
-			break;
+		query << " AND m.local_station_id = '" << stationId << "')";
+	}
+	else
+	{
+		query << ")";
 	}
 
 	Query(query.str());
 
-	auto row = FetchRow();
-
-	if (row.empty())
+	while (true)
 	{
-		return ret;
+		auto row = FetchRow();
+
+		if (row.empty())
+		{
+			break;
+		}
+
+		map<string, string> stat;
+
+		stat["id"] = row[0];
+		stat["station_name"] = row[1];
+		stat["longitude"] = row[2];
+		stat["latitude"] = row[3];
+		stat["altitude"] = row[4];
+		stat["wmoid"] = row[5];
+		stat["icaoid"] = row[6];
+		stat["lpnn"] = row[7];
+		stat["rwid"] = row[8];
+		stat["fmisid"] = row[9];
+
+		string localId;
+
+		switch (networkType)
+		{
+			default:
+			case kWMONetwork:
+				localId = stat["wmoid"];
+				break;
+			case kICAONetwork:
+				localId = stat["icaoid"];
+				break;
+			case kLPNNNetwork:
+				localId = stat["lpnn"];
+				break;
+			case kRoadWeatherNetwork:
+				localId = stat["rwid"];
+				break;
+			case kFmiSIDNetwork:
+				localId = stat["fmisid"];
+				break;
+		}
+
+		string key = to_string(static_cast<int>(networkType)) + "_" + localId;
+		stationinfo[key] = stat;
 	}
 
-	ret["id"] = row[0];
-	ret["station_name"] = row[1];
-	ret["longitude"] = row[2];
-	ret["latitude"] = row[3];
-	ret["altitude"] = row[4];
-	ret["wmoid"] = row[5];
-	ret["icaoid"] = row[6];
-	ret["lpnn"] = row[7];
-	ret["rwid"] = row[8];
-	ret["fmisid"] = row[9];
+	if (stationinfo.find(key) != stationinfo.end())
+		return stationinfo[key];
 
-	stationinfo[key] = ret;
-
-	return ret;
+	return map<string, string>();
 }
 
 std::map<string, string> NFmiRadonDB::GetLevelTransform(long producer_id, long param_id, long fmi_level_id,
@@ -1282,43 +1317,43 @@ std::string NFmiRadonDB::GetProducerMetaData(long producer_id, const string& att
 
 map<string, string> NFmiRadonDB::GetTableName(long producerId, const string& analysisTime, const string& geomName)
 {
-       const string key = to_string(producerId) + "_" + analysisTime + "_" + geomName;
+	const string key = to_string(producerId) + "_" + analysisTime + "_" + geomName;
 
 	if (tablenameinfo.find(key) != tablenameinfo.end())
 	{
 		FMIDEBUG(cout << "DEBUG: GetTableName() cache hit!" << endl);
-               return tablenameinfo[key];
-       }
+		return tablenameinfo[key];
+	}
 
-       stringstream ss;
+	stringstream ss;
 
-       ss << "SELECT "
-          << "id, schema_name, table_name, partition_name, record_count "
-          << "FROM as_grid_v "
-          << "WHERE geometry_name = '" << geomName << "'"
-          << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analysisTime << "'"
-          << ", '" << analysisTime << "')"
-          << " AND producer_id = " << producerId;
+	ss << "SELECT "
+	   << "id, schema_name, table_name, partition_name, record_count "
+	   << "FROM as_grid_v "
+	   << "WHERE geometry_name = '" << geomName << "'"
+	   << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analysisTime << "'"
+	   << ", '" << analysisTime << "')"
+	   << " AND producer_id = " << producerId;
 
-       Query(ss.str());
+	Query(ss.str());
 
-       const auto row = FetchRow();
+	const auto row = FetchRow();
 
-       map<string, string> ret;
+	map<string, string> ret;
 
-       if (row.empty())
-       {
-               return ret;
-       }
+	if (row.empty())
+	{
+		return ret;
+	}
 
-       ret["id"] = row[0];
-       ret["schema_name"] = row[1];
-       ret["table_name"] = row[2];
-       ret["partition_name"] = row[3];
-       ret["record_count"] = row[4];
+	ret["id"] = row[0];
+	ret["schema_name"] = row[1];
+	ret["table_name"] = row[2];
+	ret["partition_name"] = row[3];
+	ret["record_count"] = row[4];
 
-       tablenameinfo[key] = ret;
-       return ret;
+	tablenameinfo[key] = ret;
+	return ret;
 }
 
 double NFmiRadonDB::GetProbabilityLimitForStation(long stationId, const std::string& paramName)
@@ -1474,7 +1509,8 @@ void NFmiRadonDBPool::Release(NFmiRadonDB* theWorker)
 
 void NFmiRadonDBPool::MaxWorkers(int theMaxWorkers)
 {
-	if (theMaxWorkers == itsMaxWorkers) return;
+	if (theMaxWorkers == itsMaxWorkers)
+		return;
 
 	// Making pool smaller is not supported
 
