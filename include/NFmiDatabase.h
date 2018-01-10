@@ -9,6 +9,7 @@
 #endif
 
 #if defined(DEBUG)
+#include <iostream>
 #define FMIDEBUG(Expr) do { Expr; } while(0)
 #else
 #define FMIDEBUG(Expr)
