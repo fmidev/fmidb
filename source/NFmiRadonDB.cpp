@@ -753,9 +753,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 	map<string, string> ret;
 
-	ret["geom_id"] = row[0];
-	ret["prjn_name"] = row[1];
-	ret["prjn_id"] = row[2];  // deprecated
+	ret["id"] = row[0];
+	ret["name"] = row[1];
 	ret["grid_type_id"] = row[2];
 
 	int grid_type_id = std::stoi(row[2]);
