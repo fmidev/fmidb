@@ -604,7 +604,7 @@ string NFmiRadonDB::GetNewbaseNameFromUnivId(unsigned long univ_id)
 	string ret;
 	stringstream q;
 
-	q << "SELECT p.name FROM param_newbase_name p WHERE p.id = " << univ_id;
+	q << "SELECT p.name FROM param_newbase_name p WHERE p.univ_id = " << univ_id;
 	Query(q.str());
 
 	vector<string> row = FetchRow();
