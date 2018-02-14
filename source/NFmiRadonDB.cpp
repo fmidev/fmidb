@@ -599,6 +599,27 @@ map<string, string> NFmiRadonDB::GetParameterPrecision(const std::string& paramN
 	return ret;
 }
 
+string NFmiRadonDB::GetNewbaseNameFromUnivId(unsigned long univ_id)
+{
+	string ret;
+	stringstream q;
+
+	q << "SELECT p.name FROM param_newbase_name p WHERE p.id = " << univ_id;
+	Query(q.str());
+
+	vector<string> row = FetchRow();
+	if (row.empty())
+	{
+		FMIDEBUG(cout << "DEBUG Parameter not found: " << univ_id << "\n");
+	}
+	else
+	{
+		ret = row[0];
+	}
+	return ret;
+}
+
+
 map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& name)
 {
 	if (levelnameinfo.find(name) != levelnameinfo.end())
