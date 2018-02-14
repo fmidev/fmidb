@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.2.8
+Version: 18.2.14
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,7 +59,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Wed Jan 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.8-1.fmi
+* Wed Feb 14 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.14-1.fmi
+- Add function to get newbase name from univ id
+* Thu Feb  8 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.8-1.fmi
 - radon GetGeometryDefinition change
 * Wed Jan 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.1.10-1.fmi
 - Improved station information fetching
