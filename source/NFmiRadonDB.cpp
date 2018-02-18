@@ -1150,7 +1150,7 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 	}
 
 	query.str("");
-	query << "SELECT max(analysis_time) FROM " << row[2];
+	query << "SELECT max(analysis_time::timestamp) FROM " << row[2];
 
 	Query(query.str());
 
