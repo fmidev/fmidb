@@ -31,12 +31,16 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	void Connect(const std::string& user, const std::string& password, const std::string& database,
 	             const std::string& hostname, const int port = 5432);
 
-	std::string ClassName() const { return "NFmiRadonDB"; }
+	std::string ClassName() const
+	{
+		return "NFmiRadonDB";
+	}
 	static NFmiRadonDB& Instance();
 
 	std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
 	std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
 	void WarmGrib1ParameterCache(long producerId);
+	void WarmGrib2ParameterCache(long producerId);
 	std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
 	                                                         long timeRangeIndicator, long levelId, double levelValue);
 	std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category,
@@ -72,7 +76,11 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::string> GetTableName(long producerId, const std::string& analysisTime,
 	                                                const std::string& geomName);
 
-	short Id() { return itsId; }
+	short Id()
+	{
+		return itsId;
+	}
+
    private:
 	// These maps are used for caching
 
@@ -106,12 +114,31 @@ class NFmiRadonDBPool
 	NFmiRadonDB* GetConnection();
 	void Release(NFmiRadonDB* theWorker);
 	void MaxWorkers(int theMaxWorkers);
-	int MaxWorkers() const { return itsMaxWorkers; }
-	void Username(const std::string& theUsername) { itsUsername = theUsername; }
-	void Password(const std::string& thePassword) { itsPassword = thePassword; }
-	void Database(const std::string& theDatabase) { itsDatabase = theDatabase; }
-	void Hostname(const std::string& theHostname) { itsHostname = theHostname; }
-	void Port(int thePort) { itsPort = thePort; }
+	int MaxWorkers() const
+	{
+		return itsMaxWorkers;
+	}
+	void Username(const std::string& theUsername)
+	{
+		itsUsername = theUsername;
+	}
+	void Password(const std::string& thePassword)
+	{
+		itsPassword = thePassword;
+	}
+	void Database(const std::string& theDatabase)
+	{
+		itsDatabase = theDatabase;
+	}
+	void Hostname(const std::string& theHostname)
+	{
+		itsHostname = theHostname;
+	}
+	void Port(int thePort)
+	{
+		itsPort = thePort;
+	}
+
    private:
 	NFmiRadonDBPool();
 
