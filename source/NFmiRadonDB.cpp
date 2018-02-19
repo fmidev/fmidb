@@ -8,7 +8,7 @@ using namespace std;
 
 const float kFloatMissing = 32700.f;
 
-once_flag paramGrib1Cache;
+once_flag paramGrib1Cache, paramGrib2Cache;
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
@@ -369,6 +369,122 @@ void NFmiRadonDB::WarmGrib1ParameterCache(long producerId)
 	});
 }
 
+void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
+{
+	call_once(paramGrib2Cache, [&]() {
+
+		const auto firstHybridLevel = GetProducerMetaData(producerId, "first hybrid level number");
+		const auto lastHybridLevel = GetProducerMetaData(producerId, "last hybrid level number");
+
+		int first = 0, last = 0;
+
+		if (!firstHybridLevel.empty() && !lastHybridLevel.empty())
+		{
+			first = stoi(firstHybridLevel);
+			last = stoi(lastHybridLevel);
+		}
+
+		stringstream query;
+
+		// No param_grib2_template yet
+
+		query << "SELECT "
+		      << "p.id, p.name, p.version, p.interpolation_id, g.level_value,"
+		      << "g.discipline, g.category, g.number, l.grib_level_id "
+		      << "FROM param_grib2 g JOIN param p ON (g.param_id = p.id) "
+		      << " LEFT OUTER JOIN level_grib1 l ON (g.level_id = l.level_id) "
+		      << "WHERE "
+		      << " g.producer_id = " << producerId << " AND (g.level_id IN (3,6) OR g.level_id IS NULL)"
+		      << " GROUP BY 1,2,3,4,5,6,7,8,9 "
+		      << " ORDER BY l.grib_level_id NULLS LAST, g.level_value NULLS LAST";
+
+		Query(query.str());
+
+		while (true)
+		{
+			const auto row = FetchRow();
+
+			if (row.empty())
+				break;
+
+			const auto id = row[0];
+			const auto name = row[1];
+			const auto version = row[2];
+			const auto interp = row[3];
+			const auto level_value = row[4];
+			const auto discipline = row[5];
+			const auto category = row[6];
+			const auto number = row[7];
+			const auto grib_level = row[8];
+
+			map<string, string> ret;
+
+			ret["id"] = id;
+			ret["name"] = name;
+			ret["version"] = version;
+			ret["grib2_discipline"] = discipline;
+			ret["grib2_category"] = category;
+			ret["grib2_number"] = number;
+			ret["interpolation_method"] = interp;
+
+			string keybase = to_string(producerId) + "_" + discipline + "_" + category + "_" + number + "_";
+
+			auto AddToCache = [&](int levelType) {
+				vector<int> levels;
+
+				if (levelType == 103)
+				{
+					levels = {0, 2, 10};
+				}
+				else if (levelType == 105)
+				{
+					levels.resize(last - first + 1);
+					iota(levels.begin(), levels.end(), first);
+				}
+
+				for (const auto& i : levels)
+				{
+					const auto _key = keybase + to_string(levelType) + "_" + to_string(i);
+
+					// We don't overwrite existing entries!
+					if (paramgrib2info.find(_key) == paramgrib2info.end())
+					{
+						paramgrib2info[_key] = ret;
+					}
+				}
+			};
+
+			/// Level type and values set
+			if (!grib_level.empty() && !level_value.empty())
+			{
+				const auto _key = keybase + grib_level + "_" + level_value;
+
+				if (paramgrib2info.find(_key) == paramgrib2info.end())
+				{
+					paramgrib2info[_key] = ret;
+				}
+			}
+			// Level type set, but level value is NULL
+			else if (!grib_level.empty())
+			{
+				AddToCache(stoi(grib_level));
+			}
+			// Level type is NULL
+			else
+			{
+				vector<int> levelTypes({103, 105});
+
+				for (auto ltype : levelTypes)
+				{
+					AddToCache(ltype);
+				}
+			}
+		}
+
+		FMIDEBUG(cout << "DEBUG: Grib2ParameterCache warmed with " << paramgrib2info.size() << " entries" << endl);
+	});
+}
+
 map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
                                                        long timeRangeIndicator, long levelId, double levelValue)
 {
@@ -618,7 +734,6 @@ string NFmiRadonDB::GetNewbaseNameFromUnivId(unsigned long univ_id)
 	}
 	return ret;
 }
-
 
 map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& name)
 {
