@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.2.19
+Version: 18.4.10
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -12,7 +12,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: lib%{LIBNAME}.so
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
-BuildRequires: boost-devel >= 1.55
+BuildRequires: boost-devel >= 1.66
 BuildRequires: libpqxx-devel
 Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Apr 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.4.10-1.fmi
+- New boost
 * Mon Feb 18 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.19-1.fmi
 - Bugfix for GetLatestTime()
 * Wed Feb 14 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.14-1.fmi
