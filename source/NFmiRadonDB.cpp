@@ -1033,7 +1033,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		}
 		case 6:
 		{
-			query << "SELECT nj, first_lat, first_lon, last_lat, last_lon"
+			query << "SELECT nj, first_lat, first_lon, last_lat, last_lon,"
 			         "n, scanning_mode, points_along_parallels FROM "
 			         "geom_reduced_gaussian_v WHERE geometry_id = "
 			      << row[0];
