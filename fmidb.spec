@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.4.10
+Version: 18.7.30
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Jul 30 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.7.30-1.fmi
+- Bugfix for rgg query
 * Wed Apr 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.4.10-1.fmi
 - New boost
 * Mon Feb 18 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.19-1.fmi
