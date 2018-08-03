@@ -146,16 +146,12 @@ objdir:
 	@mkdir -p $(objdir)
 	@mkdir -p $(LIBDIR)
 
-rpm:    clean
-	mkdir -p $(rpmsourcedir) ; \
-        if [ -e $(LIB).spec ]; then \
-          tar -C .. --exclude .svn -cf $(rpmsourcedir)/lib$(LIB).tar $(LIB) ; \
-          gzip -f $(rpmsourcedir)/lib$(LIB).tar ; \
-          rpmbuild -ta $(rpmsourcedir)/lib$(LIB).tar.gz ; \
-          rm -f $(rpmsourcedir)/lib$(LIB).tar.gz ; \
-        else \
-          echo $(rpmerr); \
-        fi;
+rpm:    clean $(LIB).spec
+	rm -f $(rpmsourcedir)/lib$(LIB).tar.gz
+	mkdir -p $(rpmsourcedir)
+	tar -C .. --exclude .svn -czf $(rpmsourcedir)/lib$(LIB).tar.gz $(LIB)
+	rpmbuild -ta $(rpmsourcedir)/lib$(LIB).tar.gz
+	rm -f $(rpmsourcedir)/lib$(LIB).tar.gz
 
 .SUFFIXES: $(SUFFIXES) .cpp
 
