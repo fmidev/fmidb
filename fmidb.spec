@@ -14,7 +14,7 @@ BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost-devel >= 1.66
 BuildRequires: libpqxx-devel
-Requires: oracle-instantclient-basic >= 11.2.0.3.0
+# Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
 FMI database library
