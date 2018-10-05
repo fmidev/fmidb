@@ -390,12 +390,12 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 
 		query << "SELECT "
 		      << "p.id, p.name, p.version, p.interpolation_id, g.level_value,"
-		      << "g.discipline, g.category, g.number, l.grib_level_id "
+		      << "g.discipline, g.category, g.number, l.grib_level_id, g.type_of_statistical_processing "
 		      << "FROM param_grib2 g JOIN param p ON (g.param_id = p.id) "
-		      << " LEFT OUTER JOIN level_grib1 l ON (g.level_id = l.level_id) "
+		      << " LEFT OUTER JOIN level_grib2 l ON (g.level_id = l.level_id) "
 		      << "WHERE "
 		      << " g.producer_id = " << producerId << " AND (g.level_id IN (3,6) OR g.level_id IS NULL)"
-		      << " GROUP BY 1,2,3,4,5,6,7,8,9 "
+		      << " GROUP BY 1,2,3,4,5,6,7,8,9,10 "
 		      << " ORDER BY l.grib_level_id NULLS LAST, g.level_value NULLS LAST";
 
 		Query(query.str());
@@ -416,6 +416,7 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 			const auto category = row[6];
 			const auto number = row[7];
 			const auto grib_level = row[8];
+			const auto type_of_statistical_processing = row[0];
 
 			map<string, string> ret;
 
@@ -426,8 +427,10 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 			ret["grib2_category"] = category;
 			ret["grib2_number"] = number;
 			ret["interpolation_method"] = interp;
+			ret["type_of_statistical_processing"] = type_of_statistical_processing;
 
-			string keybase = to_string(producerId) + "_" + discipline + "_" + category + "_" + number + "_";
+			string keybase = to_string(producerId) + "_" + discipline + "_" + category + "_" + number + "_" +
+			                 type_of_statistical_processing + "_";
 
 			auto AddToCache = [&](int levelType) {
 				vector<int> levels;
@@ -571,10 +574,12 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 }
 
 map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long discipline, long category, long paramId,
-                                                       long levelId, double levelValue)
+                                                       long levelId, double levelValue,
+                                                       long typeOfStatisticalProcessing)
 {
 	string key = to_string(producerId) + "_" + to_string(discipline) + "_" + to_string(category) + "_" +
-	             to_string(paramId) + "_" + to_string(levelId) + "_" + to_string(levelValue);
+	             to_string(paramId) + "_" + to_string(levelId) + "_" + to_string(levelValue) + "_" +
+	             to_string(typeOfStatisticalProcessing);
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
@@ -596,6 +601,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	      << " AND number = " << paramId
 	      << " AND (g.level_id IS NULL OR (g.level_id = l.level_id AND l.grib_level_id = " << levelId << "))"
 	      << " AND (level_value IS NULL OR level_value = " << levelValue << ")"
+	      << " AND g.type_of_statistical_processing = " << typeOfStatisticalProcessing
 	      << " ORDER BY g.level_id NULLS LAST, level_value NULLS LAST LIMIT 1";
 
 	Query(query.str());
@@ -610,7 +616,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 		query << "SELECT p.id, p.name, p.version, p.interpolation_id, "
 		      << "NULL, NULL FROM param p, param_grib2_template t WHERE "
 		      << "p.id = t.param_id AND t.discipline = " << discipline << " AND t.category = " << category << " AND "
-		      << "t.number = " << paramId;
+		      << "t.number = " << paramId << " AND t.type_of_statistical_processing = " << typeOfStatisticalProcessing;
 
 		Query(query.str());
 		row = FetchRow();
@@ -632,6 +638,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	ret["interpolation_method"] = row[4];
 	ret["level_id"] = row[5];
 	ret["level_value"] = row[6];
+	ret["type_of_statistical_processing"] = to_string(typeOfStatisticalProcessing);
 
 	paramgrib2info[key] = ret;
 

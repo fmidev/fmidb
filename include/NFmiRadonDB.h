@@ -44,7 +44,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::string> GetParameterFromGrib1(long producerId, long tableVersion, long paramId,
 	                                                         long timeRangeIndicator, long levelId, double levelValue);
 	std::map<std::string, std::string> GetParameterFromGrib2(long producerId, long discipline, long category,
-	                                                         long paramId, long levelId, double levelValue);
+	                                                         long paramId, long levelId, double levelValue,
+	                                                         long typeOfStatisticalProcessing = -1);
 	std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName,
 	                                                          long levelId, double levelValue);
 	std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName,
