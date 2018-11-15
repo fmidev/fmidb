@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
+#include <iomanip>
 
 using namespace std;
 
@@ -1098,7 +1099,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 
 	query.str("");
 
-	int projection_id = std::stoi(row[0]);
+	int projection_id = stoi(row[0]);
 
 	// TODO: for projections other than latlon, extra properties should be checked,
 	// such as south pole, orientation etc.
@@ -1107,27 +1108,27 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 	{
 		case 1:
 			query << "SELECT geometry_id, geometry_name FROM geom_latitude_longitude_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 2:
 			query << "SELECT geometry_id, geometry_name FROM geom_stereographic_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 4:
 			query << "SELECT geometry_id, geometry_name FROM geom_rotated_latitude_longitude_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 5:
 			query << "SELECT geometry_id, geometry_name FROM geom_lambert_conformal_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 6:
 			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << lon
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 
@@ -1309,8 +1310,8 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 
 		query.str("");
 
-		query << "SELECT distinct analysis_time::timestamp FROM " << row[0] << " ORDER BY analysis_time DESC LIMIT 1 OFFSET "
-		      << offset;
+		query << "SELECT distinct analysis_time::timestamp FROM " << row[0]
+		      << " ORDER BY analysis_time DESC LIMIT 1 OFFSET " << offset;
 
 		Query(query.str());
 
