@@ -1235,54 +1235,94 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 		return "";
 	}
 
-	string tableName = "as_grid_v";
-
-	if (prod["producer_class"] == "3")
-	{
-		tableName = "as_previ_v";
-	}
+	string asTableName = "as_grid_v";
+	string partitioningType;
 
 	stringstream query;
 
-	query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
-	      << "FROM " << tableName << " WHERE producer_id = " << producer_id << " AND record_count > 0 ";
-
-	if (!geom_name.empty())
+	if (prod["producer_class"] == "3")
 	{
-		query << " AND geometry_name = '" << geom_name << "'";
+		asTableName = "as_previ_v";
+		partitioningType = "ANALYSISTIME";
 	}
-
-	query << " GROUP BY min_analysis_time, max_analysis_time, partition_name "
-	      << " ORDER BY max_analysis_time DESC LIMIT 1 OFFSET " << offset;
-
-	Query(query.str());
-
-	auto row = FetchRow();
-
-	if (row.size() == 0)
+	else
 	{
-		return "";
-	}
+		// A bit of a hack: we assume that a single producer has only single type of partitioning
+		// period defined. That is the case as of now, but nothing is stopping from someone to
+		// do otherwise.
 
-	if (row[0] == row[1])
-	{
-		// analysis time partitioning
-		return row[0];
+		query << "SELECT distinct partitioning_period FROM table_meta_grid WHERE producer_id = " << producer_id;
+
+		Query(query.str());
+		auto row = FetchRow();
+
+		assert(!row.empty());
+		partitioningType = row[0];
 	}
 
 	query.str("");
-	query << "SELECT max(analysis_time::timestamp) FROM " << row[2];
 
-	Query(query.str());
-
-	row = FetchRow();
-
-	if (row.empty())
+	if (partitioningType == "ANALYSISTIME")
 	{
-		return "";
-	}
+		query << "SELECT min_analysis_time::timestamp, max_analysis_time::timestamp, partition_name "
+		      << "FROM " << asTableName << " WHERE producer_id = " << producer_id << " AND record_count > 0 ";
 
-	return row[0];
+		if (!geom_name.empty())
+		{
+			query << " AND geometry_name = '" << geom_name << "'";
+		}
+
+		query << " GROUP BY min_analysis_time, max_analysis_time, partition_name "
+		      << " ORDER BY max_analysis_time DESC LIMIT 1 OFFSET " << offset;
+
+		Query(query.str());
+
+		auto row = FetchRow();
+
+		if (row.size() == 0)
+		{
+			return "";
+		}
+
+		assert(row[0] == row[1]);
+		return row[0];
+	}
+	else
+	{
+		// With PG11 we could just do SELECT max(analysis_time) FROM grid_tablename
+
+		query << "SELECT distinct table_name FROM " << asTableName << " WHERE producer_id = " << producer_id
+		      << " AND record_count > 0";
+
+		if (!geom_name.empty())
+		{
+			query << " AND geometry_name = '" << geom_name << "'";
+		}
+
+		Query(query.str());
+		auto row = FetchRow();
+
+		if (row.empty())
+		{
+			return "";
+		}
+
+		query.str("");
+
+		query << "SELECT distinct analysis_time::timestamp FROM " << row[0] << " ORDER BY analysis_time DESC LIMIT 1 OFFSET "
+		      << offset;
+
+		Query(query.str());
+
+		row = FetchRow();
+
+		if (row.empty())
+		{
+			return "";
+		}
+
+		return row[0];
+	}
 }
 
 map<string, string> NFmiRadonDB::GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
