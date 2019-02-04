@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.11.16
+Version: 18.2.4
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Feb  4 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.2.4-1.fmi
+- Minor change to GetGridGeoms
 * Fri Nov 16 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.11.16-1.fmi
 - Improvements for latest analysis time and geometry fetch
 * Fri Oct  5 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.10.5-1.fmi
