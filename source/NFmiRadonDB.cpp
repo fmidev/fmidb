@@ -832,7 +832,7 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const s
 	stringstream query;
 
 	query << "SELECT g.geometry_id, a.table_name, a.id, "
-	         "g.geom_name"
+	         "g.geom_name, a.schema_name, a.partition_name"
 	      << " FROM as_grid_v a, fmi_producer f, geom_v g"
 	      << " WHERE a.record_count > 0"
 	      << " AND f.name = '" << ref_prod << "'"
