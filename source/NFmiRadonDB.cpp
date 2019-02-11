@@ -168,14 +168,17 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 	      // Grib1 information
 	      << "g1.table_version, "
 	      << "g1.number, "
+	      << "g1.timerange_indicator, "
 	      // Producer specific grib2
 	      << "g2.discipline, "
 	      << "g2.category, "
 	      << "g2.number, "
+	      << "g2.type_of_statistical_processing, "
 	      // WMO template grib2
 	      << "g2t.discipline AS template_discipline, "
 	      << "g2t.category AS template_category, "
 	      << "g2t.number AS template_number, "
+	      << "g2t.type_of_statistical_processing, "
 	      // Newbase
 	      << "n.univ_id, "
 	      << "n.scale, "
@@ -225,18 +228,39 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 		return ret;
 	}
 
+	//  0 p.id
+	//  1 p.name
+	//  2 p.version
+	//  3 g1.table_version
+	//  4 g1.number
+	//  5 g1.timerange_indicator
+	//  6 g2.discipline
+	//  7 g2.category
+	//  8 g2.number
+	//  9 g2.type_of_statistical_processing
+	// 10 g2t.discipline AS template_discipline
+	// 11 g2t.category AS template_category
+	// 12 g2t.number AS template_number
+	// 13 g2t.type_of_statistical_processing
+	// 14 n.univ_id
+	// 15 n.scale
+	// 16 n.base
+	// 17 pp.precision
+
 	ret["id"] = row[0];
 	ret["name"] = row[1];
 	ret["version"] = row[2];
 	ret["grib1_table_version"] = row[3];
 	ret["grib1_number"] = row[4];
-	ret["grib2_discipline"] = row[5].empty() ? row[8] : row[5];
-	ret["grib2_category"] = row[6].empty() ? row[9] : row[6];
-	ret["grib2_number"] = row[7].empty() ? row[10] : row[7];
-	ret["univ_id"] = row[11];
-	ret["scale"] = row[12];
-	ret["base"] = row[13];
-	ret["precision"] = row[14];
+	ret["grib1_timerange_indicator"] = row[5];
+	ret["grib2_discipline"] = row[6].empty() ? row[10] : row[6];
+	ret["grib2_category"] = row[7].empty() ? row[11] : row[7];
+	ret["grib2_number"] = row[8].empty() ? row[12] : row[8];
+	ret["grib2_type_of_statistical_processing"] = row[9].empty() ? row[13] : row[9];
+	ret["univ_id"] = row[14];
+	ret["scale"] = row[15];
+	ret["base"] = row[16];
+	ret["precision"] = row[17];
 
 	paramdbinfo[key] = ret;
 
