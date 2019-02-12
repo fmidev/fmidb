@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 19.2.4
+Version: 19.2.12
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
@@ -59,6 +59,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Feb 12 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.2.12-1.fmi
+- Minor change to GetParameterFromDatabaseName()
 * Mon Feb  4 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.2.4-1.fmi
 - Minor change to GetGridGeoms
 * Fri Nov 16 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.11.16-1.fmi
