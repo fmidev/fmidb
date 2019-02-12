@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.2.4
+Version: 19.2.4
 Release: 1.el7.fmi
 License: MIT
 Group: Development/Tools
