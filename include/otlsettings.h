@@ -14,6 +14,11 @@
 
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wterminate"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 #include <otlv4.h> // include the OTL 4.0 header file
 #pragma GCC pop_options
 

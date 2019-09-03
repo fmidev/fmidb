@@ -20,12 +20,12 @@ CC = /usr/bin/g++
 
 # Default compiler flags
 
-CFLAGS = -fPIC -std=c++11 -DUNIX -O2 -DNDEBUG $(MAINFLAGS) 
+CFLAGS = -fPIC -std=c++11 -DPQXX_HIDE_EXP_OPTIONAL -DUNIX -O2 -g -DNDEBUG $(MAINFLAGS)
 LDFLAGS = -shared 
 
 # Special modes
 
-CFLAGS_DEBUG = -fPIC -std=c++11 -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
+CFLAGS_DEBUG = -fPIC -std=c++11 -DPQXX_HIDE_EXP_OPTIONAL -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 
 LDFLAGS_DEBUG =  -shared
 

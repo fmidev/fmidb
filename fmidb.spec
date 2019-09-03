@@ -3,18 +3,21 @@
 Summary: fmidb library
 Name: lib%{LIBNAME}
 Version: 19.2.12
-Release: 1.el7.fmi
+Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
 URL: http://www.fmi.fi
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: lib%{LIBNAME}.so
+BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost-devel >= 1.66
 BuildRequires: libpqxx-devel
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
+
+%global debug_package %{nil}
 
 %description
 FMI database library
