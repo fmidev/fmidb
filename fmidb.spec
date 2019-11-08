@@ -17,8 +17,6 @@ BuildRequires: boost-devel >= 1.66
 BuildRequires: libpqxx-devel
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
-%global debug_package %{nil}
-
 %description
 FMI database library
 
