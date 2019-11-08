@@ -93,8 +93,8 @@ vpath %.o $(objdir)
 
 # How to install
 
-INSTALL_PROG = install -m 775
-INSTALL_DATA = install -m 664
+INSTALL_PROG = install -m 755
+INSTALL_DATA = install -m 644
 
 # The files to be compiled
 
@@ -140,7 +140,7 @@ install:
 	  $(INSTALL_DATA) include/$$hdr $(includedir)/$$hdr; \
 	done
 
-	 $(INSTALL_DATA) lib/* $(libdir)
+	 $(INSTALL_PROG) lib/* $(libdir)
 
 objdir:
 	@mkdir -p $(objdir)

@@ -8,15 +8,21 @@
 #define OVERRIDE
 #endif
 
-#if defined(DEBUG)
 #include <iostream>
-#define FMIDEBUG(Expr) do { Expr; } while(0)
+static const char* fmideb = getenv("FMIDB_DEBUG");
+
+// clang-format off
+
+#if defined(DEBUG)
+#define FMIDEBUG(Expr) do { Expr; } while (0)
 #else
-#define FMIDEBUG(Expr)
+#define FMIDEBUG(Expr) if (fmideb) do { Expr; } while (0)
 #endif
 
-#include <string>
+// clang-format on
+
 #include <sstream>
+#include <string>
 #include <vector>
 
 class NFmiDatabase

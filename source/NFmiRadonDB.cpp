@@ -412,8 +412,6 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 
 		stringstream query;
 
-		// No param_grib2_template yet
-
 		query << "SELECT "
 		      << "p.id, p.name, p.version, p.interpolation_id, g.level_value,"
 		      << "g.discipline, g.category, g.number, l.grib_level_id, g.type_of_statistical_processing "
@@ -421,8 +419,11 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 		      << " LEFT OUTER JOIN level_grib2 l ON (g.level_id = l.level_id) "
 		      << "WHERE "
 		      << " g.producer_id = " << producerId << " AND (g.level_id IN (3,6) OR g.level_id IS NULL)"
-		      << " GROUP BY 1,2,3,4,5,6,7,8,9,10 "
-		      << " ORDER BY l.grib_level_id NULLS LAST, g.level_value NULLS LAST";
+		      << "UNION ALL SELECT "
+		      << "p2.id, p2.name, p2.version, p2.interpolation_id, NULL::numeric, "
+		      << "t.discipline, t.category, t.number, NULL::int, t.type_of_statistical_processing "
+		      << "FROM param_grib2_template t JOIN param p2 ON (t.param_id = p2.id) "
+		      << " GROUP BY 1,2,3,4,5,6,7,8,9,10";
 
 		Query(query.str());
 
@@ -442,7 +443,7 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 			const auto category = row[6];
 			const auto number = row[7];
 			const auto grib_level = row[8];
-			const auto type_of_statistical_processing = row[0];
+			const auto type_of_statistical_processing = row[9];
 
 			map<string, string> ret;
 
@@ -459,7 +460,7 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 			                 type_of_statistical_processing + "_";
 
 			auto AddToCache = [&](int levelType) {
-				vector<int> levels;
+				vector<double> levels;
 
 				if (levelType == 103)
 				{
@@ -474,7 +475,6 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 				for (const auto& i : levels)
 				{
 					const auto _key = keybase + to_string(levelType) + "_" + to_string(i);
-
 					// We don't overwrite existing entries!
 					if (paramgrib2info.find(_key) == paramgrib2info.end())
 					{
@@ -604,8 +604,8 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
                                                        long typeOfStatisticalProcessing)
 {
 	string key = to_string(producerId) + "_" + to_string(discipline) + "_" + to_string(category) + "_" +
-	             to_string(paramId) + "_" + to_string(levelId) + "_" + to_string(levelValue) + "_" +
-	             to_string(typeOfStatisticalProcessing);
+	             to_string(paramId) + "_" + to_string(typeOfStatisticalProcessing) + "_" + to_string(levelId) + "_" +
+	             to_string(levelValue);
 
 	if (paramgrib2info.find(key) != paramgrib2info.end())
 	{
