@@ -3,7 +3,7 @@
 Summary: fmidb library
 Name: lib%{LIBNAME}
 Version: 18.10.5
-Release: 1.el7.fmi
+Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
 URL: http://www.fmi.fi
