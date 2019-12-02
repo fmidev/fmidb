@@ -1281,7 +1281,10 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 		Query(query.str());
 		auto row = FetchRow();
 
-		assert(!row.empty());
+		if (row.empty())
+		{
+			return "";
+		}
 		partitioningType = row[0];
 	}
 
