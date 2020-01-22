@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 18.10.5
+Version: 19.11.8
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -10,6 +10,7 @@ URL: http://www.fmi.fi
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: lib%{LIBNAME}.so
+BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost-devel >= 1.66
@@ -59,6 +60,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Nov  8 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.11.8-1.fmi
+- Env variable FMIDB_DEBUG controls printing of SQL clauses
+* Tue Feb 12 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.2.12-1.fmi
+- Minor change to GetParameterFromDatabaseName()
+* Mon Feb  4 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.2.4-1.fmi
+- Minor change to GetGridGeoms
+* Fri Nov 16 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.11.16-1.fmi
+- Improvements for latest analysis time and geometry fetch
 * Fri Oct  5 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.10.5-1.fmi
 - Add new column to param_grib2
 * Mon Jul 30 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.7.30-1.fmi
