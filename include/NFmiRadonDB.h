@@ -38,6 +38,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	static NFmiRadonDB& Instance();
 
 	std::map<std::string, std::string> GetProducerFromGrib(long centre, long process, long type);
+	std::vector<std::map<std::string, std::string>> GetProducerFromGrib(long centre, long process);
+
 	std::map<std::string, std::string> GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id);
 	void WarmGrib1ParameterCache(long producerId);
 	void WarmGrib2ParameterCache(long producerId);
@@ -86,6 +88,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	// These maps are used for caching
 
 	std::map<std::string, std::map<std::string, std::string>> gribproducerinfo;
+	std::map<std::string, std::vector<std::map<std::string, std::string>>> gribproducerinfolist;
 	std::map<unsigned long, std::map<std::string, std::string>> producerinfo;
 	std::map<std::string, std::map<std::string, std::string>> levelinfo;
 	std::map<std::string, std::map<std::string, std::string>> levelnameinfo;

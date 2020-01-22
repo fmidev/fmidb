@@ -9,7 +9,9 @@
 #endif
 
 #include <iostream>
+#ifdef DEBUG
 static const char* fmideb = getenv("FMIDB_DEBUG");
+#endif
 
 // clang-format off
 

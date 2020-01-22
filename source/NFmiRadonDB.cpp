@@ -96,6 +96,56 @@ map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, 
 	return ret;
 }
 
+vector<map<string, string>> NFmiRadonDB::GetProducerFromGrib(long centre, long process)
+{
+	const string key = to_string(centre) + "_" + to_string(process);
+
+	if (gribproducerinfolist.find(key) != gribproducerinfolist.end())
+	{
+		FMIDEBUG(cout << "DEBUG: GetProducerFromGrib() cache hit!" << endl);
+
+		return gribproducerinfolist[key];
+	}
+
+	stringstream query;
+
+	query << "SELECT f.id, f.name, f.class_id "
+	      << "FROM fmi_producer f, producer_grib p "
+	      << "WHERE f.id = p.producer_id AND p.centre = " << centre << " AND p.ident = " << process;
+
+	Query(query.str());
+
+	vector<map<string, string>> retlist;
+
+	while (true)
+	{
+		vector<string> row = FetchRow();
+
+		if (row.empty())
+			break;
+
+		map<string, string> ret;
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+		ret["class_id"] = row[2];
+		ret["centre"] = to_string(centre);
+		ret["ident"] = to_string(process);
+		retlist.push_back(ret);
+	}
+
+	if (retlist.empty())
+	{
+		// gridparamid[key] = -1;
+		FMIDEBUG(cout << "DEBUG Producer not found\n");
+	}
+	else
+	{
+		gribproducerinfolist[key] = retlist;
+	}
+
+	return retlist;
+}
+
 map<string, string> NFmiRadonDB::GetParameterFromNewbaseId(unsigned long producer_id, unsigned long universal_id)
 {
 	string key = to_string(producer_id) + "_" + to_string(universal_id);
@@ -1293,7 +1343,6 @@ string NFmiRadonDB::GetLatestTime(int producer_id, const std::string& geom_name,
 		return "";
 	}
 
-	assert(row[0] == row[1]);
 	return row[0];
 }
 
