@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 19.12.3
+Version: 20.1.22
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -60,6 +60,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jan 22 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.1.22-1.fmi
+- Add function to get producer information without using type
 * Tue Dec  3 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.12.3-1.fmi
 - Fix to GetLatestTime()
 * Fri Nov  8 2019 Mikko Partio <mikko.partio@fmi.fi> - 19.11.8-1.fmi

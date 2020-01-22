@@ -9,15 +9,13 @@
 #endif
 
 #include <iostream>
-#ifdef DEBUG
-static const char* fmideb = getenv("FMIDB_DEBUG");
-#endif
 
 // clang-format off
 
 #if defined(DEBUG)
 #define FMIDEBUG(Expr) do { Expr; } while (0)
 #else
+static const char* fmideb = getenv("FMIDB_DEBUG");
 #define FMIDEBUG(Expr) if (fmideb) do { Expr; } while (0)
 #endif
 
