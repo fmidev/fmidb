@@ -1203,8 +1203,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 			break;
 		case 6:
 			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
-			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
-			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
+			      << "WHERE nj = " << nj << " AND first_lon = " << setprecision(10) << lon
+			      << " AND first_lat = " << lat;
 			break;
 
 		default:
