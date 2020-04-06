@@ -721,6 +721,51 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	return ret;
 }
 
+map<string, string> NFmiRadonDB::GetParameterFromGeoTIFF(long producerId, const string& paramName)
+{
+	const string key = to_string(producerId) + "_" + paramName;
+
+	if (paramgeotiffinfo.find(key) != paramgeotiffinfo.end())
+	{
+		FMIDEBUG(cout << "DEBUG: GetParameterFromGeoTIFF() cache hit!" << endl);
+
+		return paramgeotiffinfo[key];
+	}
+
+	stringstream query;
+
+	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, "
+	         "p.interpolation_id, i.name AS interpolation_name "
+	      << "FROM param_geotiff g, param p, param_unit u, interpolation_method "
+	         "i, fmi_producer f "
+	      << "WHERE g.param_id = p.id AND p.unit_id = u.id AND "
+	         "p.interpolation_id = i.id AND f.id = g.producer_id "
+	      << " AND f.id = " << producerId << " AND g.geotiff_name = '" << paramName << "'";
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	map<string, string> ret;
+
+	if (row.empty())
+	{
+		FMIDEBUG(cout << "DEBUG Parameter not found\n");
+	}
+	else
+	{
+		ret["id"] = row[0];
+		ret["name"] = row[1];
+		ret["version"] = row[2];
+		ret["geotiff_name"] = paramName;
+		ret["interpolation_method"] = row[4];
+
+		paramgeotiffinfo[key] = ret;
+	}
+
+	return ret;
+}
+
 map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const string& paramName, long levelId,
                                                         double levelValue)
 {
