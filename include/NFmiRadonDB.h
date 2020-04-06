@@ -50,6 +50,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	                                                         long typeOfStatisticalProcessing = -1);
 	std::map<std::string, std::string> GetParameterFromNetCDF(long producerId, const std::string& paramName,
 	                                                          long levelId, double levelValue);
+	std::map<std::string, std::string> GetParameterFromGeoTIFF(long producerId, const std::string& paramName);
 	std::map<std::string, std::string> GetParameterFromDatabaseName(long producerId, const std::string& paramName,
 	                                                                int levelId = -1, double levelValue = 32700.f);
 	std::map<std::string, std::string> GetParameterPrecision(const std::string& paramName);
@@ -96,6 +97,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
 	std::map<std::string, std::map<std::string, std::string>> paramgrib2info;
 	std::map<std::string, std::map<std::string, std::string>> paramnetcdfinfo;
+	std::map<std::string, std::map<std::string, std::string>> paramgeotiffinfo;
 	std::map<std::string, std::map<std::string, std::string>> paramnewbaseinfo;
 	std::map<std::string, std::map<std::string, std::string>> geometryinfo;
 	std::map<std::string, std::map<std::string, std::string>> geometryinfo_fromarea;
