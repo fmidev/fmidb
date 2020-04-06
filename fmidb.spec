@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 20.3.2
+Version: 20.4.6
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -60,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Apr  6 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.6-1.fmi
+- Initial support for LAEA projection
+- Initial support for geotiff parameter mapping
 * Mon Mar  3 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.3.2-1.fmi
 - Tuning query performance
 * Wed Jan 22 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.1.22-1.fmi
