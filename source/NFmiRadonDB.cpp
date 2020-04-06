@@ -1139,6 +1139,33 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 			return ret;
 		}
+
+		case 7:
+			query << "SELECT ni,nj, first_lat, first_lon, "
+			         "di, dj, scanning_mode, orientation, latin "
+			         "FROM geom_lambert_equal_area_v WHERE geometry_id = "
+			      << row[0];
+
+			Query(query.str());
+			row = FetchRow();
+
+			if (row.empty())
+				return map<string, string>();
+
+			ret["ni"] = row[0];
+			ret["nj"] = row[1];
+			ret["first_point_lat"] = row[2];
+			ret["first_point_lon"] = row[3];
+			ret["di"] = row[4];
+			ret["dj"] = row[5];
+			ret["scanning_mode"] = row[6];
+			ret["orientation"] = row[7];
+			ret["latin"] = row[8];
+
+			geometryinfo[geom_name] = ret;
+
+			return ret;
+
 	}
 
 	return map<string, string>();
@@ -1205,6 +1232,11 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
 			      << "WHERE nj = " << nj << " AND first_lon = " << setprecision(10) << lon
 			      << " AND first_lat = " << lat;
+			break;
+		case 7:
+			query << "SELECT geometry_id, geometry_name FROM geom_lambert_equal_area_v "
+			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND first_lon = " << setprecision(10) << lon
+			      << " AND first_lat = " << lat << " AND di = " << di << " AND dj = " << dj;
 			break;
 
 		default:
