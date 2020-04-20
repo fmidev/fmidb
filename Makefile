@@ -30,6 +30,7 @@ CFLAGS_DEBUG = -fPIC -std=c++11 -DPQXX_HIDE_EXP_OPTIONAL -DUNIX -O0 -g -DDEBUG $
 LDFLAGS_DEBUG =  -shared
 
 INCLUDES = -I$(includedir) \
+           -I/usr/include/boost169 \
            -I/usr/include/oracle \
            -I/usr/include/oracle/11.2/client64 \
 	   -iquote/usr/include/pqxx
@@ -40,9 +41,9 @@ LIBS =  -L$(LIBDIR) \
         -L/usr/lib64/oracle \
         -lclntsh \
         -lnsl -ldl -lm \
-        -lodbc \
-	/usr/lib64/libboost_date_time.a \
-        /usr/lib64/libboost_system.a
+        -lodbc
+#	/usr/lib64/libboost_date_time.a \
+#        /usr/lib64/libboost_system.a
 
 # Common library compiling template
 

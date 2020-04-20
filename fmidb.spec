@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 20.4.17
+Version: 20.4.20
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -13,7 +13,7 @@ Provides: lib%{LIBNAME}.so
 BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
-BuildRequires: boost-devel >= 1.66
+BuildRequires: boost169-devel
 BuildRequires: libpqxx-devel
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
@@ -60,6 +60,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Apr 20 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.20-1.fmi
+- boost 1.69
 * Fri Apr 17 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.17-1.fmi
 - Initial support for transverse mercator projection
 * Mon Apr  6 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.6-1.fmi
