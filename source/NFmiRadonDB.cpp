@@ -1243,10 +1243,10 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 }
 
 map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
-                                                       double dj, int gribedition, int gridtype)
+                                                       double dj, int projectionId)
 {
 	string key = to_string(ni) + "_" + to_string(nj) + "_" + to_string(lat) + "_" + to_string(lon) + "_" +
-	             to_string(di) + "_" + to_string(dj) + "_" + to_string(gribedition) + "_" + to_string(gridtype);
+	             to_string(di) + "_" + to_string(dj) + "_" + to_string(projectionId);
 
 	if (geometryinfo_fromarea.find(key) != geometryinfo_fromarea.end())
 	{
@@ -1255,29 +1255,12 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 		return geometryinfo_fromarea[key];
 	}
 
-	stringstream query;
-
-	query << "SELECT id FROM projection WHERE grib" << gribedition << "_number = " << gridtype;
-
-	Query(query.str());
-
-	auto row = FetchRow();
-
-	map<string, string> ret;
-
-	if (row.empty())
-	{
-		return ret;
-	}
-
-	query.str("");
-
-	int projection_id = stoi(row[0]);
-
 	// TODO: for projections other than latlon, extra properties should be checked,
 	// such as south pole, orientation etc.
 
-	switch (projection_id)
+	stringstream query;
+
+	switch (projectionId)
 	{
 		case 1:
 			query << "SELECT geometry_id, geometry_name FROM geom_latitude_longitude_v "
@@ -1317,13 +1300,14 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 			break;
 
 		default:
-			throw std::runtime_error("Unsupported database projection id: " + row[0]);
+			throw std::runtime_error("Unsupported database projection id: " + to_string(projectionId));
 	}
 
 	Query(query.str());
 
-	row = FetchRow();
+	auto row = FetchRow();
 
+	map<string,string> ret;
 	if (!row.empty())
 	{
 		ret["id"] = row[0];
@@ -1333,6 +1317,29 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 	}
 
 	return ret;
+}
+
+map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
+                                                       double dj, int gribedition, int gridtype)
+{
+	stringstream query;
+
+	query << "SELECT id FROM projection WHERE grib" << gribedition << "_number = " << gridtype;
+
+	Query(query.str());
+
+	auto row = FetchRow();
+
+	map<string, string> ret;
+
+	if (row.empty())
+	{
+		return ret;
+	}
+
+	int projection_id = stoi(row[0]);
+
+	return GetGeometryDefinition(ni, nj, lat, lon, di, dj, projection_id);
 }
 
 map<string, string> NFmiRadonDB::GetProducerDefinition(unsigned long producer_id)

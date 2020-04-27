@@ -66,6 +66,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
 	std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
 	                                                         double dj, int gribedition, int gridtype);
+	std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
+	                                                         double dj, int projectionId);
 	std::string GetLatestTime(int producer_id, const std::string& geom_name = "", unsigned int offset = 0);
 	std::string GetLatestTime(const std::string& ref_prod, const std::string& geom_name = "", unsigned int offset = 0);
 	std::map<std::string, std::string> GetStationDefinition(FmiRadonStationNetwork networkType, unsigned long stationId,
