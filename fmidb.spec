@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 20.4.27
+Version: 20.7.8
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -14,7 +14,8 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel
+BuildRequires: libpqxx-devel >= 5
+Requires: libpqxx >= 5
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -60,6 +61,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jul  8 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.7.8-1.fmi
+- Link against newer libpqxx (5)
 * Mon Apr 27 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.27-1.fmi
 - New functionality
 * Mon Apr 20 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.20-1.fmi
