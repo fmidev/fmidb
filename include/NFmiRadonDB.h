@@ -58,6 +58,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 
 	std::map<std::string, std::string> GetLevelFromGrib(long producerId, long levelId, long edition);
 	std::map<std::string, std::string> GetLevelFromDatabaseName(const std::string& name);
+	std::map<std::string, std::string> GetLevelInformationForProducerFromDatabaseName(const std::string& name);
+	int GetGribLevelForProducer(long producerId, long levelId, long edition);
 
 	std::map<std::string, std::string> GetProducerDefinition(unsigned long producer_id);
 	std::map<std::string, std::string> GetProducerDefinition(const std::string& producer_name);
@@ -94,6 +96,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::vector<std::map<std::string, std::string>>> gribproducerinfolist;
 	std::map<unsigned long, std::map<std::string, std::string>> producerinfo;
 	std::map<std::string, std::map<std::string, std::string>> levelinfo;
+	std::map<std::string, int> griblevelinfo;
 	std::map<std::string, std::map<std::string, std::string>> levelnameinfo;
 	std::map<std::string, std::map<std::string, std::string>> paramdbinfo;
 	std::map<std::string, std::map<std::string, std::string>> paramgrib1info;
