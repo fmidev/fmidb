@@ -899,6 +899,42 @@ map<string, string> NFmiRadonDB::GetLevelFromDatabaseName(const std::string& nam
 	return ret;
 }
 
+int NFmiRadonDB::GetGribLevelForProducer(long producerId, long levelId, long edition)
+{
+	const string key = to_string(producerId) + "_" + to_string(levelId) + "_" + to_string(edition);
+
+	if (levelinfo.find(key) != levelinfo.end())
+	{
+		FMIDEBUG(cout << "DEBUG: GetGribLevelForProducer() cache hit for " << key << endl);
+
+		return griblevelinfo[key];
+	}
+
+	stringstream query;
+
+	query << "SELECT grib_level_id FROM " << (edition == 2 ? "level_grib2 g " : "level_grib1 g")
+	      << " WHERE g.producer_id = " << producerId << " AND g.level_id = " << levelId;
+
+	Query(query.str());
+
+	vector<string> row = FetchRow();
+
+	int ret;
+
+	if (row.empty())
+	{
+		FMIDEBUG(cout << "DEBUG Level not found\n");
+		ret = -1;
+	}
+	else
+	{
+		ret = std::stoi(row[0]);
+		griblevelinfo[key] = ret;
+	}
+
+	return ret;
+}
+
 map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNumber, long edition)
 {
 	const string key = to_string(producerId) + "_" + to_string(levelNumber) + "_" + to_string(edition);
@@ -1315,7 +1351,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 
 	auto row = FetchRow();
 
-	map<string,string> ret;
+	map<string, string> ret;
 	if (!row.empty())
 	{
 		ret["id"] = row[0];
