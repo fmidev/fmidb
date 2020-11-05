@@ -11,47 +11,16 @@ NFmiPGCLDB& NFmiPGCLDB::Instance()
 	return instance_;
 }
 
-/*NFmiCLDB::NFmiCLDB() : NFmiOracle()
-{
-	connected_ = false;
-	user_ = "neons_client";
-	database_ = "CLDB";
-
-	const auto pw = getenv("CLDB_NEONSCLIENT_PASSWORD");
-	if (pw)
-	{
-		password_ = string(pw);
-	}
-	else
-	{
-		throw std::runtime_error("Environment variable CLDB_NEONSCLIENT_PASSWORD not defined");
-	}
-}*/
-/*NFmiCLDB::NFmiCLDB() : NFmiPostgreSQL() //verif...
-{
-        connected_ = false;
-        user_ = "verifimport";
-        password_ = "08y8abei";
-        database_ = "verifapi";
-        hostname_ = "dbdev.fmi.fi";
-        port_ = 5432;
-}*/
-
 NFmiPGCLDB::NFmiPGCLDB(short theId) : NFmiPostgreSQL(), itsId(theId)
 {
 }
 
 NFmiPGCLDB::~NFmiPGCLDB() { Disconnect(); }
-/*void NFmiCLDB::Connect(const int threadedMode)
-{
-	NFmiOracle::Connect(threadedMode);
-	DateFormat("YYYYMMDDHH24MISS");
-	Verbose(true);
-}*/
+
 void NFmiPGCLDB::Connect()
 {
         string password;
-        //const auto pw = getenv("RADON_RADONCLIENT_PASSWORD");
+
 	const auto pw = getenv("CLDB_PG_QDSERVERTASK_PASSWORD");
         if (pw)
         {
@@ -62,17 +31,9 @@ void NFmiPGCLDB::Connect()
                 throw runtime_error("Environment variable CLDB_PG_QDSERVERTASK_PASSWORD must be set");
         }
 
-        //NFmiCLDB::Connect("qdservertask", password, "cldb", "cldb-pg-1", 5432);
         NFmiPostgreSQL::Connect("qdservertask", password, "cldb", "cldb-pg-master.fmi.fi", 5432);
 }
 
-/*void NFmiCLDB::Connect(const std::string& user, const std::string& password, const std::string& database,
-                       const int threadedMode)
-{
-	NFmiOracle::Connect(user, password, database, threadedMode);
-	DateFormat("YYYYMMDDHH24MISS");
-	Verbose(true);
-}*/
 void NFmiPGCLDB::Connect(const std::string& user, const std::string& password, const std::string& database,
                           const std::string& hostname, int port)
 {
@@ -373,7 +334,7 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
                                                 bool aggressive_cache)
 {
 	string producer_id_str = to_string(producer_id);
-	string key = producer_id_str + "_" + to_string(station_id);
+	string key = producer_id_str + "_0" + to_string(station_id);
 
 	if (fmi_stations.find(key) != fmi_stations.end()) return fmi_stations[key];
 
@@ -386,26 +347,29 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
 
 	string query;
 
-	if (producer_id != 20015 && producer_id != 20021) // + 20021
+	if (producer_id != 20015)
 	{
 		query =
-		    "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
-		    "FROM sreg_view WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL";
+                    "SELECT n.member_code AS wmon, round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+                    "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+                    "s.station_name, s.station_id, NULL as lpnn, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
+                    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
-			query += " AND wmon = " + to_string(station_id);
+                        query += " WHERE n.member_code::int = " + to_string(station_id);
+
 	}
 	else
 	{
 		query =
 		    "SELECT n.member_code AS wmon, round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
 		    "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
-		    "s.station_name, s.station_id, NULL, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
+		    "s.station_name, s.station_id, NULL as lpnn, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
 		    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
 			query += " WHERE (s.station_id = " + to_string(station_id) +
-			         " OR n.member_code::int = " + to_string(station_id) + ")";  // to_number -> ::int, wmo 5 numeroa
+			         " OR n.member_code::int = " + to_string(station_id) + ")";
 	}
 
 	Query(query);
@@ -430,7 +394,6 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
 		string tempkey = producer_id_str + "_" + (producer_id == 20015 ? station["fmisid"] : station["wmon"]);
 
 		fmi_stations[tempkey] = station;
-
 		station.clear();
 	}
 
@@ -538,7 +501,6 @@ vector<map<string, string>> NFmiPGCLDB::GetParameterMapping(unsigned long produc
 	    "WHERE producer_id = " +
 	    to_string(producer_id) + " AND univ_id = " + to_string(universal_id);
 
-	//NFmiPGCLDB::Instance().Connect();
 	Query(query);
 
 	while (true)
