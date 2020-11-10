@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 20.8.17
+Version: 20.11.10
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -61,6 +61,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Nov 10 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.11.10-1.fmi
+- New class NFmiPGCLDB
 * Mon Aug 17 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.8.18-1.fmi
 - New function for RadonDB
 - GetGeometryDefinition longitude fixes
