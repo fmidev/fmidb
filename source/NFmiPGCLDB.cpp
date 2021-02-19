@@ -258,7 +258,7 @@ map<string, string> NFmiPGCLDB::GetExtSynopStationInfo(unsigned long station_id,
 
 	stringstream query;
 
-	query << "SELECT "
+/*	query << "SELECT "
 	      << "r.wmon as station_id, "
 	      << "r.lat as latitude, "
 	      << "r.lon as longitude, "
@@ -269,10 +269,25 @@ map<string, string> NFmiPGCLDB::GetExtSynopStationInfo(unsigned long station_id,
 	      << "wmostations r "
 	      << "WHERE "
 	      << "membership_end = to_date('9999-12-31', 'yyyy-mm-dd') AND loc_end = to_date('9999-12-31', 'yyyy-mm-dd')";
+*/
+	query << "SELECT "
+	      << "n.member_code AS wmon, "
+	      << "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+	      << "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+	      << "s.station_name, "
+	      << "s.station_id, "
+	      << "s.station_elevation "
+	      << "FROM "
+	      << "stations_v1 s LEFT OUTER JOIN network_members_v1 n ON (s.station_id = n.station_id) "
+	      << "WHERE "
+	      << "station_end = to_date('9999-12-31', 'yyyy-mm-dd')";
 
 	if (!aggressive_cache || (aggressive_cache && extsynop_stations.size() > 0))
+		query << " AND n.member_code = '" << setw(5) << setfill('0') << station_id << "'";
+/*
+	if (!aggressive_cache || (aggressive_cache && extsynop_stations.size() > 0))
 		query << " AND r.wmon = '" << setw(5) << setfill('0') << station_id << "'";
-
+*/
 	Query(query.str());
 
 	while (true)
@@ -285,7 +300,7 @@ map<string, string> NFmiPGCLDB::GetExtSynopStationInfo(unsigned long station_id,
 
 		int sid = std::stoi(values[0]);
 
-		station["station_id"] = sid;
+		station["station_id"] = values[0]; //sid;
 		station["latitude"] = values[1];
 		station["longitude"] = values[2];
 		station["station_name"] = values[3];
