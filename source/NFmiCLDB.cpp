@@ -345,7 +345,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 
 	string query;
 
-	if (producer_id != 20015)
+	if (producer_id != 20015 && producer_id != 20022)
 	{
 		query =
 		    "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
@@ -353,6 +353,15 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
 			query += " AND wmon = " + to_string(station_id);
+	}
+	else if (producer_id == 20022) // icebuoy
+	{
+		query =
+		    "SELECT NULL AS wmon, m.lat AS latitude, m.lon AS longitude, "
+		    "s.station_name, s.station_id, NULL AS lpnn, m.elev as elevation "
+		    "FROM stations_v1 s JOIN moving_locations_v1 m ON m.station_id = s.station_id "
+		    "WHERE m.created = (select max(created) from moving_locations_v1 where station_id = " + to_string(station_id) + ")";
+
 	}
 	else
 	{
@@ -385,8 +394,8 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 		station["lpnn"] = values[5];
 		station["elevation"] = values[6];
 
-		// for 20015 use fmisid, else use wmo number
-		string tempkey = producer_id_str + "_" + (producer_id == 20015 ? station["fmisid"] : station["wmon"]);
+		// for 20015, 20022 use fmisid, else use wmo number
+		string tempkey = producer_id_str + "_" + ((producer_id == 20015 || producer_id == 20022) ? station["fmisid"] : station["wmon"]);
 
 		fmi_stations[tempkey] = station;
 
