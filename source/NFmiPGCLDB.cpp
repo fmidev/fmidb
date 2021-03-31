@@ -106,29 +106,19 @@ map<string, string> NFmiPGCLDB::GetRoadStationInfo(unsigned long station_id, boo
 {
 	if (road_weather_stations.find(station_id) != road_weather_stations.end()) return road_weather_stations[station_id];
 
-	string query =
-	    "WITH stations AS ("
-	    "SELECT"
-	    " rw.rw_station_id, rw.fmisid, rw.station_formal_name "
-	    "FROM rw_stations rw "
-	    "UNION ALL "
-	    "SELECT"
-	    "  to_number(member_code), station_id, NULL as name "
-	    "FROM network_members_v1 "
-	    "WHERE"
-	    "  network_id = 31"
-	    ") "
-	    "SELECT "
-	    "r.fmisid AS station_id, "
-	    "l.latitude, "
-	    "l.longitude, "
-	    "r.station_formal_name, "
-	    "l.elevation "
-	    "FROM "
-	    "stations r, "
-	    "locations l "
-	    "WHERE "
-	    "r.fmisid = l.fmisid";
+	string query = 
+		"SELECT "
+		"n.station_id AS fmisid, "
+		"round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+		"round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+		"s.station_name, "
+		"s.station_elevation "
+		"FROM "
+		"stations_v1 s, network_members_v1 n "
+		"WHERE "
+		"station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+		"AND s.station_id = n.station_id "
+		"AND (network_id = 30 OR network_id = 31)";
 
 	/*
 	 * If aggressive_cache is not set, query only for the individual station.
@@ -138,7 +128,7 @@ map<string, string> NFmiPGCLDB::GetRoadStationInfo(unsigned long station_id, boo
 	 */
 
 	if (!aggressive_cache || (aggressive_cache && road_weather_stations.size() > 0))
-		query += " AND r.fmisid = " + to_string(station_id);
+		query += " AND n.station_id = " + to_string(station_id);
 
 	Query(query);
 
@@ -186,29 +176,20 @@ map<string, string> NFmiPGCLDB::GetSwedishRoadStationInfo(unsigned long station_
 	if (swedish_road_weather_stations.find(station_id) != swedish_road_weather_stations.end())
 		return swedish_road_weather_stations[station_id];
 
-	/*  string query = "SELECT "
-	                 "r.fmisid as station_id, "
-	                 "l.latitude, "
-	                 "l.longitude, "
-	                 "r.station_formal_name, "
-	                 "l.elevation "
-	                 "FROM "
-	                 "srw_stations r, "
-	                 "locations l "
-	                 "WHERE "
-	                 "r.fmisid = l.fmisid";
-	*/
-	string query =
-	    "SELECT "
-	    "s.station_id as station_id, "
-	    "round(s.station_geometry.sdo_point.y, 5) as latitude, "
-	    "round(s.station_geometry.sdo_point.x, 5) as longitude, "
-	    "s.station_name, "
-	    "s.station_elevation "
-	    "FROM stations_v1 s, network_members_v1 n "
-	    "WHERE s.station_id = n.station_id "
-	    "AND n.network_id IN (50,67,64) "
-	    "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')";
+        string query =
+                "SELECT "
+                "n.station_id AS station_id, "
+                "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+                "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+                "s.station_name, "
+                "s.station_elevation "
+                "FROM "
+                "stations_v1 s, network_members_v1 n "
+                "WHERE "
+                "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+                "AND s.station_id = n.station_id "
+                "AND network_id IN (50,67,64)";
+
 	/*
 	 * If aggressive_cache is not set, query only for the individual station.
 	 * Also, if aggressive_cache is set and map stationinfo is already populated
@@ -259,20 +240,25 @@ map<string, string> NFmiPGCLDB::GetExtSynopStationInfo(unsigned long station_id,
 	stringstream query;
 
 	query << "SELECT "
-	      << "r.wmon as station_id, "
-	      << "r.lat as latitude, "
-	      << "r.lon as longitude, "
-	      << "r.station_name, "
-	      << "r.fmisid, "
-	      << "r.h as elevation "
+	      << "n.member_code AS wmon, "
+	      << "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+	      << "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+	      << "s.station_name, "
+	      << "s.station_id, "
+	      << "s.station_elevation "
 	      << "FROM "
-	      << "wmostations r "
+	      << "stations_v1 s, network_members_v1 n "
 	      << "WHERE "
-	      << "membership_end = to_date('9999-12-31', 'yyyy-mm-dd') AND loc_end = to_date('9999-12-31', 'yyyy-mm-dd')";
+	      << "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+	      << "AND network_id = 20 "
+	      << "AND s.station_id = n.station_id";
 
 	if (!aggressive_cache || (aggressive_cache && extsynop_stations.size() > 0))
+		query << " AND n.member_code = '" << setw(5) << setfill('0') << station_id << "'";
+/*
+	if (!aggressive_cache || (aggressive_cache && extsynop_stations.size() > 0))
 		query << " AND r.wmon = '" << setw(5) << setfill('0') << station_id << "'";
-
+*/
 	Query(query.str());
 
 	while (true)
@@ -285,7 +271,7 @@ map<string, string> NFmiPGCLDB::GetExtSynopStationInfo(unsigned long station_id,
 
 		int sid = std::stoi(values[0]);
 
-		station["station_id"] = sid;
+		station["station_id"] = values[0];
 		station["latitude"] = values[1];
 		station["longitude"] = values[2];
 		station["station_name"] = values[3];
@@ -334,7 +320,7 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
                                                 bool aggressive_cache)
 {
 	string producer_id_str = to_string(producer_id);
-	string key = producer_id_str + "_0" + to_string(station_id);
+	string key = producer_id_str + (to_string(station_id).length() == 4 ? "_0" + to_string(station_id) : "_" + to_string(station_id));
 
 	if (fmi_stations.find(key) != fmi_stations.end()) return fmi_stations[key];
 
@@ -591,20 +577,26 @@ map<int, map<string, string>> NFmiPGCLDB::GetStationListForArea(unsigned long pr
 
 			query =
 			    "SELECT "
-			    "r.wmon AS station_id, "
-			    "r.lat, "
-			    "r.lon, "
-			    "r.station_name, "
-			    "r.fmisid, "
+			    "n.member_code AS station_id, "
+			    "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+			    "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+			    "s.station_name, "
+			    "s.station_id AS fmisid, "
 			    "NULL AS lpnn, "
-			    "r.h "
+			    "s.station_elevation "
 			    "FROM "
-			    "wmostations r "
+			    "stations_v1 s, network_members_v1 n "
 			    "WHERE "
-			    "r.lat BETWEEN " +
+			    "s.station_id = n.station_id "
+			    "AND "
+			    "network_id = 20 "
+			    "AND "
+			    "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+			    "AND "
+			    "round(st_y(s.station_geometry)::decimal, 5) BETWEEN " +
 			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
-			    "r.lon BETWEEN " +
+			    "round(st_x(s.station_geometry)::decimal, 5) BETWEEN " +
 			    to_string(min_longitude) + " AND " + to_string(max_longitude);
 			break;
 
@@ -612,88 +604,54 @@ map<int, map<string, string>> NFmiPGCLDB::GetStationListForArea(unsigned long pr
 			// Road weather
 
 			query =
-			    "WITH stations AS ("
-			    "SELECT"
-			    " rw.rw_station_id, rw.fmisid "
-			    "FROM rw_stations rw "
-			    "UNION ALL "
-			    "SELECT"
-			    " to_number(member_code), station_id "
-			    "FROM network_members_v1 "
-			    "WHERE"
-			    " network_id = 31"
-			    ")"
-			    "SELECT "
-			    "r.fmisid AS station_id, "
-			    "l.latitude, "
-			    "l.longitude, "
-			    "s.station_name, "
-			    "r.fmisid, "
-			    "NULL AS lpnn, "
-			    "l.elevation "
-			    "FROM "
-			    "stations r, "
-			    "stations_v1 s, "
-			    "locations l "
-			    "WHERE "
-			    "r.fmisid = l.fmisid "
+                            "SELECT "
+                            "s.station_id AS station_id, "
+                            "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+                            "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+                            "s.station_name, "
+                            "s.station_id AS fmisid, "
+                            "NULL AS lpnn, "
+                            "s.station_elevation "
+                            "FROM "
+                            "stations_v1 s, network_members_v1 n "
+                            "WHERE "
+                            "s.station_id = n.station_id "
+                            "AND "
+                            "network_id IN (30,31) "
+                            "AND "
+			    "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
 			    "AND "
-			    "s.station_id = l.fmisid "
-			    "AND "
-			    "l.latitude BETWEEN " +
-			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
-			    " AND "
-			    "l.longitude BETWEEN " +
-			    to_string(min_longitude) + " AND " + to_string(max_longitude);
-			break;
+                            "round(st_y(s.station_geometry)::decimal, 5) BETWEEN " +
+                            to_string(min_latitude) + " AND " + to_string(max_latitude) +
+                            " AND "
+                            "round(st_x(s.station_geometry)::decimal, 5) BETWEEN " +
+                            to_string(min_longitude) + " AND " + to_string(max_longitude);
+                        break;
 
 		case 20014:
 			// Swedish road weather
 
 			query =
 			    "SELECT "
-			    "s.station_id as station_id, "
-			    "round(s.station_geometry.sdo_point.y, 5) as latitude, "
-			    "round(s.station_geometry.sdo_point.x, 5) as longitude, "
+			    "s.station_id AS station_id, "
+			    "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+			    "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
 			    "s.station_name, "
-			    "s.station_id as fmisid, "
-			    "NULL as lpnn, "
+			    "s.station_id AS fmisid, "
+			    "NULL AS lpnn, "
 			    "s.station_elevation "
 			    "FROM stations_v1 s, network_members_v1 n "
 			    "WHERE s.station_id = n.station_id "
-			    "AND n.network_id IN (50,67,64) "
-			    "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')"
-			    "AND round(s.station_geometry.sdo_point.y, 5) BETWEEN " +
+			    "AND "
+			    "n.network_id IN (50,67,64) "
+			    "AND "
+			    "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+			    "AND "
+			    "round(st_y(s.station_geometry)::decimal, 5) BETWEEN " +
 			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
 			    " AND "
-			    "round(s.station_geometry.sdo_point.x, 5) BETWEEN " +
+			    "round(st_x(s.station_geometry)::decimal, 5) BETWEEN " +
 			    to_string(min_longitude) + " AND " + to_string(max_longitude);
-			;
-
-			/*      query = "SELECT "
-			              "r.fmisid AS station_id, "
-			              "l.latitude, "
-			              "l.longitude, "
-			              "r.station_formal_name AS station_name, "
-			              "r.fmisid, "
-			              "NULL AS lpnn, "
-			              "l.elevation "
-			              "FROM "
-			              "srw_stations r, "
-			              "locations l "
-			              "WHERE "
-			              "r.fmisid = l.fmisid "
-			              "AND "
-			              "l.latitude BETWEEN " +
-			              to_string (min_latitude) +
-			              " AND " +
-			              to_string (max_latitude) +
-			              " AND "
-			              "l.longitude BETWEEN " +
-			              to_string (min_longitude) +
-			              " AND " +
-			              to_string (max_longitude);
-			*/
 			break;
 
 		case 20015:
@@ -742,6 +700,32 @@ map<int, map<string, string>> NFmiPGCLDB::GetStationListForArea(unsigned long pr
 			    " AND " + to_string(max_latitude);
 			break;
 
+		case 20021:
+			query =
+			    "SELECT "
+                            "n.member_code AS station_id, "
+                            "round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
+                            "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
+                            "s.station_name, "
+                            "s.station_id AS fmisid, "
+                            "NULL AS lpnn, "
+                            "s.station_elevation "
+                            "FROM "
+                            "stations_v1 s, network_members_v1 n "
+                            "WHERE "
+                            "s.station_id = n.station_id "
+                            "AND "
+                            "network_id = 20 "
+                            "AND "
+                            "station_end = to_date('9999-12-31', 'yyyy-mm-dd') "
+                            "AND "
+                            "round(st_y(s.station_geometry)::decimal, 5) BETWEEN " +
+                            to_string(min_latitude) + " AND " + to_string(max_latitude) +
+                            " AND "
+                            "round(st_x(s.station_geometry)::decimal, 5) BETWEEN " +
+                            to_string(min_longitude) + " AND " + to_string(max_longitude);
+			break;
+
 		default:
 			/*
 			 *  LPNN stations
@@ -786,7 +770,7 @@ map<int, map<string, string>> NFmiPGCLDB::GetStationListForArea(unsigned long pr
 
 		int id = std::stoi(values[0]);
 
-		station["station_id"] = id;
+		station["station_id"] = values[0]; //id;
 		station["latitude"] = values[1];
 		station["longitude"] = values[2];
 		station["station_name"] = values[3];
