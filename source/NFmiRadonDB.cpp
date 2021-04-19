@@ -40,7 +40,7 @@ void NFmiRadonDB::Connect()
 		throw runtime_error("Environment variable RADON_RADONCLIENT_PASSWORD must be set");
 	}
 
-	NFmiRadonDB::Connect("radon_client", password, "radon", "vorlon", 5432);
+	NFmiRadonDB::Connect("radon_client", password, "radon", "radondb", 5432);
 }
 
 void NFmiRadonDB::Connect(const std::string& user, const std::string& password, const std::string& database,
