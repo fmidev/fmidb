@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 21.3.31
+Version: 21.5.7
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -61,7 +61,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Wed Mar 31 2021 Mikko Partio <mikko.partio@fmi.fi> - 20.11.10-1.fmi
+* Fri May  7 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.5.7-1.fmi
+- Read earth shape name from radon
+* Wed Mar 31 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.3.31-1.fmi
 - Read earth shape from radon (geometry fetch)
 - Ice buoy support
 - PGCLDB changes
