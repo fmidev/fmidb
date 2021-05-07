@@ -1066,7 +1066,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 1:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, earth_semi_major, earth_semi_minor, "
-			         "proj4 FROM "
+			         "proj4, earth_ellipsoid_name FROM "
 			         "geom_latitude_longitude_v WHERE geometry_id = "
 			      << row[0];
 			Query(query.str());
@@ -1095,6 +1095,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[7];
 			ret["earth_semi_minor"] = row[8];
 			ret["proj4"] = row[9];
+			ret["earth_ellipsoid_name"] = row[10];
 
 			geometryinfo[geom_name] = ret;
 
@@ -1104,7 +1105,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 2:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, "
-			         "orientation, earth_semi_major, earth_semi_minor, proj4 FROM geom_stereographic_v WHERE "
+			         "orientation, earth_semi_major, earth_semi_minor, proj4, earth_ellipsoid_name FROM "
+			         "geom_stereographic_v WHERE "
 			         "geometry_id = "
 			      << row[0];
 			Query(query.str());
@@ -1133,7 +1135,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[8];
 			ret["earth_semi_minor"] = row[9];
 			ret["proj4"] = row[10];
-
+			ret["earth_ellipsoid_name"] = row[11];
 			geometryinfo[geom_name] = ret;
 
 			return ret;
@@ -1141,7 +1143,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 5:
 			query << "SELECT ni,nj, first_lat, first_lon, "
 			         "di, dj, scanning_mode, orientation, latin1, latin2, "
-			         "south_pole_lat, south_pole_lon, earth_semi_major, earth_semi_minor, proj4 FROM "
+			         "south_pole_lat, south_pole_lon, earth_semi_major, earth_semi_minor, proj4, earth_ellipsoid_name "
+			         "FROM "
 			         "geom_lambert_conformal_v WHERE geometry_id = "
 			      << row[0];
 
@@ -1166,6 +1169,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[12];
 			ret["earth_semi_minor"] = row[13];
 			ret["proj4"] = row[14];
+			ret["earth_ellipsoid_name"] = row[15];
 
 			geometryinfo[geom_name] = ret;
 
@@ -1174,7 +1178,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 4:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, "
-			         "south_pole_lat, south_pole_lon, earth_semi_major, earth_semi_minor, proj4 FROM "
+			         "south_pole_lat, south_pole_lon, earth_semi_major, earth_semi_minor, proj4, earth_ellipsoid_name "
+			         "FROM "
 			         "geom_rotated_latitude_longitude_v "
 			         "WHERE geometry_id = "
 			      << row[0];
@@ -1204,6 +1209,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[9];
 			ret["earth_semi_minor"] = row[10];
 			ret["proj4"] = row[11];
+			ret["earth_ellipsoid_name"] = row[12];
 
 			geometryinfo[geom_name] = ret;
 
@@ -1212,7 +1218,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 6:
 		{
 			query << "SELECT nj, first_lat, first_lon, last_lat, last_lon,"
-			         "n, scanning_mode, points_along_parallels, earth_semi_major, earth_semi_minor, proj4 FROM "
+			         "n, scanning_mode, points_along_parallels, earth_semi_major, earth_semi_minor, proj4, "
+			         "earth_ellipsoid_name FROM "
 			         "geom_reduced_gaussian_v WHERE geometry_id = "
 			      << row[0];
 			Query(query.str());
@@ -1232,6 +1239,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[7];
 			ret["earth_semi_minor"] = row[8];
 			ret["proj4"] = row[9];
+			ret["earth_ellipsoid_name"] = row[10];
 
 			geometryinfo[geom_name] = ret;
 
@@ -1240,7 +1248,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 		case 7:
 			query << "SELECT ni,nj, first_lat, first_lon, "
-			         "di, dj, scanning_mode, orientation, latin, earth_semi_major, earth_semi_minor, proj4 "
+			         "di, dj, scanning_mode, orientation, latin, earth_semi_major, earth_semi_minor, proj4, "
+			         "earth_ellipsoid_name "
 			         "FROM geom_lambert_equal_area_v WHERE geometry_id = "
 			      << row[0];
 
@@ -1262,6 +1271,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[9];
 			ret["earth_semi_minor"] = row[10];
 			ret["proj4"] = row[11];
+			ret["earth_ellipsoid_name"] = row[12];
 
 			geometryinfo[geom_name] = ret;
 
@@ -1269,7 +1279,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 
 		case 8:
 			query << "SELECT ni,nj, first_lat, first_lon, "
-			         "di, dj, scanning_mode, orientation, latin, scale, earth_semi_major, earth_semi_minor, proj4 "
+			         "di, dj, scanning_mode, orientation, latin, scale, earth_semi_major, earth_semi_minor, proj4, "
+			         "earth_ellipsoid_name "
 			         "FROM geom_transverse_mercator_v WHERE geometry_id = "
 			      << row[0];
 
@@ -1292,6 +1303,7 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_major"] = row[10];
 			ret["earth_semi_minor"] = row[11];
 			ret["proj4"] = row[12];
+			ret["earth_ellipsoid_name"] = row[13];
 
 			geometryinfo[geom_name] = ret;
 
