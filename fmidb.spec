@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 21.6.10
+Version: 21.6.11
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -61,6 +61,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Jun 11 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.11-1.fmi
+- More precision when comparing di/dj
 * Thu Jun 10 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.10-1.fmi
 - Add threshold when comparing latlon values for area corners
 * Fri May  7 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.5.7-1.fmi
