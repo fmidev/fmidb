@@ -1349,22 +1349,22 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 		case 1:
 			query << "SELECT geometry_id, geometry_name FROM geom_latitude_longitude_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 2:
 			query << "SELECT geometry_id, geometry_name FROM geom_stereographic_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 4:
 			query << "SELECT geometry_id, geometry_name FROM geom_rotated_latitude_longitude_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 5:
 			query << "SELECT geometry_id, geometry_name FROM geom_lambert_conformal_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 6:
 			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
@@ -1373,12 +1373,12 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 		case 7:
 			query << "SELECT geometry_id, geometry_name FROM geom_lambert_equal_area_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 		case 8:
 			query << "SELECT geometry_id, geometry_name FROM geom_transverse_mercator_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
 			break;
 
 		default:
