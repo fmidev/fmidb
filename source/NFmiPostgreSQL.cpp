@@ -123,7 +123,11 @@ void NFmiPostgreSQL::Disconnect()
 {
 	if (connected_)
 	{
+#if PQXX_VERSION_MAJOR < 7
 		db_->disconnect();
+#else
+		db_->close();
+#endif
 		connected_ = false;
 	}
 }
