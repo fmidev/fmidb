@@ -33,7 +33,6 @@ INCLUDES = -I$(includedir) \
            -I/usr/include/boost169 \
            -I/usr/include/oracle \
            -I/usr/include/oracle/11.2/client64 \
-	   -iquote/usr/include/pqxx
 
 LIBS =  -L$(LIBDIR) \
         -L$(LIBDIR)/odbc \
