@@ -399,7 +399,7 @@ vector<string> NFmiOracle::FetchRowFromCursor()
  *
  */
 
-void NFmiOracle::Execute(const string& sql) throw(int)
+void NFmiOracle::Execute(const string& sql)
 {
 	if (!connected_)
 	{
@@ -435,7 +435,7 @@ void NFmiOracle::Execute(const string& sql) throw(int)
  *
  */
 
-void NFmiOracle::ExecuteProcedure(const string& sql) throw(int)
+void NFmiOracle::ExecuteProcedure(const string& sql)
 {
 	if (!connected_)
 	{
@@ -509,7 +509,7 @@ string NFmiOracle::MakeDate(const otl_datetime& time)
  * Commit transaction.
  */
 
-void NFmiOracle::Commit() throw(int)
+void NFmiOracle::Commit()
 {
 	FMIDEBUG(cout << "DEBUG: COMMIT" << endl);
 
@@ -532,7 +532,7 @@ void NFmiOracle::Commit() throw(int)
  * Rollback transaction.
  */
 
-void NFmiOracle::Rollback() throw(int)
+void NFmiOracle::Rollback()
 {
 	FMIDEBUG(cout << "DEBUG: ROLLBACK" << endl);
 

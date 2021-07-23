@@ -27,14 +27,14 @@ class NFmiOracle : public NFmiDatabase
 	std::vector<std::string> FetchRow(void);
 	std::vector<std::string> FetchRowFromCursor(void);
 
-	void Execute(const std::string &sql) throw(int);
-	void ExecuteProcedure(const std::string &sql) throw(int);
+	void Execute(const std::string &sql) ;
+	void ExecuteProcedure(const std::string &sql) ;
 
 	std::string MakeDate(const otl_datetime &datetime);
 	// std::string MakeNEONSDate(const otl_datetime &datetime);
 
-	virtual void Commit() throw(int)FINAL;
-	virtual void Rollback() throw(int)FINAL;
+	virtual void Commit() FINAL;
+	virtual void Rollback() FINAL;
 
 	bool TestMode() { return test_mode_; }
 	void TestMode(bool test_mode) { test_mode_ = test_mode; }
