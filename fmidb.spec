@@ -24,6 +24,7 @@ FMI database library
 %package devel
 Summary: development package
 Group: Development/Tools
+Requires: libpqxx-devel
 
 %description devel
 Headers and static libraries for fmidb
