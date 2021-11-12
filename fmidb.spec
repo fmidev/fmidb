@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 21.6.11
+Version: 21.7.23
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -14,8 +14,8 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel >= 5
-Requires: libpqxx >= 5
+BuildRequires: libpqxx-devel >= 7
+Requires: libpqxx >= 7
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -61,6 +61,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Jul 23 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.7.23-1.fmi
+- pqxx7
 * Fri Jun 11 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.11-1.fmi
 - More precision when comparing di/dj
 * Thu Jun 10 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.10-1.fmi

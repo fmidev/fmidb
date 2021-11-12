@@ -130,7 +130,7 @@ $(LIB): $(OBJS)
 	$(CC) -o $(LIBDIR)/libfmidb.so $(LDFLAGS) $(OBJFILES)
 
 clean:
-	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/$(LIB).* *~ source/*~ include/*~
+	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/lib$(LIB).* *~ source/*~ include/*~
 
 install:
 	mkdir -p $(libdir)
