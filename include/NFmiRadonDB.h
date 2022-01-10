@@ -89,6 +89,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 		return itsId;
 	}
 
+	int RadonVersion();
+
    private:
 	// These maps are used for caching
 
@@ -113,6 +115,7 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::map<std::string, std::string>> tablenameinfo;
 
 	short itsId;  // Only for connection pooling
+	int itsRadonVersion;
 };
 
 class NFmiRadonDBPool

@@ -20,13 +20,36 @@ NFmiRadonDB& NFmiRadonDB::Instance()
 	return instance_;
 }
 
-NFmiRadonDB::NFmiRadonDB(short theId) : NFmiPostgreSQL(), itsId(theId)
+NFmiRadonDB::NFmiRadonDB(short theId) : NFmiPostgreSQL(), itsId(theId), itsRadonVersion(-1)
 {
 }
 NFmiRadonDB::~NFmiRadonDB()
 {
 	Disconnect();
 }
+
+int NFmiRadonDB::RadonVersion()
+{
+	if (itsRadonVersion != -1)
+	{
+		return itsRadonVersion;
+	}
+
+	Query("SELECT radon_version_f()");
+	const auto row = FetchRow();
+
+	try
+	{
+		itsRadonVersion = stoi(row[0]);
+	}
+	catch (const std::exception& e)
+	{
+		throw runtime_error("Unable to get radon version: " + string(e.what()));
+	}
+
+	return itsRadonVersion;
+}
+
 void NFmiRadonDB::Connect()
 {
 	string password;
@@ -1105,10 +1128,22 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 		case 2:
 		{
 			query << "SELECT ni, nj, first_lat, first_lon, di, dj, scanning_mode, "
-			         "orientation, earth_semi_major, earth_semi_minor, proj4, earth_ellipsoid_name FROM "
+			         "orientation, earth_semi_major, earth_semi_minor, proj4, earth_ellipsoid_name";
+
+			if (RadonVersion() >= 20211021)
+			{
+				query << ",latin, lat_ts";
+			}
+			else
+			{
+				query << ",90, 60";
+			}
+
+			query << " FROM "
 			         "geom_stereographic_v WHERE "
 			         "geometry_id = "
 			      << row[0];
+
 			Query(query.str());
 			row = FetchRow();
 
@@ -1136,6 +1171,9 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
 			ret["earth_semi_minor"] = row[9];
 			ret["proj4"] = row[10];
 			ret["earth_ellipsoid_name"] = row[11];
+			ret["latin"] = row[12];
+			ret["lat_ts"] = row[13];
+
 			geometryinfo[geom_name] = ret;
 
 			return ret;
