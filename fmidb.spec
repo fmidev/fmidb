@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 21.7.23
+Version: 22.1.10
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Jan 10 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.10-1.fmi
+- Retrieve more information from stereographic grid
 * Fri Jul 23 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.7.23-1.fmi
 - pqxx7
 * Fri Jun 11 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.11-1.fmi
