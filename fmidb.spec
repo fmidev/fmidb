@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 22.1.10
+Version: 22.1.14
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -14,8 +14,8 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel >= 7
-Requires: libpqxx >= 7
+BuildRequires: libpqxx-devel >= 7.6.0
+Requires: libpqxx >= 7.6.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Fri Jan 14 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.14-1.fmi
+- libpqxx 7.6
 * Mon Jan 10 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.10-1.fmi
 - Retrieve more information from stereographic grid
 * Fri Jul 23 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.7.23-1.fmi
