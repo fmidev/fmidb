@@ -1768,7 +1768,7 @@ map<string, string> NFmiRadonDB::GetTableName(long producerId, const string& ana
 	stringstream ss;
 
 	ss << "SELECT "
-	   << "id, schema_name, table_name, partition_name, record_count "
+	   << "id, schema_name, table_name, partition_name, record_count, delete_time "
 	   << "FROM as_grid_v "
 	   << "WHERE geometry_name = '" << geomName << "'"
 	   << " AND analysis_time = to_timestamp('" << analysisTime << "', 'YYYY-MM-DD HH24:MI:SS')"
@@ -1790,6 +1790,7 @@ map<string, string> NFmiRadonDB::GetTableName(long producerId, const string& ana
 	ret["table_name"] = row[2];
 	ret["partition_name"] = row[3];
 	ret["record_count"] = row[4];
+	ret["delete_time"] = row[5];
 
 	tablenameinfo[key] = ret;
 	return ret;
