@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 22.1.14
+Version: 22.6.21
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Jun 21 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.6.21-1.fmi
+- Return table delete_time from GetTableName
 * Fri Jan 14 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.14-1.fmi
 - libpqxx 7.6
 * Mon Jan 10 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.10-1.fmi
