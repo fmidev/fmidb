@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 22.6.21
+Version: 22.8.24
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -14,8 +14,8 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel >= 7.6.0
-Requires: libpqxx >= 7.6.0
+BuildRequires: libpqxx-devel >= 7.7.0
+Requires: libpqxx >= 7.7.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Aug 24 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.8.24-1.fmi
+- libpqxx 7.7
 * Tue Jun 21 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.6.21-1.fmi
 - Return table delete_time from GetTableName
 * Fri Jan 14 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.14-1.fmi
