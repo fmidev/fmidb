@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 22.8.24
+Version: 22.11.3
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Nov 3 2022 Ville Kuvaja <ville.kuvaja@fmi.fi> - 22.11.3-1.fmi
+- removed sreg
 * Wed Aug 24 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.8.24-1.fmi
 - libpqxx 7.7
 * Tue Jun 21 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.6.21-1.fmi
