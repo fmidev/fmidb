@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 22.11.3
+Version: 23.4.25
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -62,8 +62,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Thu Nov 3 2022 Ville Kuvaja <ville.kuvaja@fmi.fi> - 22.11.3-1.fmi
-- removed sreg
+* Tue Apr 25 2023 Ville Kuvaja <ville.kuvaja@fmi.fi> - 23.4.25-1.fmi
+- station network membership check
+* Wed Nov  9 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.11.9-1.fmi
+- Grib level metadata cache optimization
+* Thu Nov  3 2022 Ville Kuvaja <ville.kuvaja@fmi.fi> - 22.11.3-1.fmi
+- Remove sreg
 * Wed Aug 24 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.8.24-1.fmi
 - libpqxx 7.7
 * Tue Jun 21 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.6.21-1.fmi

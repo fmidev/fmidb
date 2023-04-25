@@ -336,7 +336,7 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
                     "SELECT n.member_code AS wmon, round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
                     "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
                     "s.station_name, s.station_id, NULL as lpnn, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
-                    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
+                    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20 AND n.membership_end = to_date('9999-12-31', 'yyyy-mm-dd')) ";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
                         query += " WHERE n.member_code::int = " + to_string(station_id);
@@ -348,7 +348,7 @@ map<string, string> NFmiPGCLDB::GetFMIStationInfo(unsigned long producer_id, uns
 		    "SELECT n.member_code AS wmon, round(st_y(s.station_geometry)::decimal, 5) AS latitude, "
 		    "round(st_x(s.station_geometry)::decimal, 5) AS longitude, "
 		    "s.station_name, s.station_id, NULL as lpnn, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
-		    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
+		    " network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20 AND n.membership_end = to_date('9999-12-31', 'yyyy-mm-dd')) ";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
 			query += " WHERE (s.station_id = " + to_string(station_id) +
