@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 21.7.23
+Version: 23.4.25
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -14,8 +14,8 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel >= 7
-Requires: libpqxx >= 7
+BuildRequires: libpqxx-devel >= 7.7.0
+Requires: libpqxx >= 7.7.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -24,6 +24,7 @@ FMI database library
 %package devel
 Summary: development package
 Group: Development/Tools
+Requires: libpqxx-devel
 
 %description devel
 Headers and static libraries for fmidb
@@ -61,6 +62,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Tue Apr 25 2023 Ville Kuvaja <ville.kuvaja@fmi.fi> - 23.4.25-1.fmi
+- station network membership check
+* Wed Nov  9 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.11.9-1.fmi
+- Grib level metadata cache optimization
+* Thu Nov  3 2022 Ville Kuvaja <ville.kuvaja@fmi.fi> - 22.11.3-1.fmi
+- Remove sreg
+* Wed Aug 24 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.8.24-1.fmi
+- libpqxx 7.7
+* Tue Jun 21 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.6.21-1.fmi
+- Return table delete_time from GetTableName
+* Fri Jan 14 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.14-1.fmi
+- libpqxx 7.6
+* Mon Jan 10 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.1.10-1.fmi
+- Retrieve more information from stereographic grid
 * Fri Jul 23 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.7.23-1.fmi
 - pqxx7
 * Fri Jun 11 2021 Mikko Partio <mikko.partio@fmi.fi> - 21.6.11-1.fmi

@@ -332,7 +332,7 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
                                                 bool aggressive_cache)
 {
 	string producer_id_str = to_string(producer_id);
-	string key = producer_id_str + "_" + to_string(station_id);
+	string key = producer_id_str + (to_string(station_id).length() == 4 ? "_0" + to_string(station_id) : "_" + to_string(station_id));
 
 	if (fmi_stations.find(key) != fmi_stations.end()) return fmi_stations[key];
 
@@ -348,11 +348,21 @@ map<string, string> NFmiCLDB::GetFMIStationInfo(unsigned long producer_id, unsig
 	if (producer_id != 20015 && producer_id != 20022)
 	{
 		query =
+		    "SELECT n.member_code AS wmon, round(s.station_geometry.sdo_point.y, 5) AS latitude, "
+		    "round(s.station_geometry.sdo_point.x, 5) AS longitude, "
+		    "s.station_name, s.station_id, NULL, s.station_elevation FROM stations_v1 s LEFT OUTER JOIN "
+		    "network_members_v1 n ON (s.station_id = n.station_id AND n.network_id = 20) ";
+
+		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
+			query += " WHERE (s.station_id = " + to_string(station_id) +
+				 " OR to_number(n.member_code) = " + to_string(station_id) + ")";
+/*		query =
 		    "SELECT wmon, lat, lon, station_name, NULL as fmisid, lpnn, elevation "
 		    "FROM sreg_view WHERE wmon IS NOT NULL AND lat IS NOT NULL AND lon IS NOT NULL";
 
 		if (!aggressive_cache || (aggressive_cache && fmi_stations.size() > 0))
 			query += " AND wmon = " + to_string(station_id);
+*/
 	}
 	else if (producer_id == 20022) // icebuoy
 	{
@@ -757,6 +767,26 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 
 			query =
 			    "SELECT "
+			    "s.station_id as station_id, "
+			    "round(s.station_geometry.sdo_point.y, 5) as latitude, "
+			    "round(s.station_geometry.sdo_point.x, 5) as longitude, "
+			    "s.station_name, "
+			    "s.station_id as fmisid, "
+			    "NULL as lpnn, "
+			    "s.station_elevation "
+			    "FROM stations_v1 s, network_members_v1 n "
+			    "WHERE s.station_id = n.station_id "
+			    //"AND n.network_id IN (50,67,64) " // no network_id in default
+			    "AND n.membership_end = to_date('9999-12-31 00:00:00', 'yyyy-mm-dd hh24:mi:ss')"
+			    "AND round(s.station_geometry.sdo_point.y, 5) BETWEEN " +
+			    to_string(min_latitude) + " AND " + to_string(max_latitude) +
+			    " AND "
+			    "round(s.station_geometry.sdo_point.x, 5) BETWEEN " +
+			    to_string(min_longitude) + " AND " + to_string(max_longitude);
+			;
+
+		/*	query =
+			    "SELECT "
 			    "to_number(lpad(wmo_bloc, 2, 0) || lpad(wmon, 3, 0)) AS wmon, "
 			    "floor(lat/100) + mod(lat,100)/60 + nvl(lat_sec, 0)/3600 AS latitude, "
 			    "floor(lon/100) + mod(lon,100)/60 + nvl(lon_sec, 0)/3600 AS longitude, "
@@ -775,7 +805,7 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 			    " AND wmon IS NOT NULL "
 			    "AND (message IN ('M200','M200A','M500','M500H','HASY','NAWS','AFTN') OR lpnn IN (1019)) "
 			    "AND enddate IS NULL "
-			    "AND lpnn NOT IN (9950) ";
+			    "AND lpnn NOT IN (9950) ";*/
 
 			break;
 	}
