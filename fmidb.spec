@@ -14,10 +14,10 @@ BuildRequires: gcc-c++
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
-BuildRequires: libpqxx-devel >= 7.7.0
-BuildRequires: libpqxx-devel < 8.0.0
-Requires: libpqxx >= 7.7.0
-Requires: libpqxx < 8.0.0
+BuildRequires: libpqxx-devel >= 1:7.7.0
+BuildRequires: libpqxx-devel < 1:8.0.0
+Requires: libpqxx >= 1:7.7.0
+Requires: libpqxx < 1:8.0.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
