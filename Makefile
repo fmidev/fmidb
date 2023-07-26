@@ -20,12 +20,12 @@ CC = /usr/bin/g++
 
 # Default compiler flags
 
-CFLAGS = -fPIC -std=c++17 -DPQXX_HIDE_EXP_OPTIONAL -DUNIX -O2 -g -DNDEBUG $(MAINFLAGS)
+CFLAGS = -fPIC -std=c++17 -DUNIX -O2 -g -DNDEBUG $(MAINFLAGS)
 LDFLAGS = -shared 
 
 # Special modes
 
-CFLAGS_DEBUG = -fPIC -std=c++17 -DPQXX_HIDE_EXP_OPTIONAL -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
+CFLAGS_DEBUG = -fPIC -std=c++17 -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 
 LDFLAGS_DEBUG =  -shared
 
@@ -41,8 +41,6 @@ LIBS =  -L$(LIBDIR) \
         -lclntsh \
         -lnsl -ldl -lm \
         -lodbc
-#	/usr/lib64/libboost_date_time.a \
-#        /usr/lib64/libboost_system.a
 
 # Common library compiling template
 
