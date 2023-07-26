@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 23.4.25
+Version: 23.7.26
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -15,7 +15,9 @@ BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
 BuildRequires: libpqxx-devel >= 7.7.0
+BuildRequires: libpqxx-devel < 8.0.0
 Requires: libpqxx >= 7.7.0
+Requires: libpqxx < 8.0.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
@@ -62,6 +64,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Wed Jul 26 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.26-1.fmi
+- Add small margin when comparing grid cell sizes
 * Tue Apr 25 2023 Ville Kuvaja <ville.kuvaja@fmi.fi> - 23.4.25-1.fmi
 - station network membership check
 * Wed Nov  9 2022 Mikko Partio <mikko.partio@fmi.fi> - 22.11.9-1.fmi

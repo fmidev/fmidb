@@ -1351,6 +1351,8 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 	stringstream query;
 	stringstream lon_condition;
 	stringstream lat_condition;
+	stringstream di_condition;
+	stringstream dj_condition;
 
 	// Check three different conditions for longitude:
 	// a) argument and database are using same range
@@ -1363,41 +1365,59 @@ map<string, string> NFmiRadonDB::GetGeometryDefinition(size_t ni, size_t nj, dou
 
 	lat_condition << "round(first_lat::numeric, 8) = round(" << setprecision(10) << lat << ", 8)";
 
+	// when comparing grid cell size, a small margin is added because sometimes
+	// precision is calculated up to limits of numerical precision
+
+	di_condition << setprecision(10) << "abs(di - " << di << ") < ";
+	dj_condition << setprecision(10) << "abs(dj - " << dj << ") < ";
+
 	switch (projectionId)
 	{
 		case 1:
+			di_condition << "0.0000001";
+			dj_condition << "0.0000001";
 			query << "SELECT geometry_id, geometry_name FROM geom_latitude_longitude_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 		case 2:
+			di_condition << "0.01";
+			dj_condition << "0.01";
 			query << "SELECT geometry_id, geometry_name FROM geom_stereographic_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 		case 4:
+			di_condition << "0.0000001";
+			dj_condition << "0.0000001";
 			query << "SELECT geometry_id, geometry_name FROM geom_rotated_latitude_longitude_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 		case 5:
+			di_condition << "0.01";
+			dj_condition << "0.01";
 			query << "SELECT geometry_id, geometry_name FROM geom_lambert_conformal_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 		case 6:
 			query << "SELECT geometry_id, geometry_name FROM geom_reduced_gaussian_v "
 			      << "WHERE nj = " << nj << " AND " << lon_condition.str() << " AND " << lat_condition.str();
 			break;
 		case 7:
+			di_condition << "0.01";
+			dj_condition << "0.01";
 			query << "SELECT geometry_id, geometry_name FROM geom_lambert_equal_area_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 		case 8:
+			di_condition << "0.01";
+			dj_condition << "0.01";
 			query << "SELECT geometry_id, geometry_name FROM geom_transverse_mercator_v "
 			      << "WHERE nj = " << nj << " AND ni = " << ni << " AND " << lon_condition.str() << " AND "
-			      << lat_condition.str() << setprecision(10) << " AND di = " << di << " AND dj = " << dj;
+			      << lat_condition.str() << " AND " << di_condition.str() << " AND " << dj_condition.str();
 			break;
 
 		default:
