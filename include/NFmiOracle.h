@@ -8,42 +8,57 @@ class NFmiOracle : public NFmiDatabase
 {
    public:
 	NFmiOracle();
-	virtual ~NFmiOracle();
+	virtual ~NFmiOracle() noexcept;
 
-	std::string ClassName() const { return "NFmiOracle"; }
-	static NFmiOracle &Instance();
+	std::string ClassName() const
+	{
+		return "NFmiOracle";
+	}
+	static NFmiOracle& Instance();
 
 	virtual void Connect();
 	virtual void Connect(const int threadedMode);
 
-	virtual void Connect(const std::string &user, const std::string &password, const std::string &database,
+	virtual void Connect(const std::string& user, const std::string& password, const std::string& database,
 	                     const int threadedMode = 0);
 
 	virtual void Disconnect(void) FINAL;
 
-	virtual void Query(const std::string &sql) FINAL;
-	virtual void Query(const std::string &sql, const unsigned int buffer_size) FINAL;
+	virtual void Query(const std::string& sql) FINAL;
+	virtual void Query(const std::string& sql, const unsigned int buffer_size) FINAL;
 
 	std::vector<std::string> FetchRow(void);
 	std::vector<std::string> FetchRowFromCursor(void);
 
-	void Execute(const std::string &sql) ;
-	void ExecuteProcedure(const std::string &sql) ;
+	void Execute(const std::string& sql);
+	void ExecuteProcedure(const std::string& sql);
 
-	std::string MakeDate(const otl_datetime &datetime);
+	std::string MakeDate(const otl_datetime& datetime);
 	// std::string MakeNEONSDate(const otl_datetime &datetime);
 
 	virtual void Commit() FINAL;
 	virtual void Rollback() FINAL;
 
-	bool TestMode() { return test_mode_; }
-	void TestMode(bool test_mode) { test_mode_ = test_mode; }
-	void TransactionIsolationLevel(const std::string &level);
+	bool TestMode()
+	{
+		return test_mode_;
+	}
+	void TestMode(bool test_mode)
+	{
+		test_mode_ = test_mode;
+	}
+	void TransactionIsolationLevel(const std::string& level);
 
-	void DateFormat(const std::string &dateFormat);
+	void DateFormat(const std::string& dateFormat);
 
-	bool Verbose() { return verbose_; }
-	void Verbose(bool verbose) { verbose_ = verbose; }
+	bool Verbose()
+	{
+		return verbose_;
+	}
+	void Verbose(bool verbose)
+	{
+		verbose_ = verbose;
+	}
 	// These function are used with connection pooling
 
 	void Attach();
@@ -69,7 +84,11 @@ class NFmiOracle : public NFmiDatabase
 	void PooledConnection(bool pooled_connection);
 	bool PooledConnection() const;
 
-	oracle::otl_connect *RawConnection() { return &db_; };
+	oracle::otl_connect* RawConnection()
+	{
+		return &db_;
+	};
+
    protected:
 	oracle::otl_connect db_;
 	oracle::otl_stream stream_;
