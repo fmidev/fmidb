@@ -1,6 +1,6 @@
 LIB = fmidb
 
-MAINFLAGS = -Wall -W -Wno-unused-parameter -Wno-deprecated
+MAINFLAGS = -Wall -W -Wno-unused-parameter -Wno-deprecated -Wno-stringop-overflow
 
 EXTRAFLAGS = -Wpointer-arith \
 	-Wcast-qual \

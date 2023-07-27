@@ -31,7 +31,8 @@ NFmiOracle::NFmiOracle()
 
 void NFmiOracle::Connect(const string& user, const string& password, const string& database, const int threadedMode)
 {
-	if (connected_) return;
+	if (connected_)
+		return;
 
 	oracle::otl_connect::otl_initialize(threadedMode);  // initialize OCI environment
 
@@ -52,10 +53,14 @@ void NFmiOracle::Connect(const string& user, const string& password, const strin
 	}
 }
 
-void NFmiOracle::Connect() { return Connect(0); }
+void NFmiOracle::Connect()
+{
+	return Connect(0);
+}
 void NFmiOracle::Connect(const int threadedMode)
 {
-	if (connected_) return;
+	if (connected_)
+		return;
 
 	oracle::otl_connect::otl_initialize(threadedMode);  // initialize OCI environment
 
@@ -78,14 +83,19 @@ void NFmiOracle::Connect(const int threadedMode)
 	}
 }
 
-void NFmiOracle::Query(const string& sql) { return Query(sql, 50); }
+void NFmiOracle::Query(const string& sql)
+{
+	return Query(sql, 50);
+}
 void NFmiOracle::Query(const string& sql, const unsigned int buffer_size)
 {
-	if (!connected_) throw runtime_error("ERROR: must be connected before executing query");
+	if (!connected_)
+		throw runtime_error("ERROR: must be connected before executing query");
 
 	BeginSession();
 
-	if (TestMode()) return;
+	if (TestMode())
+		return;
 
 	FMIDEBUG(cout << "DEBUG: " << sql.c_str() << endl);
 
@@ -126,7 +136,8 @@ void NFmiOracle::Query(const string& sql, const unsigned int buffer_size)
 
 vector<string> NFmiOracle::FetchRow()
 {
-	if (!connected_) throw runtime_error("Cannot perform SQL query before connected");
+	if (!connected_)
+		throw runtime_error("Cannot perform SQL query before connected");
 
 	assert(stream_.good());
 
@@ -264,7 +275,8 @@ vector<string> NFmiOracle::FetchRow()
 
 vector<string> NFmiOracle::FetchRowFromCursor()
 {
-	if (!connected_) throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
+	if (!connected_)
+		throw runtime_error("NFmiOracle: Cannot perform SQL query before connected");
 
 	assert(stream_.good());
 	assert(refcur_.good());
@@ -445,7 +457,8 @@ void NFmiOracle::ExecuteProcedure(const string& sql)
 
 	BeginSession();
 
-	if (TestMode()) return;
+	if (TestMode())
+		return;
 
 	string temp_sql = "BEGIN\n:cur<refcur,out> := " + sql + ";\nEND;";
 
@@ -480,7 +493,16 @@ void NFmiOracle::ExecuteProcedure(const string& sql)
 	}
 }
 
-NFmiOracle::~NFmiOracle() { Disconnect(); }
+NFmiOracle::~NFmiOracle() noexcept
+{
+	try
+	{
+		Disconnect();
+	}
+	catch (...)
+	{
+	};
+}
 void NFmiOracle::Disconnect()
 {
 	db_.logoff();  // disconnect from NFmiOracle
@@ -492,7 +514,7 @@ void NFmiOracle::Disconnect()
  * MakeStandardDate()
  *
  * Format an OTL datetime to string format.
-*/
+ */
 
 string NFmiOracle::MakeDate(const otl_datetime& time)
 {
@@ -582,7 +604,8 @@ void NFmiOracle::TransactionIsolationLevel(const std::string& level)
 
 void NFmiOracle::Attach()
 {
-	if (connected_) return;
+	if (connected_)
+		return;
 
 	oracle::otl_connect::otl_initialize(1);  // initialize OCI environment
 
@@ -606,7 +629,8 @@ void NFmiOracle::Attach()
 
 void NFmiOracle::Detach()
 {
-	if (!connected_) return;
+	if (!connected_)
+		return;
 
 	try
 	{
@@ -626,7 +650,8 @@ void NFmiOracle::Detach()
 
 void NFmiOracle::BeginSession()
 {
-	if (!connected_) throw runtime_error("Cannot begin session before connected");
+	if (!connected_)
+		throw runtime_error("Cannot begin session before connected");
 
 	if (initialized_ || !pooled_connection_)
 	{
@@ -677,7 +702,8 @@ void NFmiOracle::BeginSession()
 
 void NFmiOracle::EndSession()
 {
-	if (!connected_) throw runtime_error("Cannot end session if not connected");
+	if (!connected_)
+		throw runtime_error("Cannot end session if not connected");
 
 	if (!initialized_)
 	{
@@ -718,5 +744,11 @@ void NFmiOracle::DateFormat(const string& dateFormat)
 		throw runtime_error("Invalid date mask: " + dateFormat);
 }
 
-void NFmiOracle::PooledConnection(bool pooled_connection) { pooled_connection_ = pooled_connection; }
-bool NFmiOracle::PooledConnection() const { return pooled_connection_; }
+void NFmiOracle::PooledConnection(bool pooled_connection)
+{
+	pooled_connection_ = pooled_connection;
+}
+bool NFmiOracle::PooledConnection() const
+{
+	return pooled_connection_;
+}
