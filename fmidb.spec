@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 23.7.26
+Version: 23.7.27
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -10,7 +10,7 @@ URL: http://www.fmi.fi
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: lib%{LIBNAME}.so
-BuildRequires: gcc-c++
+BuildRequires: gcc-c++ >= 8.5.0
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
 BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
@@ -64,6 +64,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Jul 27 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.27-1.fmi
+- New version of Oracle Template Library
 * Wed Jul 26 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.26-1.fmi
 - Add small margin when comparing grid cell sizes
 * Tue Apr 25 2023 Ville Kuvaja <ville.kuvaja@fmi.fi> - 23.4.25-1.fmi
