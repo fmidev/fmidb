@@ -287,7 +287,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 	      << "LEFT OUTER JOIN param_precision pp "
 	      << "ON (p.id = pp.param_id) "
 	      << "WHERE "
-	      << "p.name = '" << parameterName << "'"
+	      << "p.name = '" << parameterName << "' "
 	      << "ORDER BY "
 	      << "g1.level_id NULLS LAST, g1.level_value NULLS LAST,"
 	      << "g2.level_id NULLS LAST, g2.level_value NULLS LAST";
