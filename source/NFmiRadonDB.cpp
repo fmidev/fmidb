@@ -238,7 +238,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 	      // Database information
 	      << "p.id, "
 	      << "p.name, "
-	      << "p.version, "
+	      << "1 AS version, "
 	      // Grib1 information
 	      << "g1.table_version, "
 	      << "g1.number, "
@@ -304,7 +304,7 @@ map<string, string> NFmiRadonDB::GetParameterFromDatabaseName(long producerId, c
 
 	//  0 p.id
 	//  1 p.name
-	//  2 p.version
+	//  2 version REMOVED FROM TABLE, HARD CODED TO 1
 	//  3 g1.table_version
 	//  4 g1.number
 	//  5 g1.timerange_indicator
@@ -375,7 +375,7 @@ void NFmiRadonDB::WarmGrib1ParameterCache(long producerId)
 		    stringstream query;
 
 		    query << "SELECT "
-		          << "p.id, p.name, p.version, p.interpolation_id, g.level_value,"
+		          << "p.id, p.name, 1 AS version, p.interpolation_id, g.level_value,"
 		          << "g.table_version, g.number, g.timerange_indicator, l.grib_level_id "
 		          << "FROM param_grib1 g JOIN param p ON (g.param_id = p.id) "
 		          << " LEFT OUTER JOIN level_grib1 l ON (g.level_id = l.level_id) "
@@ -491,14 +491,14 @@ void NFmiRadonDB::WarmGrib2ParameterCache(long producerId)
 		    stringstream query;
 
 		    query << "SELECT "
-		          << "p.id, p.name, p.version, p.interpolation_id, g.level_value,"
+		          << "p.id, p.name, 1 AS version, p.interpolation_id, g.level_value,"
 		          << "g.discipline, g.category, g.number, l.grib_level_id, g.type_of_statistical_processing "
 		          << "FROM param_grib2 g JOIN param p ON (g.param_id = p.id) "
 		          << " LEFT OUTER JOIN level_grib2 l ON (g.level_id = l.level_id) "
 		          << "WHERE "
 		          << " g.producer_id = " << producerId << " AND (g.level_id IN (3,6) OR g.level_id IS NULL)"
 		          << "UNION ALL SELECT "
-		          << "p2.id, p2.name, p2.version, p2.interpolation_id, NULL::numeric, "
+		          << "p2.id, p2.name, 1, p2.interpolation_id, NULL::numeric, "
 		          << "t.discipline, t.category, t.number, NULL::int, t.type_of_statistical_processing "
 		          << "FROM param_grib2_template t JOIN param p2 ON (t.param_id = p2.id) "
 		          << " GROUP BY 1,2,3,4,5,6,7,8,9,10";
@@ -614,7 +614,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib1(long producerId, long tab
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, p.interpolation_id "
+	query << "SELECT p.id, p.name, 1 AS version, p.interpolation_id "
 	      << "FROM param_grib1 g, level_grib1 l, param p "
 	      << "WHERE g.param_id = p.id"
 	      << " AND g.producer_id = " << producerId << " AND table_version = " << tableVersion
@@ -670,7 +670,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, "
+	query << "SELECT p.id, p.name, 1 AS version, u.name AS unit_name, "
 	         "p.interpolation_id, i.name AS interpolation_name, "
 	         "g.level_id "
 	      << "FROM param_grib2 g, level_grib2 l, param p, param_unit u, interpolation_method i, "
@@ -693,7 +693,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGrib2(long producerId, long dis
 	if (row.empty())
 	{
 		query.str("");
-		query << "SELECT p.id, p.name, p.version, p.interpolation_id, "
+		query << "SELECT p.id, p.name, 1 AS version, p.interpolation_id, "
 		      << "NULL, NULL FROM param p, param_grib2_template t WHERE "
 		      << "p.id = t.param_id AND t.discipline = " << discipline << " AND t.category = " << category << " AND "
 		      << "t.number = " << paramId << " AND t.type_of_statistical_processing = " << typeOfStatisticalProcessing;
@@ -738,7 +738,7 @@ map<string, string> NFmiRadonDB::GetParameterFromGeoTIFF(long producerId, const 
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, "
+	query << "SELECT p.id, p.name, 1 AS version, u.name AS unit_name, "
 	         "p.interpolation_id, i.name AS interpolation_name "
 	      << "FROM param_geotiff g, param p, param_unit u, interpolation_method "
 	         "i, fmi_producer f "
@@ -784,7 +784,7 @@ map<string, string> NFmiRadonDB::GetParameterFromNetCDF(long producerId, const s
 
 	stringstream query;
 
-	query << "SELECT p.id, p.name, p.version, u.name AS unit_name, "
+	query << "SELECT p.id, p.name, 1 AS version, u.name AS unit_name, "
 	         "p.interpolation_id, i.name AS interpolation_name, "
 	         "g.level_id, g.level_value "
 	      << "FROM param_netcdf g, param p, param_unit u, interpolation_method "
