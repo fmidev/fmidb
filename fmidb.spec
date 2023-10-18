@@ -2,7 +2,7 @@
 
 Summary: fmidb library
 Name: lib%{LIBNAME}
-Version: 23.7.27
+Version: 23.10.16
 Release: 1%{dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -64,6 +64,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Mon Oct 16 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.10.16-1.fmi
+- STU-22549: Remove column param(version) from queries
 * Thu Jul 27 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.27-1.fmi
 - New version of Oracle Template Library
 * Wed Jul 26 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.26-1.fmi
