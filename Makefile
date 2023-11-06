@@ -38,7 +38,8 @@ LIBS =  -L$(LIBDIR) \
         -L/lib64 \
         -L/usr/lib64/oracle \
         -lclntsh \
-        -lnsl -ldl -lm
+        -lodbc \
+        -ldl -lm
 
 # Common library compiling template
 
@@ -123,7 +124,7 @@ release: objdir $(LIB)
 
 $(LIB): $(OBJS)
 	ar rcs $(LIBDIR)/libfmidb.a $(OBJFILES)
-	$(CC) -o $(LIBDIR)/libfmidb.so $(LDFLAGS) $(OBJFILES)
+	$(CC) -o $(LIBDIR)/libfmidb.so $(LDFLAGS) $(LIBDIRS) $(LIBS) $(OBJFILES)
 
 clean:
 	rm -f $(PROG) $(OBJFILES) $(LIBDIR)/lib$(LIB).* *~ source/*~ include/*~

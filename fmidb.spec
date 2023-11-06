@@ -24,9 +24,11 @@ BuildRequires: boost169-devel
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
 BuildRequires: make
+BuildRequires: unixODBC-devel
+Requires: unixODBC
 Requires: libpqxx >= 1:7.7.0
 Requires: libpqxx < 1:8.0.0
-# Requires: oracle-instantclient-basic >= 11.2.0.3.0
+Requires: oracle-instantclient-basic >= 11.2.0.3.0
 
 %description
 FMI database library
