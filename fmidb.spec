@@ -1,21 +1,29 @@
-%define LIBNAME fmidb
+%if !0%{?version:1}
+%define version 23.10.16
+%endif
+
+%if !0%{?release:1}
+%define release 1
+%endif
+
+%define distnum %(/usr/lib/rpm/redhat/dist.sh --distnum)
 
 Summary: fmidb library
-Name: lib%{LIBNAME}
-Version: 23.10.16
-Release: 1%{dist}.fmi
+Name: libfmidb
+Version: %{version}
+Release: %{release}%{dist}.fmi
 License: MIT
 Group: Development/Tools
 URL: http://www.fmi.fi
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
-Provides: lib%{LIBNAME}.so
+Provides: libfmidb.so
 BuildRequires: gcc-c++ >= 8.5.0
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
-BuildRequires: unixODBC-devel
 BuildRequires: boost169-devel
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
+BuildRequires: make
 Requires: libpqxx >= 1:7.7.0
 Requires: libpqxx < 1:8.0.0
 # Requires: oracle-instantclient-basic >= 11.2.0.3.0
@@ -34,7 +42,7 @@ Headers and static libraries for fmidb
 %prep
 rm -rf $RPM_BUILD_ROOT
 
-%setup -q -n "%{LIBNAME}" 
+%setup -q -n "libfmidb" 
 
 %build
 make %{_smp_mflags} 
@@ -56,11 +64,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0644)
-%{_libdir}/lib%{LIBNAME}.so
+%{_libdir}/libfmidb.so
 
 %files devel
 %defattr(-,root,root,0644)
-%{_libdir}/lib%{LIBNAME}.a
+%{_libdir}/libfmidb.a
 %{_includedir}/*.h
 
 %changelog
@@ -112,7 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Apr  6 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.4.6-1.fmi
 - Initial support for LAEA projection
 - Initial support for geotiff parameter mapping
-* Mon Mar  3 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.3.2-1.fmi
+* Mon Mar  2 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.3.2-1.fmi
 - Tuning query performance
 * Wed Jan 22 2020 Mikko Partio <mikko.partio@fmi.fi> - 20.1.22-1.fmi
 - Add function to get producer information without using type
@@ -130,9 +138,9 @@ rm -rf $RPM_BUILD_ROOT
 - Add new column to param_grib2
 * Mon Jul 30 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.7.30-1.fmi
 - Bugfix for rgg query
-* Wed Apr 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.4.10-1.fmi
+* Tue Apr 10 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.4.10-1.fmi
 - New boost
-* Mon Feb 18 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.19-1.fmi
+* Mon Feb 19 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.19-1.fmi
 - Bugfix for GetLatestTime()
 * Wed Feb 14 2018 Mikko Partio <mikko.partio@fmi.fi> - 18.2.14-1.fmi
 - Add function to get newbase name from univ id

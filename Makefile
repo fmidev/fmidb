@@ -35,12 +35,10 @@ INCLUDES = -I$(includedir) \
            -I/usr/include/oracle/11.2/client64 \
 
 LIBS =  -L$(LIBDIR) \
-        -L$(LIBDIR)/odbc \
         -L/lib64 \
         -L/usr/lib64/oracle \
         -lclntsh \
-        -lnsl -ldl -lm \
-        -lodbc
+        -lnsl -ldl -lm
 
 # Common library compiling template
 
@@ -147,7 +145,7 @@ objdir:
 rpm:    clean $(LIB).spec
 	rm -f $(rpmsourcedir)/lib$(LIB).tar.gz
 	mkdir -p $(rpmsourcedir)
-	tar -C .. --exclude .svn -czf $(rpmsourcedir)/lib$(LIB).tar.gz $(LIB)
+	tar --transform "s,^./,libfmidb/,"  --exclude-vcs -czf $(rpmsourcedir)/lib$(LIB).tar.gz .
 	rpmbuild -ta $(rpmsourcedir)/lib$(LIB).tar.gz
 	rm -f $(rpmsourcedir)/lib$(LIB).tar.gz
 
