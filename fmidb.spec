@@ -8,6 +8,12 @@
 
 %define distnum %(/usr/lib/rpm/redhat/dist.sh --distnum)
 
+%if %{distnum} == 8
+%define boost boost169
+%else
+%define boost boost
+%endif
+
 Summary: fmidb library
 Name: libfmidb
 Version: %{version}
@@ -20,11 +26,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: libfmidb.so
 BuildRequires: gcc-c++ >= 8.5.0
 BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
-BuildRequires: boost169-devel
+BuildRequires: %{boost}-devel
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
 BuildRequires: make
 BuildRequires: unixODBC-devel
+BuildRequires: gawk
 Requires: unixODBC
 Requires: libpqxx >= 1:7.7.0
 Requires: libpqxx < 1:8.0.0

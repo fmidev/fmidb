@@ -1,5 +1,7 @@
 LIB = fmidb
 
+RHEL_MAJOR_VERSION := $(shell awk -F'[="]' '/VERSION_ID/ { print substr($$3, 1, 1) }' /etc/os-release)
+
 MAINFLAGS = -Wall -W -Wno-unused-parameter -Wno-deprecated -Wno-stringop-overflow
 
 EXTRAFLAGS = -Wpointer-arith \
@@ -29,9 +31,7 @@ CFLAGS_DEBUG = -fPIC -std=c++17 -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 
 LDFLAGS_DEBUG =  -shared
 
-INCLUDES = -I$(includedir) \
-           -I/usr/include/boost169 \
-           -I/usr/include/oracle \
+INCLUDES = -I/usr/include/oracle \
            -I/usr/include/oracle/11.2/client64 \
 
 LIBS =  -L$(LIBDIR) \
@@ -40,6 +40,10 @@ LIBS =  -L$(LIBDIR) \
         -lclntsh \
         -lodbc \
         -ldl -lm
+
+ifeq ($(RHEL_MAJOR_VERSION),8)
+  INCLUDES := $(INCLUDES) -isystem /usr/include/boost169
+endif
 
 # Common library compiling template
 
