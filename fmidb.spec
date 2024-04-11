@@ -1,5 +1,5 @@
 %if !0%{?version:1}
-%define version 23.10.16
+%define version 24.04.11
 %endif
 
 %if !0%{?release:1}
@@ -25,7 +25,7 @@ Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: libfmidb.so
 BuildRequires: gcc-c++ >= 8.5.0
-BuildRequires: oracle-instantclient-devel >= 11.2.0.3.0
+BuildRequires: oracle-instantclient-devel >= 19.22
 BuildRequires: %{boost}-devel
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
@@ -35,7 +35,8 @@ BuildRequires: gawk
 Requires: unixODBC
 Requires: libpqxx >= 1:7.7.0
 Requires: libpqxx < 1:8.0.0
-Requires: oracle-instantclient-basic >= 11.2.0.3.0
+Requires: oracle-instantclient-basic >= 19.22
+Requires: fmi-tnsnames-oracle
 
 %description
 FMI database library
@@ -81,6 +82,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Apr 11 2024 Ville Kuvaja <ville.kuvaja@fmi.fi> - 24.04.11-1.fmi
+- oracle-instant-client and fmi-tnsnames-oracle
 * Mon Oct 16 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.10.16-1.fmi
 - STU-22549: Remove column param(version) from queries
 * Thu Jul 27 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.7.27-1.fmi
