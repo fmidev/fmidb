@@ -25,7 +25,7 @@ Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 Provides: libfmidb.so
 BuildRequires: gcc-c++ >= 8.5.0
-BuildRequires: oracle-instantclient-devel >= 19.22
+BuildRequires: oracle-instantclient19.22-devel
 BuildRequires: %{boost}-devel
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
@@ -35,7 +35,7 @@ BuildRequires: gawk
 Requires: unixODBC
 Requires: libpqxx >= 1:7.7.0
 Requires: libpqxx < 1:8.0.0
-Requires: oracle-instantclient-basic >= 19.22
+Requires: oracle-instantclient19.22-basic
 Requires: fmi-tnsnames-oracle
 
 %description
