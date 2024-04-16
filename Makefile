@@ -32,7 +32,7 @@ CFLAGS_DEBUG = -fPIC -std=c++17 -DUNIX -O0 -g -DDEBUG $(MAINFLAGS) $(EXTRAFLAGS)
 LDFLAGS_DEBUG =  -shared
 
 INCLUDES = -I/usr/include/oracle \
-           -I/usr/include/oracle/11.2/client64 \
+           -I/usr/include/oracle/19.22/client64 \
 
 LIBS =  -L$(LIBDIR) \
         -L/lib64 \
