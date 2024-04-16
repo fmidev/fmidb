@@ -1,5 +1,5 @@
 %if !0%{?version:1}
-%define version 24.04.11
+%define version 24.04.16
 %endif
 
 %if !0%{?release:1}
@@ -82,7 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
-* Thu Apr 11 2024 Ville Kuvaja <ville.kuvaja@fmi.fi> - 24.04.11-1.fmi
+* Tue Apr 16 2024 Ville Kuvaja <ville.kuvaja@fmi.fi> - 24.04.16-1.fmi
 - oracle-instant-client and fmi-tnsnames-oracle
 * Mon Oct 16 2023 Mikko Partio <mikko.partio@fmi.fi> - 23.10.16-1.fmi
 - STU-22549: Remove column param(version) from queries
