@@ -22,7 +22,7 @@ jobs:
     with:
       rpm_base_image: rockylinux/rockylinux:9
       rpm_spec_file: fmidb.spec
-      rpm_additional_repositories: "epel-release,https://download.fmi.fi/smartmet-open/rhel/9/x86_64/smartmet-open-release-latest-9.noarch.rpm,https://download.fmi.fi/fmiforge/rhel/8/x86_64/fmiforge-release-latest-8.noarch.rpm"
+      rpm_additional_repositories: "epel-release,https://download.fmi.fi/smartmet-open/rhel/9/x86_64/smartmet-open-release-latest-9.noarch.rpm,https://download.fmi.fi/fmiforge/rhel/9/x86_64/fmiforge-release-latest-9.noarch.rpm"
       rpm_enable_repositories: crb
       build_image: false
     secrets:
