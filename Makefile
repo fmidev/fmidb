@@ -36,6 +36,7 @@ INCLUDES = -I/usr/include/oracle \
 
 LIBS =  -L$(LIBDIR) \
         -L/lib64 \
+	-L/usr/lib/oracle/19.22/client64/lib \
         -L/usr/lib64/oracle \
         -lclntsh \
         -lodbc \
