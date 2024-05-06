@@ -65,6 +65,8 @@ class NFmiRadonDB : public NFmiPostgreSQL
 	std::map<std::string, std::string> GetProducerDefinition(const std::string& producer_name);
 	std::vector<std::vector<std::string>> GetGridGeoms(const std::string& ref_prod, const std::string& analtime,
 	                                                   const std::string& geom_name = "");
+	std::vector<std::vector<std::string>> GetGridGeoms(long producer_id, const std::string& analtime,
+	                                                   const std::string& geom_name = "");
 	std::map<std::string, std::string> GetGeometryDefinition(const std::string& geom_name);
 	std::map<std::string, std::string> GetGeometryDefinition(size_t ni, size_t nj, double lat, double lon, double di,
 	                                                         double dj, int gribedition, int gridtype);

@@ -978,10 +978,9 @@ map<string, string> NFmiRadonDB::GetLevelFromGrib(long producerId, long levelNum
 	return ret;
 }
 
-vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime,
-                                                 const string& geom_name)
+vector<vector<string>> NFmiRadonDB::GetGridGeoms(long producer_id, const string& analtime, const string& geom_name)
 {
-	const string key = ref_prod + "_" + analtime + "_" + geom_name;
+	const string key = to_string(producer_id) + "_" + analtime + "_" + geom_name;
 	if (gridgeoms.count(key) > 0)
 	{
 		FMIDEBUG(cout << "DEBUG: GetGridGeoms() cache hit!" << endl);
@@ -995,8 +994,7 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const s
 	         "g.geom_name, a.schema_name, a.partition_name"
 	      << " FROM as_grid_v a, fmi_producer f, geom_v g"
 	      << " WHERE a.record_count > 0"
-	      << " AND f.name = '" << ref_prod << "'"
-	      << " AND a.producer_id = f.id"
+	      << " AND f.id = " << producer_id << " AND a.producer_id = f.id"
 	      << " AND (min_analysis_time, max_analysis_time) OVERLAPS ('" << analtime << "', '" << analtime << "')"
 	      << " AND a.geometry_name = g.geom_name";
 
@@ -1024,6 +1022,13 @@ vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const s
 	gridgeoms[key] = ret;
 
 	return ret;
+}
+
+vector<vector<string>> NFmiRadonDB::GetGridGeoms(const string& ref_prod, const string& analtime,
+                                                 const string& geom_name)
+{
+	auto prod_def = GetProducerDefinition(ref_prod);
+	return GetGridGeoms(std::stoi(prod_def["producer_id"]), analtime, geom_name);
 }
 
 map<string, string> NFmiRadonDB::GetGeometryDefinition(const string& geom_name)
