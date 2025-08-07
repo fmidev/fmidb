@@ -27,14 +27,19 @@ Provides: libfmidb.so
 BuildRequires: gcc-c++ >= 8.5.0
 BuildRequires: oracle-instantclient19.22-devel
 BuildRequires: %{boost}-devel
+%if %{distnum} == 8
 BuildRequires: libpqxx-devel >= 1:7.7.0
 BuildRequires: libpqxx-devel < 1:8.0.0
+Requires: libpqxx >= 1:7.7.0
+Requires: libpqxx < 1:8.0.0
+%else
+BuildRequires: libpqxx-devel >= 1:7.9.0
+Requires: libpqxx >= 1:7.9.0
+%endif
 BuildRequires: make
 BuildRequires: unixODBC-devel
 BuildRequires: gawk
 Requires: unixODBC
-Requires: libpqxx >= 1:7.7.0
-Requires: libpqxx < 1:8.0.0
 Requires: oracle-instantclient19.22-basic
 Requires: fmi-tnsnames-oracle
 
@@ -84,6 +89,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/*.h
 
 %changelog
+* Thu Aug  7 2025 Mikko Partio <mikko.partio@fmi.fi> - 25.8.7-1.fmi
+- RHEL9 with pqxx minimum version 7.9.0
 * Wed Apr 17 2024 Ville Kuvaja <ville.kuvaja@fmi.fi> - 24.04.16-1.fmi
 - AutoReqProv added to spec file
 * Tue Apr 16 2024 Ville Kuvaja <ville.kuvaja@fmi.fi> - 24.04.16-1.fmi
