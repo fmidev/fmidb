@@ -717,16 +717,15 @@ map<int, map<string, string>> NFmiCLDB::GetStationListForArea(unsigned long prod
 
 		case 20016:
 			query =
-			    "SELECT w.wmon, "
+			    "SELECT s.station_id as wmon, "
 			    "round(S.STATION_GEOMETRY.sdo_point.y, 5) as LATITUDE, "
 			    "round(S.STATION_GEOMETRY.sdo_point.x, 5) as LONGITUDE, "
 			    "s.station_name, "
 			    "s.station_id AS fmisid,"
 			    "NULL as lpnn, "
 			    "s.station_elevation "
-			    "FROM stations_v1 s, group_members_v1 gm, wmostations w "
-			    "WHERE (gm.group_id = 125 OR gm.group_id = 127)"
-			    "AND w.fmisid = s.station_id "
+			    "FROM stations_v1 s, group_members_v1 gm "
+			    "WHERE (gm.group_id = 125 OR gm.group_id = 127) "
 			    "AND gm.station_id = s.station_id "
 			    "AND sysdate BETWEEN gm.valid_from AND gm.valid_to "
 			    "AND gm.membership_on = 'Y' "
