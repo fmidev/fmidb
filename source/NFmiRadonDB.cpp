@@ -78,7 +78,7 @@ void NFmiRadonDB::Connect(const std::string& user, const std::string& password, 
 
 map<string, string> NFmiRadonDB::GetProducerFromGrib(long centre, long process, long type_id)
 {
-	const string key = to_string(centre) + "_" + to_string(process);
+	const string key = to_string(centre) + "_" + to_string(process) + "_" + to_string(type_id);
 
 	if (gribproducerinfo.find(key) != gribproducerinfo.end())
 	{
